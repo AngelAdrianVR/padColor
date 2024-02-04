@@ -30,20 +30,21 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Log in" />
+    <Head title="Inicio de sesión" />
 
     <AuthenticationCard>
-        <template #logo>
+
+        <div class="flex justify-center mt-14">
             <AuthenticationCardLogo />
-        </template>
+        </div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form class="w-2/3 mx-auto mt-12" @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel class="ml-5 text-white" for="email" value="Correo electrónico" />
                 <TextInput
                     id="email"
                     v-model="form.email"
@@ -57,7 +58,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <InputLabel class="ml-5 text-white" for="password" value="Contraseña" />
                 <TextInput
                     id="password"
                     v-model="form.password"
@@ -69,20 +70,20 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="block mt-4">
+            <div class="block mt-2">
                 <label class="flex items-center">
                     <Checkbox v-model:checked="form.remember" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                    <span class="ms-2 text-sm text-[#999999]">Mantener sesión</span>
                 </label>
             </div>
 
             <div class="flex items-center justify-end mt-4">
-                <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <!-- <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-[#999999] hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Forgot your password?
-                </Link>
+                </Link> -->
 
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Log in
+                <PrimaryButton class="mx-auto px-12 mt-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    Iniciar sesión
                 </PrimaryButton>
             </div>
         </form>
