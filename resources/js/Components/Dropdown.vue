@@ -54,7 +54,7 @@ const alignmentClasses = computed(() => {
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
-        <div v-show="open" class="fixed inset-0 z-40" @click="open = false" />
+        <div v-show="open" class="fixed inset-0 z-50" @click="open = false" />
 
         <transition
             enter-active-class="transition ease-out duration-200"

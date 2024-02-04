@@ -25,9 +25,9 @@ const switchToTeam = (team) => {
     });
 };
 
-const logout = () => {
-    router.post(route('logout'));
-};
+// const logout = () => {
+//     router.post(route('logout'));
+// };
 </script>
 
 <template>
