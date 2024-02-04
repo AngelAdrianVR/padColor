@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,3 +36,19 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 });
+
+
+//Tickets routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('tickets', TicketController::class)->middleware('auth');
+
+
+//users routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('users', UserController::class)->middleware('auth');
+
+
+//settings routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('settings', SettingController::class)->middleware('auth');
+

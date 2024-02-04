@@ -19,6 +19,7 @@
         "vue": "^3.2.31"
     },
     "dependencies": {
-        "element-plus": "^2.5.5"
+        "element-plus": "^2.5.5",
+        "unplugin-vue-components": "^0.26.0"
     }
 }
