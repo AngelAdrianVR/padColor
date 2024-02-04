@@ -45,7 +45,20 @@ const submit = () => {
         <form class="w-2/3 mx-auto mt-12" @submit.prevent="submit">
             <div>
                 <InputLabel class="ml-5 text-white" for="email" value="Correo electrónico" />
-                <TextInput
+                <el-input v-model="form.email"
+                    id="email"
+                    class="w-2/3" 
+                    type="email"
+                    placeholder="Escribe tu correo electrónico"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    >
+                    <template #prefix>
+                        <i class="fa-solid fa-envelope text-primary text-sm"></i>
+                    </template>
+                </el-input>
+                <!-- <TextInput
                     id="email"
                     v-model="form.email"
                     type="email"
@@ -53,24 +66,36 @@ const submit = () => {
                     required
                     autofocus
                     autocomplete="username"
-                />
+                /> -->
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div class="mt-4">
                 <InputLabel class="ml-5 text-white" for="password" value="Contraseña" />
-                <TextInput
+                <el-input
+                    v-model="form.password"
+                    required
+                    class="w-2/3"
+                    type="password"
+                    placeholder="Please input password"
+                    show-password
+                >
+                    <template #prefix>
+                        <i class="fa-solid fa-lock text-sm"></i>
+                    </template>
+                </el-input>
+                <!-- <TextInput
                     id="password"
                     v-model="form.password"
                     type="password"
                     class="mt-1 block w-full"
                     required
                     autocomplete="current-password"
-                />
+                /> -->
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="block mt-2">
+            <div class="block mt-3 ml-5">
                 <label class="flex items-center">
                     <Checkbox v-model:checked="form.remember" name="remember" />
                     <span class="ms-2 text-sm text-[#999999]">Mantener sesión</span>
@@ -82,7 +107,7 @@ const submit = () => {
                     Forgot your password?
                 </Link> -->
 
-                <PrimaryButton class="mx-auto px-12 mt-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton class="mx-auto px-12 mt-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing || !form.email || ! form.password">
                     Iniciar sesión
                 </PrimaryButton>
             </div>
