@@ -159,5 +159,10 @@ return [
         'capacity_event' => 'capacidad del evento',
         'address' => 'domicilio',
         'participants_quantity' => 'asistentes',
+        'category' => 'categoría',
+        'responsible_id' => 'responsable',
+        'status' => 'estatus',
+        'priority' => 'prioridad',
+        'expired_date' => 'fecha de vencimiento',
     ],
 ];
