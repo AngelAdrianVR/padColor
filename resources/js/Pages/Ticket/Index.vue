@@ -25,33 +25,41 @@
 
         <!-- Tickets -->
         <div class="mt-7">
-            <div class="flex items-center space-x-3 border-b border-grayD9 pb-2">
-                <label class="flex items-center ml-7 lg:ml-24">
-                    <Checkbox v-model:checked="all_tickets" name="remember" />
+            <div class="flex items-center space-x-9 border-b border-grayD9 pb-2">
+                <label class="flex items-center ml-2 lg:ml-24">
+                    <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
                 </label>
+                <DangerButton @click="massiveDelete" v-if="selectAllTickets || selectedTicketsId.length > 0" class="!py-1">Eliminar</DangerButton>
             </div>
-            <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" />
-        </div>
+            <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" 
+                :selectTicket="selectAllTickets"
+                @selected="selectedTicket"
+                @unselected="unselectedTicket" />
+            </div>
+            {{ selectedTicketsId }}
     </AppLayout>
-  
 </template>
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import DangerButton from "@/Components/DangerButton.vue";
 import TicketRow from "@/Components/MyComponents/Ticket/TicketRow.vue";
 import Checkbox from '@/Components/Checkbox.vue';
+import axios from 'axios';
 
 export default {
 data() {
     return {
-        all_tickets: false,
+        selectAllTickets: false,
+        selectedTicketsId: []
     }
 },
 components:{
 AppLayout,
 PrimaryButton,
+DangerButton,
 TicketRow,
 Checkbox
 },
@@ -59,7 +67,30 @@ props:{
 tickets: Object
 },
 methods:{
+    selectedTicket(ticket_id) {
+        this.selectedTicketsId.push(ticket_id);
+    },
+    unselectedTicket(ticket_id) {
+        const index = this.selectedTicketsId.findIndex(id => id === ticket_id);
 
+        //Elimina del arreglo el elemento si encuentra el id
+        if (index != -1) {
+            this.selectedTicketsId.splice(index, 1);
+        }
+    },
+    massiveDelete() {
+        axios.post(route('tickets.massive-delete'), { ids: this.selectedTicketsId } )
+            .then(response => {
+            this.$notify({
+                title: "Correcto",
+                message: "ticket(s) eliminado(s)",
+                type: "success",
+            });
+        })
+        .catch(error => {
+            console.error('Error al eliminar registros:', error);
+        });
+    }
 }
 }
 </script>

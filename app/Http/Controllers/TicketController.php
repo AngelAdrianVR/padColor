@@ -111,6 +111,24 @@ class TicketController extends Controller
     }
 
 
+    public function massiveDelete(Request $request)
+    {
+        $ids = request();
+        // $ids = $request->input('ids');
+        // return $ids;
+
+    //    Ticket::whereIn('id', $ids)->delete();
+        foreach ($ids as $id) {
+            $ticket = Ticket::find($id);
+            if ($ticket) {
+                $ticket->delete();
+            }
+        }
+
+        return to_route('tickets.index');
+    }
+
+
     public function updateStatus(Ticket $ticket)
     {        
         $ticket->update([
