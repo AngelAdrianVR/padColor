@@ -24,15 +24,14 @@
         </div>
 
         <!-- Tickets -->
-        <div class="mt-9">
+        <div class="mt-7">
             <div class="flex items-center space-x-3 border-b border-grayD9 pb-2">
-                <label class="flex items-center ml-7 lg:ml-20">
+                <label class="flex items-center ml-7 lg:ml-24">
                     <Checkbox v-model:checked="all_tickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
                 </label>
             </div>
-
-
+            <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" />
         </div>
     </AppLayout>
   
@@ -41,6 +40,7 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import TicketRow from "@/Components/MyComponents/Ticket/TicketRow.vue";
 import Checkbox from '@/Components/Checkbox.vue';
 
 export default {
@@ -52,6 +52,7 @@ data() {
 components:{
 AppLayout,
 PrimaryButton,
+TicketRow,
 Checkbox
 },
 props:{

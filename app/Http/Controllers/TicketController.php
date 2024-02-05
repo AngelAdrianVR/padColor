@@ -13,8 +13,8 @@ class TicketController extends Controller
     
     public function index()
     {
-        $tickets = TicketResource::collection(Ticket::latest()->with('media')->get());
-
+        $tickets = TicketResource::collection(Ticket::latest()->with('category:id,name', 'responsible:id,name,profile_photo_path','user:id,name,profile_photo_path')->get());
+        // return $tickets;
         return inertia('Ticket/Index', compact('tickets'));
     }
 
@@ -32,7 +32,7 @@ class TicketController extends Controller
     {
         $request->validate([
             'category_id' => 'required',
-            'responsible_id' => 'required',
+            'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'status' => 'required|string',
@@ -59,18 +59,65 @@ class TicketController extends Controller
     
     public function edit(Ticket $ticket)
     {
-        //
+        $categories = Category::all();
+        $users = User::all(['id', 'name', 'profile_photo_path']);
+
+        return inertia('Ticket/Edit', compact('ticket', 'categories', 'users'));
     }
 
     
     public function update(Request $request, Ticket $ticket)
     {
-        //
+        $request->validate([
+            'category_id' => 'required',
+            'responsible_id' => 'nullable',
+            'title' => 'required|string|max:100',
+            'description' => 'required|string',
+            'status' => 'required|string',
+            'priority' => 'required|string',
+            'expired_date' => 'required|date|after:yesterday',
+        ]);
+
+        $ticket->update($request->all());
+
+        return to_route('tickets.index');
+    }
+
+
+    public function updateWithMedia(Request $request, Ticket $ticket)
+    {
+        $request->validate([
+            'category_id' => 'required',
+            'responsible_id' => 'nullable',
+            'title' => 'required|string|max:100',
+            'description' => 'required|string',
+            'status' => 'required|string',
+            'priority' => 'required|string',
+            'expired_date' => 'required|date|after:yesterday',
+        ]);
+
+        $ticket->update($request->all());
+
+        // Guardar media
+        $ticket->addMediaFromRequest('media')->toMediaCollection();
+
+        return to_route('tickets.index');
     }
 
     
     public function destroy(Ticket $ticket)
     {
         //
+    }
+
+
+    public function updateStatus(Ticket $ticket)
+    {        
+        $ticket->update([
+            'status' => request('status'),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
 }

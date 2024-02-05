@@ -1,9 +1,9 @@
 <template>
-    <AppLayout title="Crear ticket">
+    <AppLayout title="Editar ticket">
         <div class="lg:p-9 p-1">
             <Back />
 
-            <form @submit.prevent="store" class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 grid grid-cols-2 gap-x-3">
+            <form @submit.prevent="update" class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 grid grid-cols-2 gap-x-3">
                 <h1 class="font-bold ml-2 col-span-2">Crear ticket</h1>
                 <div class="relative mt-5">
                     <InputLabel value="Categoría*" class="ml-3 mb-1" />
@@ -86,7 +86,7 @@
                     <FileUploader @files-selected="this.form.media = $event" />
                 </div>
                 <div class="col-span-2 text-right">
-                    <PrimaryButton :disabled="form.processing">Guardar</PrimaryButton>
+                    <PrimaryButton :disabled="form.processing">Guardar cambios</PrimaryButton>
                 </div>
             </form>
         </div>
@@ -132,13 +132,13 @@ import { useForm } from "@inertiajs/vue3";
 export default {
 data() {
      const form = useForm({
-      category_id: null,
-      responsible_id: null,
-      title: null,
-      description: null,
-      status: null,
-      priority: null,
-      expired_date: null,
+      category_id: this.ticket.category_id,
+      responsible_id: this.ticket.responsible_id,
+      title: this.ticket.title,
+      description: this.ticket.description,
+      status: this.ticket.status,
+      priority: this.ticket.priority,
+      expired_date: this.ticket.expired_date,
       media: null
     });
 
@@ -205,12 +205,13 @@ Modal,
 Back
 },
 props:{
+ticket: Object,
 categories: Array,
 users: Array,
 },
 methods:{
-    store() {
-        this.form.post(route("tickets.store"), {
+    update() {
+        this.form.put(route("tickets.update", this.ticket.id), {
             onSuccess: () => {
             this.$notify({
                 title: "Correcto",

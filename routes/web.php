@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -41,6 +42,8 @@ Route::middleware([
 //Tickets routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('tickets', TicketController::class)->middleware('auth');
+Route::put('tickets-update-status/{ticket}', [TicketController::class, 'updateStatus'])->name('tickets.update-status')->middleware('auth');
+Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'updateWithMedia'])->name('tickets.update-with-media')->middleware('auth');
 
 
 //users routes---------------------------------------------------------------------------
@@ -51,4 +54,9 @@ Route::resource('users', UserController::class)->middleware('auth');
 //settings routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('settings', SettingController::class)->middleware('auth');
+
+
+//categories routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('categories', CategoryController::class)->middleware('auth');
 
