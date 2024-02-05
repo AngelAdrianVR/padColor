@@ -44,6 +44,7 @@ Route::middleware([
 Route::resource('tickets', TicketController::class)->middleware('auth');
 Route::put('tickets-update-status/{ticket}', [TicketController::class, 'updateStatus'])->name('tickets.update-status')->middleware('auth');
 Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'updateWithMedia'])->name('tickets.update-with-media')->middleware('auth');
+Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
 
 
 //users routes---------------------------------------------------------------------------

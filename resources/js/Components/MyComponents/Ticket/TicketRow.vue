@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-between border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-[28px]">
+  <div class="flex justify-between border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-2">
         <section>
             <div class="flex items-center space-x-4">
                 <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>
@@ -8,7 +8,7 @@
                 </el-tooltip>
             </div>
             <label class="flex items-center py-1">
-                <Checkbox v-model:checked="selected" />
+                <Checkbox @change="ticketSelection" v-model:checked="selected" />
                 <span class="ms-2 text-sm font-bold">{{ ticket.title }}</span>
             </label>
             <div class="flex items-center space-x-2 pl-6">
@@ -20,8 +20,8 @@
             </div>
         </section>
 
-        <section class="flex justify-end items-center space-x-4 w-3/4 lg:pr-7 cursor-pointer">
-            <div class="lg:w-1/4">
+        <section class="flex justify-end items-center space-x-3 w-3/4 lg:pr-7 cursor-pointer">
+            <div class="lg:w-1/4 w-1/2">
                 <el-select @change="updateStatus" v-model="status" clearable
                     placeholder="Seleccione" no-data-text="No hay opciones registradas"
                     no-match-text="No se encontraron coincidencias">
@@ -37,12 +37,11 @@
                 <figure v-if="ticket.responsible" class="flex justify-center items-center space-x-2 text-sm rounded-full">
                     <img class="size-14 rounded-full object-cover" :src="ticket.responsible?.profile_photo_url" :alt="ticket.responsible?.name">
                 </figure>
-                <div @click="$inertia.get(route('tickets.edit', ticket.id))" v-else class="rounded-full border size-14 flex items-center justify-center px-4 cursor-pointer hover:border-primary">
+                <div @click.stop="$inertia.get(route('tickets.edit', ticket.id))" v-else class="rounded-full border size-14 flex items-center justify-center px-4 cursor-pointer hover:border-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
                     </svg>
                 </div>
-
             </el-tooltip>
         </section>
     </div>
@@ -55,7 +54,7 @@ import axios from 'axios';
 export default {
 data() {
     return {
-        selected: false,
+        selected: null,
         showResponsibleModal: false,
         status: this.ticket.status,
         statuses: [
@@ -97,8 +96,10 @@ components:{
 Checkbox
 },
 props:{
-ticket: Object
+ticket: Object,
+selectTicket: Boolean
 },
+emits: ['selected', 'unselected'],
 methods:{
 getIcon(ticket) {
         if (ticket.status === 'Abierto') {
@@ -147,6 +148,19 @@ getIcon(ticket) {
                 type: "error",
             });
         }
+    },
+    ticketSelection() {
+        if (this.selected) {
+            this.$emit('selected', this.ticket.id);
+        } else {
+            this.$emit('unselected', this.ticket.id);
+        }
+    }
+},
+watch:{
+    selectTicket(newVal) {
+        this.selected = newVal;
+        this.ticketSelection();
     }
 }
 }
