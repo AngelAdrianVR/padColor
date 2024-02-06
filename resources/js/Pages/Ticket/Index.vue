@@ -30,14 +30,19 @@
                     <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
                 </label>
-                <DangerButton @click="massiveDelete" v-if="selectAllTickets || selectedTicketsId.length > 0" class="!py-1">Eliminar</DangerButton>
+                <el-popconfirm v-if="selectAllTickets || selectedTicketsId.length > 0" confirm-button-text="Si" cancel-button-text="No" icon-color="#ff4d4d"
+                    title="¿Continuar?" @confirm="massiveDelete">
+                    <template #reference>
+                        <DangerButton class="!py-1">Eliminar</DangerButton>
+                    </template>
+                </el-popconfirm>
+                <p class="text-[#ff4d4d]"></p>
             </div>
             <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" 
                 :selectTicket="selectAllTickets"
                 @selected="selectedTicket"
                 @unselected="unselectedTicket" />
             </div>
-            {{ selectedTicketsId }}
     </AppLayout>
 </template>
 
@@ -78,18 +83,26 @@ methods:{
             this.selectedTicketsId.splice(index, 1);
         }
     },
-    massiveDelete() {
-        axios.post(route('tickets.massive-delete'), { ids: this.selectedTicketsId } )
-            .then(response => {
-            this.$notify({
+    async massiveDelete() {
+        try {
+            const response = await axios.post(route('tickets.massive-delete', { tickets: this.selectedTicketsId }));
+            
+            if (response.status == 200) {
+                this.$notify({
                 title: "Correcto",
                 message: "ticket(s) eliminado(s)",
                 type: "success",
             });
-        })
-        .catch(error => {
-            console.error('Error al eliminar registros:', error);
-        });
+            location.reload();
+            }
+        } catch (error) {
+            console.log(error);
+            this.$notify({
+                title: "Error de servidor",
+                message: "No se pudo completar la acción. Inténta más tarde",
+                type: "error",
+            });
+        }
     }
 }
 }

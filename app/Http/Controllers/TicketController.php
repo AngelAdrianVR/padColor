@@ -51,9 +51,12 @@ class TicketController extends Controller
     }
 
     
-    public function show(Ticket $ticket)
+    public function show($ticket_id)
     {
-        //
+        $ticket = TicketResource::make(Ticket::with('responsible', 'user')->find($ticket_id));
+        
+        // return $ticket;
+        return inertia('Ticket/Show', compact('ticket'));
     }
 
     
@@ -113,19 +116,10 @@ class TicketController extends Controller
 
     public function massiveDelete(Request $request)
     {
-        $ids = request();
-        // $ids = $request->input('ids');
-        // return $ids;
-
-    //    Ticket::whereIn('id', $ids)->delete();
-        foreach ($ids as $id) {
-            $ticket = Ticket::find($id);
-            if ($ticket) {
-                $ticket->delete();
-            }
+        foreach ($request->tickets as $ticket) {
+            $ticket = Ticket::find($ticket);
+            $ticket?->delete();
         }
-
-        return to_route('tickets.index');
     }
 
 

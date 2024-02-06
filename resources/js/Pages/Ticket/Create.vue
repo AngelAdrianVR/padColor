@@ -47,12 +47,12 @@
                         <InputLabel value="Estatus" class="" />
                         <i v-if="form.status" :class="getStatusColor()" class="fa-solid fa-circle text-[8px]"></i>
                     </div>
-                    <el-select class="w-full" v-model="form.status" clearable
+                    <el-select v-model="form.status"
                         placeholder="Seleccione" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">
                         <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
-                            <p style="float: left">
-                                <i :class="item.color" class="fa-solid fa-circle text-[8px]"></i>
+                            <p class="w-4" style="float: left">
+                                <span v-html="item.icon"></span>
                             </p>
                             <span class="ml-2">{{ item.label }}</span>
                         </el-option>
@@ -154,27 +154,33 @@ data() {
             {
                 label: 'Abierto',
                 color: 'text-[#0355B5]',
+                icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
 
             },
             {
                 label:'En espera',
                 color:'text-[#FD8827]',
+                icon:'<i class="fa-regular fa-clock text-[#FD8827]"></i>',
             },
             {
                 label:'En espera de 3ro',
                 color:'text-[#B927FD]',
+                icon:'<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
             },
             {
                 label:'Completado',
                 color:'text-[#3F9C30]',
+                icon:'<i class="fa-solid fa-check text-[#3F9C30]"></i>',
             },
             {
                 label:'Re-abierto',
                 color:'text-[#FD4646]',
+                icon:'<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
             },
             {
                 label:'En proceso',
                 color:'text-[#3D3D3D]',
+                icon:'<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D]"></i>',
             },
         ],
         priorities: [
