@@ -1,0 +1,51 @@
+<template>
+    <div class="flex items-center border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-[28px]">
+        <label class="flex items-center py-1">
+            <Checkbox v-model:checked="selected" />
+        </label>
+        <figure class="flex justify-center items-center text-sm rounded-full pl-4">
+            <img class="size-14 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">
+        </figure>
+        <section class="flex flex-col pl-6">
+            <div class="flex items-center space-x-3 text-gray66 text-xs font-bold">
+                <span>Dpto. {{ user.employee_properties?.department }}</span>
+                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>{{ user.employee_properties?.job_position }}</span>
+            </div>
+            <h2 class="font-bold">{{ user.name }}</h2>
+            <div class="flex items-center space-x-3 text-xs text-gray66">
+                <span>#{{ user.id }}</span>
+                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>{{ user.email }}</span>
+                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>{{ user.phone }}</span>
+                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+        </section>
+    </div>
+</template>
+
+<script>
+import Checkbox from '@/Components/Checkbox.vue';
+import axios from 'axios';
+
+export default {
+    data() {
+        return {
+            selected: false,
+            showResponsibleModal: false,
+        }
+    },
+    components: {
+        Checkbox
+    },
+    props: {
+        user: Object
+    },
+    methods: {
+
+
+    }
+}
+</script>

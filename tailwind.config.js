@@ -22,6 +22,8 @@ export default {
                 primarylight: '#e955a6',
                 secondary: '#25346D',
                 secondarylight: '#25346D',
+                redpad: '#C1202A',
+                greenpad: '#278E16',
                 black1: '#1A1A1A',
                 gray66: '#666666',
                 grayD9: '#D9D9D9',
