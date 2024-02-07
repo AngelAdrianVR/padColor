@@ -1,0 +1,62 @@
+<template>
+    <div @click="openFile" class="flex space-x-4 border border-grayD9 rounded-md p-2 cursor-pointer hover:border-primary">
+        <img class="h-8" :src="getFileTypeIcon()" alt="">
+        <div>
+            <p :title="file.file_name" class="font-bold text-sm truncate w-40 lg:w-56">{{ file.file_name }}</p>
+            <p class="text-sm text-gray99">{{ (file.size/1000) }}KB</p>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+data(){
+    return{
+
+    }
+},
+props:{
+file: Object
+},
+methods:{
+    getFileTypeIcon() {
+        // Asocia extensiones de archivo a iconos
+        const fileExtension = this.file.file_name?.split('.').pop().toLowerCase();
+
+        switch (fileExtension) {
+            case 'pdf':
+                return '/images/pdf.png';
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+                return '/images/image.png';
+            case 'mp4':
+            case 'avi':
+            case 'mkv':
+            case 'mov':
+                return 'fa-regular fa-file-video text-sky-400';
+            default:
+                return '/images/doc.png';
+        }
+    },
+    openFile() {
+      // Aquí asumimos que file.url es la URL del archivo que quieres abrir
+      const fileUrl = this.file.original_url;
+
+      // Verificamos si la URL está presente antes de intentar abrir una nueva pestaña
+      if (fileUrl) {
+        // Abrir el archivo en una nueva pestaña
+        window.open(fileUrl, '_blank');
+      } else {
+        console.error('La URL del archivo no está definida.');
+        this.$notify({
+            title: "Error de servidor",
+            message: "No se pudo abrir el archivo. Probablemente no exista o está dañado",
+            type: "error",
+        });
+      }
+    },
+}
+}
+</script>

@@ -20,9 +20,9 @@
             </div>
         </section>
 
-        <section class="flex justify-end items-center space-x-3 w-3/4 lg:pr-7 cursor-pointer">
+        <section @click="$inertia.get(route('tickets.show', ticket.id))" class="flex justify-end items-center space-x-3 w-3/4 lg:pr-7 cursor-pointer">
             <div class="lg:w-1/4 w-1/2">
-                <el-select @change="updateStatus" v-model="status" clearable
+                <el-select @change="updateStatus" v-model="status"
                     placeholder="Seleccione" no-data-text="No hay opciones registradas"
                     no-match-text="No se encontraron coincidencias">
                     <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
@@ -101,7 +101,7 @@ selectTicket: Boolean
 },
 emits: ['selected', 'unselected'],
 methods:{
-getIcon(ticket) {
+    getIcon(ticket) {
         if (ticket.status === 'Abierto') {
             return '<i class="fa-solid fa-arrow-up text-[#0355B5] mr-2"></i>';
         } else if (ticket.status === 'En espera') {
