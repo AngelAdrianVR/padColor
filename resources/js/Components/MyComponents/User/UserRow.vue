@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-[28px]">
+    <div @click="$inertia.get(route('users.show', user.id))" class="flex items-center border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-[28px] cursor-pointer">
         <label class="flex items-center py-1">
             <Checkbox v-model:checked="selected" />
         </label>

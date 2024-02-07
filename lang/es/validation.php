@@ -164,5 +164,7 @@ return [
         'status' => 'estatus',
         'priority' => 'prioridad',
         'expired_date' => 'fecha de vencimiento',
+        'employee_properties.department' => 'departamento',
+        'employee_properties.job_position' => 'puesto',
     ],
 ];

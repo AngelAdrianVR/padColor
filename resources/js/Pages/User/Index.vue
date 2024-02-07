@@ -2,7 +2,7 @@
     <AppLayout title="Usuarios">
         <div class="flex justify-between items-center mt-4 mx-10">
             <h1 class="text-lg font-bold">Todos los usuarios</h1>
-            <PrimaryButton @click="$inertia.get(route('users.create'))">Crear ticket</PrimaryButton>
+            <PrimaryButton @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
         </div>
 
         <!-- Buscador -->
@@ -43,7 +43,7 @@ export default {
         AppLayout,
         PrimaryButton,
         UserRow,
-        Checkbox
+        Checkbox,
     },
     props: {
         users: Object

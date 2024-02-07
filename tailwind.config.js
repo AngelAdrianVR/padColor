@@ -19,7 +19,7 @@ export default {
             },
             colors: {
                 primary: '#D72C8A',
-                primarylight: '#e955a6',
+                primarylight: '#FAE6F1',
                 secondary: '#25346D',
                 secondarylight: '#25346D',
                 redpad: '#C1202A',
