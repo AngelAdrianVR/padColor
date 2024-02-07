@@ -52,34 +52,42 @@
             <!-- Pestañas -->
             <div class="lg:w-3/4 w-full flex items-center space-x-7 text-sm border-b border-gray4 lg:mx-16 mx-2 mt-16 mb-5">
               <div @click="currentTab = 1" :class="currentTab == 1 ? 'text-primary border-b-2 border-primary pb-1 px-3 font-bold' : 'px-3 pb-1 text-gray66 font-semibold' " class="flex items-center space-x-2 cursor-pointer text-base">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"  class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                </svg>
-                <p>Resoluciones(2)</p> 
+                <i class="fa-solid fa-check-double"></i>
+                <p>Resoluciones (2)</p> 
               </div>
               <div @click="currentTab = 2" :class="currentTab == 2 ? 'text-primary border-b-2 border-primary pb-1 px-3 font-bold' : 'px-3 pb-1 text-gray66 font-semibold'" class="flex items-center space-x-2 cursor-pointer text-base">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
+                <i class="fa-regular fa-comment-dots"></i>
                 <p>Conversaciones</p> 
               </div>
               <div @click="currentTab = 3" :class="currentTab == 3 ? 'text-primary border-b-2 border-primary pb-1 px-3 font-bold' : 'px-3 pb-1 text-gray66 font-semibold'" class="flex items-center space-x-2 cursor-pointer text-base">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
+                <i class="fa-solid fa-clock-rotate-left"></i>
                 <p>Registro de actividad</p> 
               </div>
             </div>
 
-            <!-- Tab 1 all events ------------------------ -->
-            <div class="lg:grid grid-cols-2 gap-5 lg:mx-7" v-if="currentTab == 1">
-              <!-- <div class="space-y-5" v-if="community_events.data.length > 0">
-                <CommunityEventCard 
-                @delete-community-event="deleteCommunityEvent" 
-                v-for="communityEvent in community_events.data" :key="communityEvent" :communityEvent="communityEvent"
-                :registered_events="my_community_events" />
-              </div>
-              <p class="text-xs text-gray-400 text-center" v-else>No hay eventos próximos</p> -->
+            <!-- Tab 1 resoluciones ------------------------ -->
+            <div class="lg:mx-7" v-if="currentTab == 1">
+                <div class="flex space-x-3 mt-5">
+                    <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
+                        <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                        :alt="$page.props.auth.user.name" />
+                    </div>
+                    <RichText @submitComment="storeComment(taskComponentLocal)" @content="updateSolutionComment($event)" ref="commentEditor"
+                        class="flex-1" hasMedia :userList="users" :disabled="sendingComments || !solutionComment" />
+                </div>
+            </div>
+            <!-- ----------------------------------------- -->
+
+            <!-- Tab 2 conversaciones ------------------------ -->
+            <div class="lg:mx-7" v-if="currentTab == 2">
+                <div class="flex space-x-3 mt-5">
+                    <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
+                        <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                        :alt="$page.props.auth.user.name" />
+                    </div>
+                    <RichText @submitComment="storeComment(taskComponentLocal)" @content="updateConversationComment($event)" ref="commentEditor"
+                        class="flex-1" withFooter :userList="users" :disabled="sendingComments || !conversationComment" />
+                </div>
             </div>
             <!-- ----------------------------------------- -->
 
@@ -91,6 +99,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ThirthButton from "@/Components/MyComponents/ThirthButton.vue";
 import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
+import RichText from "@/Components/MyComponents/RichText.vue";
 import Back from "@/Components/MyComponents/Back.vue";
 import axios from 'axios';
 
@@ -98,6 +107,9 @@ export default {
 data() {
     return {
         currentTab: 1,
+        sendingComments: false,
+        solutionComment: null,
+        conversationComment: null,
         status: this.ticket.data.status,
         statuses: [
             {
@@ -138,10 +150,12 @@ components:{
 AppLayout,
 ThirthButton,
 FileView,
+RichText,
 Back
 },
 props:{
-ticket: Object
+ticket: Object,
+users: Array,
 },
 methods:{
     getPriorityColor() {
@@ -191,6 +205,33 @@ methods:{
                 type: "error",
             });
         }
+    },
+    updateSolutionComment(content) {
+      this.solutionComment = content;
+    },
+    updateConversationComment(content) {
+      this.conversationComment = content;
+    },
+    async storeComment() {
+      const editor = this.$refs.commentEditor;
+      if (this.form.comment) {
+        this.sendingComments = true;
+        try {
+          const response = await axios.post(route("oportunity-tasks.comment", this.taskComponentLocal.id), {
+            comment: this.form.comment,
+            mentions: editor.mentions,
+          });
+          if (response.status === 200) {
+            this.taskComponentLocal?.comments.push(response.data.item);
+            this.form.comment = null;
+            editor.clearContent();
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          this.sendingComments = false;
+        }
+      }
     },
 }
 }
