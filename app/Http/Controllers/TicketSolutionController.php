@@ -2,64 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TicketSolutionResource;
 use App\Models\TicketSolution;
 use Illuminate\Http\Request;
 
 class TicketSolutionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+   
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    
     public function store(Request $request)
     {
-        //
+        $ticket_solution = TicketSolution::create([
+            'description' => $request->solutionDescription,
+            'ticket_id' => $request->ticketId,
+            'user_id' => auth()->id(),
+        ]);
+
+        // guardar la media si es que existe
+        // if ($request->solution_media != null) {
+            $ticket_solution->addMediaFromRequest()->toMediaCollection();
+        // }
+        
+        return response()->json(['item' => $ticket_solution]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(TicketSolution $ticketSolution)
+    
+    public function show(TicketSolution $ticket_solution)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    
     public function edit(TicketSolution $ticketSolution)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, TicketSolution $ticketSolution)
+    
+    public function update(Request $request, TicketSolution $ticket_solution)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(TicketSolution $ticketSolution)
+    
+    public function destroy(TicketSolution $ticket_solution)
     {
-        //
+        $ticket_solution->delete();   
+    }
+
+
+    public function fetchSolutions($ticket)
+    {
+        $ticket_solutions = TicketSolutionResource::collection(TicketSolution::latest()->with('user:id,name,profile_photo_path')->where('ticket_id', $ticket)->get());
+
+        return response()->json(['items' => $ticket_solutions]);
     }
 }

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TicketResource;
+use App\Http\Resources\TicketSolutionResource;
 use App\Models\Category;
 use App\Models\Ticket;
+use App\Models\TicketSolution;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -14,7 +16,8 @@ class TicketController extends Controller
     public function index()
     {
         $tickets = TicketResource::collection(Ticket::latest()->with('category:id,name', 'responsible:id,name,profile_photo_path','user:id,name,profile_photo_path')->get());
-        // return $tickets;
+
+        // return $ticket_solutions;
         return inertia('Ticket/Index', compact('tickets'));
     }
 
@@ -53,7 +56,7 @@ class TicketController extends Controller
     
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::with('responsible', 'user')->find($ticket_id));
+        $ticket = TicketResource::make(Ticket::with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
         $users = User::all(['id', 'name', 'profile_photo_path']);
         
         // return $ticket;
