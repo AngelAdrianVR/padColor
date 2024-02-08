@@ -163,7 +163,6 @@
             </div>
             <!-- ----------------------------------------- -->
 
-        </div>
     </AppLayout>
 </template>
 
@@ -383,34 +382,15 @@ methods:{
             this.ticketHistory = response.data.items;            
             this.loading = false;
             this.fetchSolutions(); //recupera las soluciones de nuevo
-        }
-    },
-    async fetchSolutions() {
-        this.loading = true;
-        try {
-          const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticket.data.id));
-          if (response.status === 200) {
-            this.ticketSolutions = response.data.items;            
-          }
+            }
         } catch (error) {
           console.log(error);
+
         } finally {
           this.loading = false;
         }
     },
-    async fetchConversation() {
-        this.loading = true;
-        try {
-          const response = await axios.get(route("tickets.fetch-conversation", this.ticket.data.id));
-          if (response.status === 200) {
-            this.conversation = response.data.items;            
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          this.loading = false;
-        }
-    },
+   
     solutionDeleted(solutionId) {
         const indexToDelete = this.ticketSolutions.findIndex(item => item.id === solutionId);
 
