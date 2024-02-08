@@ -26,7 +26,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'employee_properties',
+        'is_active',
+        'phone',
         'password',
+        'profile_photo_path',
     ];
 
     /**
@@ -48,6 +52,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'employee_properties' => 'array',
     ];
 
     /**

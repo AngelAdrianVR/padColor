@@ -49,6 +49,8 @@ Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'upd
 //users routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('users', UserController::class)->middleware('auth');
+Route::post('users/update-with-media/{user}', [UserController::class, 'updateWithMedia'])->name('users.update-with-media')->middleware('auth');
+Route::post('users/massive-delete', [UserController::class, 'massiveDelete'])->name('users.massive-delete');
 
 
 //settings routes---------------------------------------------------------------------------
