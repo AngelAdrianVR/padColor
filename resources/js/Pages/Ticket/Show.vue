@@ -102,8 +102,8 @@
                 </div>
 
                 <!-- estado de carga -->
-                <div v-if="loading" class="flex justify-center items-center py-10">
-                    <i class="fa-solid fa-spinner fa-spin text-4xl text-primary"></i>
+                <div v-if="loading" class="mt-24">
+                    <Loading />
                 </div>
             </div>
             <!-- ----------------------------------------- -->
@@ -126,8 +126,8 @@
                 </div>
 
                 <!-- estado de carga -->
-                <div v-if="loading" class="flex justify-center items-center py-10">
-                    <i class="fa-solid fa-spinner fa-spin text-4xl text-primary"></i>
+                <div v-if="loading" class="mt-24">
+                    <Loading />
                 </div>
             </div>
             <!-- ----------------------------------------- -->
@@ -150,8 +150,8 @@
                 </div>
 
                 <!-- estado de carga -->
-                <div v-if="loading" class="flex justify-center items-center py-10">
-                    <i class="fa-solid fa-spinner fa-spin text-4xl text-primary"></i>
+               <div v-if="loading" class="mt-24">
+                    <Loading />
                 </div>
             </div>
             <!-- ----------------------------------------- -->
@@ -167,6 +167,7 @@ import SolutionGlove from "@/Components/MyComponents/TicketSolution/SolutionGlov
 import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
 import RichText from "@/Components/MyComponents/RichText.vue";
 import Comment from "@/Components/MyComponents/Ticket/Comment.vue";
+import Loading from "@/Components/MyComponents/Loading.vue";
 import Back from "@/Components/MyComponents/Back.vue";
 import axios from 'axios';
 
@@ -224,6 +225,7 @@ SolutionGlove,
 FileView,
 RichText,
 Comment,
+Loading,
 Back
 },
 props:{

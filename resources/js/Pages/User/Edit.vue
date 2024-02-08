@@ -81,8 +81,8 @@ export default {
             is_active: this.user.is_active,
             image: null,
             employee_properties: {
-                department: this.user.employee_properties.department,
-                job_position: this.user.employee_properties.job_position,
+                department: this.user.employee_properties?.department,
+                job_position: this.user.employee_properties?.job_position,
             },
         });
 

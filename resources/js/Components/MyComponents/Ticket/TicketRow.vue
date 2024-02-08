@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-between border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-2">
+  <div class="md:flex justify-between border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-2">
         <section>
             <div class="flex items-center space-x-4">
                 <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>

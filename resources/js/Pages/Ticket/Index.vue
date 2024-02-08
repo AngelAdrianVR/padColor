@@ -6,7 +6,7 @@
         </div>
 
         <!-- Buscador y filtros -->
-        <div class="flex justify-between items-center mt-4 mx-2 lg:mx-10">
+        <div class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
 
             <div class="lg:w-1/4 relative">
                 <input class="input w-full pl-9" placeholder="Buscar tickets" type="text">
