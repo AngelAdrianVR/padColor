@@ -51,9 +51,13 @@ class TicketController extends Controller
     }
 
     
-    public function show(Ticket $ticket)
+    public function show($ticket_id)
     {
-        //
+        $ticket = TicketResource::make(Ticket::with('responsible', 'user')->find($ticket_id));
+        $users = User::all(['id', 'name', 'profile_photo_path']);
+        
+        // return $ticket;
+        return inertia('Ticket/Show', compact('ticket', 'users'));
     }
 
     
@@ -108,6 +112,15 @@ class TicketController extends Controller
     public function destroy(Ticket $ticket)
     {
         //
+    }
+
+
+    public function massiveDelete(Request $request)
+    {
+        foreach ($request->tickets as $ticket) {
+            $ticket = Ticket::find($ticket);
+            $ticket?->delete();
+        }
     }
 
 
