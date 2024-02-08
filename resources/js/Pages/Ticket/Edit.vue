@@ -8,7 +8,7 @@
                 <div class="relative mt-5">
                     <InputLabel value="Categoría*" class="ml-3 mb-1" />
                     <p @click="showCategoryModal = true"
-                        class="text-primary text-xs cursor-pointer absolute right-2 top-[2px]">Agregar categoría</p>
+                        class="text-primary text-xs cursor-pointer absolute md:right-2 right-0 top-[2px]">Agregar categoría</p>
                     <el-select class="w-full" v-model="form.category_id" clearable
                         placeholder="Seleccione" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">

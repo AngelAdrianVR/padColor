@@ -38,7 +38,7 @@
                             </svg>
                             <span>Departamento:</span>
                         </p>
-                        <p>{{ user.employee_properties.department }}</p>
+                        <p>{{ user.employee_properties?.department }}</p>
                         <p class="flex items-center space-x-2 text-gray99">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-4">
@@ -47,7 +47,7 @@
                             </svg>
                             <span>Puesto:</span>
                         </p>
-                        <p>{{ user.employee_properties.job_position }}</p>
+                        <p>{{ user.employee_properties?.job_position }}</p>
                         <p class="flex items-center space-x-2 text-gray99">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-4">
