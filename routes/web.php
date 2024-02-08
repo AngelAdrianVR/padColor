@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketHistoryController;
 use App\Http\Controllers\TicketSolutionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -49,6 +50,8 @@ Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'upd
 Route::post('tickets-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
 Route::post('tickets/{ticket}/comment', [TicketController::class, 'comment'])->name('tickets.comment')->middleware('auth');
 Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fetchConversation'])->name('tickets.fetch-conversation')->middleware('auth');
+Route::get('tickets-fetch-history/{ticket}', [TicketController::class, 'fetchHistory'])->name('tickets.fetch-history')->middleware('auth');
+
 
 
 //Tickets-solutions routes---------------------------------------------------------------------------
@@ -56,6 +59,12 @@ Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fet
 Route::resource('ticket-solutions', TicketSolutionController::class)->middleware('auth');
 Route::post('ticket-solutions/update-with-media/{ticket_solution}', [TicketSolutionController::class, 'updateWithMedia'])->name('ticket-solutions.update-with-media')->middleware('auth');
 Route::get('ticket-solutions-fetch-all-solutions/{ticket}', [TicketSolutionController::class, 'fetchSolutions'])->name('ticket-solutions.fetch-solutions')->middleware('auth');
+
+
+//Tickets-histories routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('ticket-histories', TicketHistoryController::class)->middleware('auth');
+
 
 
 //users routes---------------------------------------------------------------------------
