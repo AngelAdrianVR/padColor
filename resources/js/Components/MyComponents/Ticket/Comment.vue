@@ -84,26 +84,6 @@ methods:{
         });
     }
 },
-//     async deleteItem() {
-//     try {
-//         const response = await axios.delete(route('tickets.delete-comment', this.comment.id));
-//         if (response.status === 200) {
-//             this.$emit('comment-deleted', this.comment.id);
-//             this.$notify({
-//                 title: "Correcto",
-//                 message: "Se ha eliminado tu comentario",
-//                 type: "success",
-//             });
-//         }
-//     } catch (error) {
-//         console.log(error);
-//         this.$notify({
-//             title: "Error de servidor",
-//             message: "No se pudo eliminar tu comentario. Inténtalo de nuevo más tarde",
-//             type: "error",
-//         });
-//     }
-// },
 }
 }
 </script>

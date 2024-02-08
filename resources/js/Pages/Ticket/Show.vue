@@ -116,12 +116,38 @@
                             <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                             :alt="$page.props.auth.user.name" />
                         </div>
-                        <RichText @submitComment="storeComment(taskComponentLocal)" @content="updateConversationComment($event)" ref="commentEditor"
+                        <RichText @submitComment="storeComment()" @content="updateConversationComment($event)" ref="commentEditor"
                             class="flex-1" withFooter :userList="users" :disabled="loading || !conversationComment" />
                     </div>
-                    <div class="mt-10">
+                    <div v-if="conversation?.length > 0" class="mt-10">
                         <Comment class="mt-5 mx-9" v-for="comment in conversation" :key="comment" :comment="comment" @comment-deleted="commentDeleted" />                    
                     </div>
+                    <p v-else class="text-center text-gray-500 text-sm">No hay conversación en este ticket</p>
+                </div>
+
+                <!-- estado de carga -->
+                <div v-if="loading" class="flex justify-center items-center py-10">
+                    <i class="fa-solid fa-spinner fa-spin text-4xl text-primary"></i>
+                </div>
+            </div>
+            <!-- ----------------------------------------- -->
+
+
+            <!-- Tab 3 historial de actividad ------------------------ -->
+            <div class="lg:mx-7" v-if="currentTab == 3">
+                <div v-if="!loading">
+                    <div v-if="ticketHistory?.length > 0">
+                        <el-timeline>
+                            <el-timeline-item
+                            v-for="(activity, index) in ticketHistory"
+                            :key="index"
+                            :timestamp="activity.created_at"
+                            >
+                            <p class="font-bold text-secondary text-sm">{{activity.user.name + ' '}}<span class="font-normal">{{ activity.description }}</span></p>
+                            </el-timeline-item>
+                        </el-timeline>
+                    </div>
+                    <p v-else class="text-gray-500 text-center text-sm">No hay actividad registrada a este ticket</p>
                 </div>
 
                 <!-- estado de carga -->
@@ -154,7 +180,8 @@ data() {
         solutionMedia: null, //Archivos adjuntos para la solución
         conversationComment: null,
         conversation: null, //todos los comentarios del ticket
-        ticketSolutions: null,
+        ticketSolutions: null, //Todas las soluciones
+        ticketHistory: null, //Toda la actividad del ticket
         status: this.ticket.data.status,
         statuses: [
             {
@@ -243,6 +270,8 @@ methods:{
                     message: "Se ha actualizado el estatus",
                     type: "success",
                 });
+
+                this.fetchHistory();
             }
         } catch (error) {
             console.log(error);
@@ -335,6 +364,19 @@ methods:{
           this.loading = false;
         }
     },
+    async fetchHistory() {
+        this.loading = true;
+        try {
+          const response = await axios.get(route("tickets.fetch-history", this.ticket.data.id));
+          if (response.status === 200) {
+            this.ticketHistory = response.data.items;            
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          this.loading = false;
+        }
+    },
     solutionDeleted(solutionId) {
         const indexToDelete = this.ticketSolutions.findIndex(item => item.id === solutionId);
 
@@ -352,7 +394,8 @@ methods:{
 },
 mounted() {
     this.fetchSolutions(); //carga todas las soluciones
-    this.fetchConversation(); //carga todas las soluciones
+    this.fetchConversation(); //carga todos los comentarios
+    this.fetchHistory(); //carga todo el historial de actividad
 }
 }
 </script>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TicketSolutionResource;
+use App\Models\TicketHistory;
 use App\Models\TicketSolution;
 use Illuminate\Http\Request;
 
@@ -29,10 +30,17 @@ class TicketSolutionController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        // guardar la media si es que existe
-        // if ($request->solution_media != null) {
-            $ticket_solution->addMediaFromRequest()->toMediaCollection();
-        // }
+        // Guardar la media si existe
+        if ($request->hasFile('solution_media')) {
+            $ticket_solution->addMediaFromRequest('solution_media')->toMediaCollection();
+        }
+        
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'publicó una solución',
+            'user_id' =>  auth()->id(),  
+            'ticket_id' =>  $request->ticketId,  
+        ]);
         
         return response()->json(['item' => $ticket_solution]);
     }

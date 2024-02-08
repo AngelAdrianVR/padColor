@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\TicketHistoryResource;
 use App\Http\Resources\TicketResource;
-use App\Http\Resources\TicketSolutionResource;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Ticket;
-use App\Models\TicketSolution;
+use App\Models\TicketHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -52,6 +52,13 @@ class TicketController extends Controller
             $ticket->addMediaFromRequest('media')->toMediaCollection();
         }
 
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'creó el ticket #' . $ticket->id . ' "' . $ticket->title . '".',
+            'user_id' =>  auth()->id(),  
+            'ticket_id' =>  $ticket->id,  
+        ]);
+
         return to_route('tickets.index');
     }
 
@@ -61,7 +68,7 @@ class TicketController extends Controller
         $ticket = TicketResource::make(Ticket::with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
         $users = User::all(['id', 'name', 'profile_photo_path']);
         
-        // return $conversation;
+        // return $ticket_history;
         return inertia('Ticket/Show', compact('ticket', 'users'));
     }
 
@@ -87,7 +94,22 @@ class TicketController extends Controller
             'expired_date' => 'required|date|after:yesterday',
         ]);
 
+        //guarda al responsable antes de edición
+        $current_responsible_id = $ticket->responsible_id;
+        
         $ticket->update($request->all());
+        
+        //Crear registro de actividad si se cambio al responsable
+        if ($current_responsible_id == $request->responsible_id) {
+            
+        } else {
+            $new_responsible = User::find($request->responsible_id);
+            TicketHistory::create([
+                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'user_id' =>  auth()->id(),  
+                'ticket_id' =>  $ticket->id,  
+            ]);
+        }
 
         return to_route('tickets.index');
     }
@@ -105,10 +127,24 @@ class TicketController extends Controller
             'expired_date' => 'required|date|after:yesterday',
         ]);
 
+        //guarda al responsable antes de edición
+        $current_responsible_id = $ticket->responsible_id;
+
         $ticket->update($request->all());
 
         // Guardar media
         $ticket->addMediaFromRequest('media')->toMediaCollection();
+
+        //Crear registro de actividad si se cambio al responsable
+        if ($current_responsible_id != $request->responsible_id) {
+            $new_responsible = User::find($request->responsible_id);
+            
+            TicketHistory::create([
+                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'user_id' =>  auth()->id(),  
+                'ticket_id' =>  $ticket->id,  
+            ]);
+        }
 
         return to_route('tickets.index');
     }
@@ -136,6 +172,13 @@ class TicketController extends Controller
             'updated_at' => now(),
         ]);
 
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'cambió el estado del ticket a "' . $ticket->status . '".',
+            'user_id' =>  auth()->id(),  
+            'ticket_id' =>  $ticket->id,  
+        ]);
+
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
 
@@ -153,6 +196,13 @@ class TicketController extends Controller
         //     $user = User::find($mention['id']);
         //     $user->notify(new MentionNotification($oportunity_task, "", 'opportunities'));
         // }
+
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'realizó un comentario "' . $comment->body . '".',
+            'user_id' =>  auth()->id(),  
+            'ticket_id' =>  $ticket->id,  
+        ]);
         
         return response()->json(['item' => $comment->fresh('user')]);
     }
@@ -161,7 +211,13 @@ class TicketController extends Controller
     {
         $conversation = CommentResource::collection(Comment::where('commentable_type', 'App\Models\Ticket')->where('commentable_id', $ticket)->with('user:id,name,profile_photo_path')->get());
 
-
         return response()->json(['items' => $conversation]);
+    }
+
+    public function fetchHistory($ticket)
+    {
+        $ticket_history = TicketHistoryResource::collection(TicketHistory::with('user:id,name,profile_photo_path', 'ticket')->where('ticket_id', $ticket)->get());
+
+        return response()->json(['items' => $ticket_history]);
     }
 }
