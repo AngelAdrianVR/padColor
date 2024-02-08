@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\TicketHistoryResource;
 use App\Http\Resources\TicketResource;
-use App\Http\Resources\TicketSolutionResource;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
-use App\Models\TicketSolution;
 use App\Models\User;
 use Illuminate\Http\Request;
 
