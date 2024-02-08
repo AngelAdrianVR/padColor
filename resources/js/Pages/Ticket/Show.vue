@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="ticket.data.title">
-        <div class="lg:p-9 p-1">
+        <div class="lg:p-9 p-2">
             <div class="flex items-center justify-between">
                 <Back />
                 <p class="text-gray66">Información sobre el ticket</p>
@@ -13,25 +13,25 @@
                     <p class="text-gray66">Descripción</p>
                     <span class="text-black">{{ ticket.data.description }}</span>
                 </div>
-                <div class="lg:flex items-center space-x-3">
+                <div class="md:flex items-center space-x-3">
                     <p class="text-gray66 text-sm">Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <p class="text-gray66 text-sm">Creado por: <span class="text-black ml-1">{{ ticket.data.responsible?.name }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <p class="text-gray66 text-sm">Creado el: <span class="text-black ml-1">{{ ticket.data.created_at }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <p class="text-gray66 text-sm">Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <div class="flex items-center space-x-3">
                         <p class="text-gray66 text-sm">Prioridad: <span class="text-black ml-1">{{ ticket.data.priority }}</span></p>
                         <i :class="getPriorityColor()" class="fa-solid fa-circle text-[7px]"></i>
                     </div>
                 </div>
-                <div class="flex justify-between my-2">
+                <div class="md:flex items-center my-2 space-x-4">
                     <!-- Estatus -->
-                    <div class="flex items-center space-x-3 w-full">
+                    <div class="flex items-center space-x-3 lg:w-1/4">
                         <p class="text-gray66 text-sm">Estatus:</p>
-                        <div class="lg:w-1/4">
+                        <div class="lg:w-1/2 w-full">
                             <el-select @change="updateStatus" v-model="status"
                                 placeholder="Seleccione" no-data-text="No hay opciones registradas"
                                 no-match-text="No se encontraron coincidencias">
@@ -43,17 +43,17 @@
                                 </el-option>
                             </el-select>
                         </div>
-                        <i class="fa-solid fa-circle text-[3px]"></i>
-                        <p class="text-gray66 text-sm"><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el' }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
-                        <i class="fa-solid fa-circle text-[3px]"></i>
-                        <div class="flex items-center space-x-3">
-                            <p class="text-gray66 text-sm">Responsable: </p>
-                            <div class="flex text-sm rounded-full w-10">
-                                <img class="size-9 rounded-full object-cover" :src="ticket.data.responsible.profile_photo_url"
-                                :alt="ticket.data.responsible.name" />
-                            </div>  
-                            <p class="text-sm">{{ticket.data.responsible.name}}</p>
-                        </div>
+                    </div>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
+                    <p class="text-gray66 text-sm my-2 md:my-0"><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el' }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
+                    <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
+                    <div class="flex items-center space-x-3">
+                        <p class="text-gray66 text-sm">Responsable: </p>
+                        <div class="flex text-sm rounded-full w-10">
+                            <img class="size-9 rounded-full object-cover" :src="ticket.data.responsible.profile_photo_url"
+                            :alt="ticket.data.responsible.name" />
+                        </div>  
+                        <p class="text-sm">{{ticket.data.responsible.name}}</p>
                     </div>
                 </div>
 
@@ -65,7 +65,7 @@
             </div>
 
             <!-- Pestañas -->
-            <div class="lg:w-3/4 w-full flex items-center space-x-7 text-sm border-b border-gray4 lg:mx-16 mx-2 mt-16 mb-5">
+            <div class="lg:w-3/4 w-full flex items-center space-x-7 text-sm border-b border-gray4 lg:mx-16 mx-2 mt-16 mb-5 contenedor">
               <div @click="currentTab = 1" :class="currentTab == 1 ? 'text-primary border-b-2 border-primary pb-1 px-3 font-bold' : 'px-3 pb-1 text-gray66 font-semibold' " class="flex items-center space-x-2 cursor-pointer text-base">
                 <i class="fa-solid fa-check-double"></i>
                 <p>Resoluciones ({{ ticketSolutions?.length ?? '0' }})</p> 
@@ -120,7 +120,7 @@
                             class="flex-1" withFooter :userList="users" :disabled="loading || !conversationComment" />
                     </div>
                     <div v-if="conversation?.length > 0" class="mt-10">
-                        <Comment class="mt-5 mx-9" v-for="comment in conversation" :key="comment" :comment="comment" @comment-deleted="commentDeleted" />                    
+                        <Comment class="mt-5 lg:mx-9" v-for="comment in conversation" :key="comment" :comment="comment" @comment-deleted="commentDeleted" />                    
                     </div>
                     <p v-else class="text-center text-gray-500 text-sm">No hay conversación en este ticket</p>
                 </div>
@@ -147,13 +147,6 @@
                             </el-timeline-item>
                         </el-timeline>
                     </div>
-                    <p v-else class="text-gray-500 text-center text-sm">No hay actividad registrada a este ticket</p>
-                        <RichText @submitComment="storeComment(taskComponentLocal)" @content="updateConversationComment($event)" ref="commentEditor"
-                            class="flex-1" withFooter :userList="users" :disabled="loading || !conversationComment" />
-                    </div>
-                    <div class="mt-10">
-                        <Comment class="mt-5 mx-9" v-for="comment in conversation" :key="comment" :comment="comment" @comment-deleted="commentDeleted" />                    
-                    </div>
                 </div>
 
                 <!-- estado de carga -->
@@ -163,6 +156,7 @@
             </div>
             <!-- ----------------------------------------- -->
 
+        </div>
     </AppLayout>
 </template>
 
@@ -413,3 +407,18 @@ mounted() {
 }
 }
 </script>
+
+<style>
+.contenedor {
+  display: flex;
+  overflow-x: scroll;
+  /* Permite el desplazamiento horizontal */
+  white-space: nowrap;
+  /* Evita el salto de línea de las secciones */
+}
+
+.seccion {
+  flex: 0 0 22%;
+  /* Establece el ancho de cada sección al 25% */
+}
+</style>

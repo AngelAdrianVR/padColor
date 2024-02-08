@@ -33,7 +33,7 @@ const switchToTeam = (team) => {
 
         <Banner />
 
-        <div class="overflow-hidden h-screen md:flex bg-gray-100">
+        <div class="overflow-hidden h-screen md:flex bg-white">
             <!-- sidenav -->
             <aside class="col-span-2 w-auto">
                 <SideNav />
@@ -121,7 +121,7 @@ const switchToTeam = (team) => {
                 </nav>
 
             
-                <div class="overflow-y-auto h-[calc(100vh-4.1rem)] bg-white">
+                <div class="overflow-y-auto h-[calc(100vh-9.1rem)] bg-white">
                     <slot />
                 </div>
 
