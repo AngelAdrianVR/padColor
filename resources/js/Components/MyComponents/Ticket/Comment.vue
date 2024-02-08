@@ -1,14 +1,14 @@
 <template>
     <div>
         <div class="flex items-center justify-between mx-3">
-            <div class="flex text-sm rounded-full items-center space-x-3">
+            <div class="flex text-xs md:text-sm rounded-full items-center space-x-3">
                 <img class="size-7 rounded-full object-cover" :src="comment.user.profile_photo_url"
                 :alt="comment.user.name" />
                 <p class="text-secondary font-bold text-sm">{{ comment.user.name }}</p>
-                <p class="text-gray99 text-sm pl-5">{{ comment.created_at }}</p>
+                <p v-if="!in_edition" class="text-gray99 pl-5">{{ comment.created_at }}</p>
             </div>
             <div v-if="$page.props.auth.user.id === comment.user.id" class="flex items-center space-x-2">
-                <PrimaryButton @click="update" class="!py-1" v-if="in_edition">Guardar cambios</PrimaryButton>
+                <PrimaryButton @click="update" class="!py-1" v-if="in_edition">Actualizar</PrimaryButton>
                 <i v-if="!in_edition" @click="in_edition = true" class="fa-solid fa-pencil text-xs text-primary rounded-md bg-pink-200 py-1 px-[5px] cursor-pointer"></i>
                 <el-tag v-else closable :type="primary" @close="in_edition = false">
                     En edición
