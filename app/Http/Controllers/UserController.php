@@ -152,4 +152,17 @@ class UserController extends Controller
 
         return response()->json(['message' => 'usuario(s) eliminado(s)']);
     }
+
+    public function getMatches($query)
+    {
+        $users = UserResource::collection(User::where('id', 'LIKE', "%$query%")
+            ->orWhere('name', 'LIKE', "%$query%")
+            ->orWhere('employee_properties->department', 'LIKE', "%$query%")
+            ->orWhere('employee_properties->job_position', 'LIKE', "%$query%")
+            ->orWhere('phone', 'LIKE', "%$query%")
+            ->orWhere('email', 'LIKE', "%$query%")
+            ->get());
+
+        return response()->json(['items' => $users]);
+    }
 }
