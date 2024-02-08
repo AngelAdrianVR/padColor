@@ -36,7 +36,6 @@
                         <DangerButton class="!py-1">Eliminar</DangerButton>
                     </template>
                 </el-popconfirm>
-                <p class="text-[#ff4d4d]"></p>
             </div>
             <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" 
                 :selectTicket="selectAllTickets"
