@@ -19,10 +19,7 @@
 
         <!-- usuarios -->
         <div v-if="loading" class="mt-32">
-            <div class="flex flex-col items-center text-primary">
-                <i class="fa-solid fa-square fa-bounce text-4xl"></i>
-                <span class="text-[10px]">Cargando...</span>
-            </div>
+            <Loading />
         </div>
         <div v-else class="mt-7">
             <div class="flex items-center border-b border-grayD9 pb-2">
@@ -51,6 +48,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import UserRow from "@/Components/MyComponents/User/UserRow.vue";
+import Loading from "@/Components/MyComponents/Loading.vue";
 import Checkbox from '@/Components/Checkbox.vue';
 
 export default {
@@ -69,6 +67,7 @@ export default {
         PrimaryButton,
         UserRow,
         Checkbox,
+        Loading,
     },
     props: {
         users: Object
