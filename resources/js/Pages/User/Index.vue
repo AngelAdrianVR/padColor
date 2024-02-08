@@ -6,11 +6,14 @@
         </div>
 
         <!-- Buscador -->
-        <div class="flex justify-between items-center mt-4 mx-2 lg:mx-10">
-            <div class="lg:w-1/4 relative">
-                <input class="input w-full pl-9" placeholder="Buscar usuario" type="text">
+        <div class="flex items-center mt-4 mx-2 lg:mx-10">
+            <div class="lg:w-1/4 relative lg:mr-12">
+                <input v-model="searchTemp" @keyup.enter="search = searchTemp; searchTemp = null" class="input w-full pl-9" placeholder="Buscar usuario" type="search">
                 <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
             </div>
+            <el-tag v-if="search" size="large" closable @close="handleTagClose">
+                Estas buscando: <b>{{ search }}</b>
+            </el-tag>
         </div>
 
         <!-- usuarios -->
@@ -45,6 +48,8 @@ export default {
     data() {
         return {
             allUsers: false,
+            searchTemp: null,
+            search: null,
             selectedItems: [],
         }
     },
@@ -58,6 +63,14 @@ export default {
         users: Object
     },
     methods: {
+        handleSearch() {
+            this.search = this.searchTemp;
+            console.log(this.search)
+            // this.searchTemp = null;
+        },
+        handleTagClose() {
+            this.search = null;
+        },
         handleCheckedItem(evt) {
             if (evt.isActive) {
                 this.selectedItems.push(evt.id);
@@ -86,6 +99,9 @@ export default {
             }
             this.setSelectedPropFromUserRow(this.allUsers);
         },
+        handleSearch() {
+
+        },
         async deleteItems() {
             try {
                 const response = await axios.post(route('users.massive-delete', {
@@ -112,15 +128,5 @@ export default {
             }
         },
     },
-    // watch: {
-    //     allUsers(checked) {
-    //         if (checked) {
-    //             this.selectedItems = this.users.data.map(user => user.id);
-    //         } else {
-    //             this.selectedItems = [];
-    //         }
-    //         this.setSelectedPropFromUserRow(checked);
-    //     }
-    // }
 }
 </script>
