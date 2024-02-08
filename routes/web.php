@@ -52,6 +52,7 @@ Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])
 Route::resource('users', UserController::class)->middleware('auth');
 Route::post('users/update-with-media/{user}', [UserController::class, 'updateWithMedia'])->name('users.update-with-media')->middleware('auth');
 Route::post('users/massive-delete', [UserController::class, 'massiveDelete'])->name('users.massive-delete');
+Route::get('users-get-matches/{query}', [UserController::class, 'getMatches'])->name('users.get-matches');
 
 
 //settings routes---------------------------------------------------------------------------

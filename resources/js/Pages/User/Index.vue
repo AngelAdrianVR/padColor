@@ -8,7 +8,8 @@
         <!-- Buscador -->
         <div class="flex items-center mt-4 mx-2 lg:mx-10">
             <div class="lg:w-1/4 relative lg:mr-12">
-                <input v-model="searchTemp" @keyup.enter="search = searchTemp; searchTemp = null" class="input w-full pl-9" placeholder="Buscar usuario" type="search">
+                <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
+                    placeholder="Buscar usuario" type="search">
                 <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
             </div>
             <el-tag v-if="search" size="large" closable @close="handleTagClose">
@@ -17,10 +18,17 @@
         </div>
 
         <!-- usuarios -->
-        <div class="mt-7">
+        <div v-if="loading" class="mt-24">
+            <div class="flex flex-col items-center text-primary">
+                <i class="fa-solid fa-square fa-bounce text-4xl"></i>
+                <span class="text-[10px]">Cargando...</span>
+            </div>
+        </div>
+        <div v-else class="mt-7">
             <div class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-7 lg:ml-24">
-                    <Checkbox @change="handleAllUsersChecked" v-model:checked="allUsers" name="all" />
+                    <Checkbox @change="handleAllUsersChecked" v-model:checked="allUsers" name="all"
+                        :disabled="!users.data.length" />
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
                 </label>
                 <div v-if="selectedItems.length" class="lg:ml-36">
@@ -34,6 +42,7 @@
             </div>
             <UserRow v-for="user in users.data" :key="user" :user="user" @checked="handleCheckedItem"
                 :ref="'user' + user.id" />
+            <el-empty v-if="!users.data.length" description="No hay usuarios para mostrar" />
         </div>
     </AppLayout>
 </template>
@@ -48,9 +57,11 @@ export default {
     data() {
         return {
             allUsers: false,
+            loading: false,
             searchTemp: null,
             search: null,
             selectedItems: [],
+            usersBuffer: [], //guarda temporalmente todos los usuarios cargados para solo mostrar las coincidencias cuando se hace busqueda
         }
     },
     components: {
@@ -65,11 +76,22 @@ export default {
     methods: {
         handleSearch() {
             this.search = this.searchTemp;
-            console.log(this.search)
-            // this.searchTemp = null;
+            this.searchTemp = null;
+            if (this.search) {
+                this.fetchMatches();
+            } else {
+                this.showAllUsers();
+            }
+        },
+        showAllUsers() {
+            if (this.usersBuffer.length) {
+                this.users.data = this.usersBuffer;
+                this.usersBuffer = [];
+            }
         },
         handleTagClose() {
             this.search = null;
+            this.showAllUsers();
         },
         handleCheckedItem(evt) {
             if (evt.isActive) {
@@ -99,8 +121,22 @@ export default {
             }
             this.setSelectedPropFromUserRow(this.allUsers);
         },
-        handleSearch() {
+        async fetchMatches() {
+            try {
+                this.loading = true;
+                const response = await axios.get(route('users.get-matches', { query: this.search }));
 
+                if (response.status === 200) {
+                    if (!this.usersBuffer.length) {
+                        this.usersBuffer = this.users.data;
+                    }
+                    this.users.data = response.data.items;
+                }
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.loading = false;
+            }
         },
         async deleteItems() {
             try {
