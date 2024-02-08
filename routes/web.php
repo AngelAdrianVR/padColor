@@ -53,6 +53,7 @@ Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fet
 Route::get('tickets-fetch-history/{ticket}', [TicketController::class, 'fetchHistory'])->name('tickets.fetch-history')->middleware('auth');
 
 
+
 //Tickets-solutions routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('ticket-solutions', TicketSolutionController::class)->middleware('auth');
@@ -63,6 +64,7 @@ Route::get('ticket-solutions-fetch-all-solutions/{ticket}', [TicketSolutionContr
 //Tickets-histories routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('ticket-histories', TicketHistoryController::class)->middleware('auth');
+
 
 
 //users routes---------------------------------------------------------------------------

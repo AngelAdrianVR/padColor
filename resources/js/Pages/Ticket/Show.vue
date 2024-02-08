@@ -148,6 +148,12 @@
                         </el-timeline>
                     </div>
                     <p v-else class="text-gray-500 text-center text-sm">No hay actividad registrada a este ticket</p>
+                        <RichText @submitComment="storeComment(taskComponentLocal)" @content="updateConversationComment($event)" ref="commentEditor"
+                            class="flex-1" withFooter :userList="users" :disabled="loading || !conversationComment" />
+                    </div>
+                    <div class="mt-10">
+                        <Comment class="mt-5 mx-9" v-for="comment in conversation" :key="comment" :comment="comment" @comment-deleted="commentDeleted" />                    
+                    </div>
                 </div>
 
                 <!-- estado de carga -->
@@ -270,7 +276,6 @@ methods:{
                     message: "Se ha actualizado el estatus",
                     type: "success",
                 });
-
                 this.fetchHistory();
             }
         } catch (error) {
@@ -360,6 +365,12 @@ methods:{
           }
         } catch (error) {
           console.log(error);
+          this.$notify({
+                title: "Error de servidor",
+                message: "Hubo un problema al publicar tu solución. Inténta más tarde",
+                type: "error",
+            });
+
         } finally {
           this.loading = false;
         }
@@ -370,6 +381,29 @@ methods:{
           const response = await axios.get(route("tickets.fetch-history", this.ticket.data.id));
           if (response.status === 200) {
             this.ticketHistory = response.data.items;            
+            this.loading = false;
+            this.fetchSolutions(); //recupera las soluciones de nuevo
+        }
+    },
+    async fetchSolutions() {
+        this.loading = true;
+        try {
+          const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticket.data.id));
+          if (response.status === 200) {
+            this.ticketSolutions = response.data.items;            
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          this.loading = false;
+        }
+    },
+    async fetchConversation() {
+        this.loading = true;
+        try {
+          const response = await axios.get(route("tickets.fetch-conversation", this.ticket.data.id));
+          if (response.status === 200) {
+            this.conversation = response.data.items;            
           }
         } catch (error) {
           console.log(error);
