@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-[28px]">
         <label class="flex items-center py-1">
-            <Checkbox v-model:checked="selected" @change="$emit('checked', {id: user.id, isActive: selected})" />
+            <Checkbox v-model:checked="selected" @change="$emit('checked', {id: user.id, isActive: selected})" :disabled="$page.props.auth.user.id === user.id" />
         </label>
         <figure class="flex justify-center items-center text-sm rounded-full pl-4">
             <img class="size-14 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">

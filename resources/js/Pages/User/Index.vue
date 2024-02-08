@@ -18,7 +18,7 @@
         </div>
 
         <!-- usuarios -->
-        <div v-if="loading" class="mt-24">
+        <div v-if="loading" class="mt-32">
             <div class="flex flex-col items-center text-primary">
                 <i class="fa-solid fa-square fa-bounce text-4xl"></i>
                 <span class="text-[10px]">Cargando...</span>
@@ -33,7 +33,7 @@
                 </label>
                 <div v-if="selectedItems.length" class="lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
-                        title="¿Desea eliminar los elementos seleccionados?" @confirm="deleteItems()">
+                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'" @confirm="deleteItems()">
                         <template #reference>
                             <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
                         </template>
@@ -109,13 +109,17 @@ export default {
         },
         setSelectedPropFromUserRow(value) {
             this.users.data.forEach(element => {
-                const ref = 'user' + element.id
-                this.$refs[ref][0].selected = value;
+                if (element.id !== this.$page.props.auth.user.id) {
+                    const ref = 'user' + element.id;
+                    this.$refs[ref][0].selected = value;
+                }
             });
         },
         handleAllUsersChecked() {
             if (this.allUsers) {
                 this.selectedItems = this.users.data.map(user => user.id);
+                const index = this.selectedItems.findIndex(item => item === this.$page.props.auth.user.id);
+                this.selectedItems.splice(index, 1);
             } else {
                 this.selectedItems = [];
             }
