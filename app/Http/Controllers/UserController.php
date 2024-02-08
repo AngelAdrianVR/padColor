@@ -54,9 +54,9 @@ class UserController extends Controller
 
     public function show(user $user)
     {
-        $users = User::where('id', '!=', auth()->id())->get(['id', 'name']);
+        $users = User::get(['id', 'name']);
 
-        return inertia('User/Show', compact('user', 'users')); 
+        return inertia('User/Show', compact('user', 'users'));
     }
 
 
@@ -72,6 +72,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:15',
+            'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
             // 'roles' => 'required|array|min:1',
@@ -79,7 +80,7 @@ class UserController extends Controller
         ]);
 
         $user->update($request->all());
-        $user->syncRoles($request->roles);
+        // $user->syncRoles($request->roles);
 
         if (!$request->selectedImage) {
             $this->deleteProfilePhoto($user);
@@ -94,6 +95,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:15',
+            'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
             // 'roles' => 'required|array|min:1',
@@ -102,8 +104,8 @@ class UserController extends Controller
 
         $user->update($request->all());
         // convertir a int los roles para que no ocurra error
-        $roles = array_map('intval', $request->roles);
-        $user->syncRoles($roles);
+        // $roles = array_map('intval', $request->roles);
+        // $user->syncRoles($roles);
 
         $this->deleteProfilePhoto($user);
         $this->storeProfilePhoto($request, $user);
@@ -139,5 +141,15 @@ class UserController extends Controller
                 'profile_photo_path' => null,
             ]);
         }
+    }
+
+    public function massiveDelete(Request $request)
+    {
+        foreach ($request->items_ids as $id) {
+            $item = User::find($id);
+            $item?->delete();
+        }
+
+        return response()->json(['message' => 'usuario(s) eliminado(s)']);
     }
 }

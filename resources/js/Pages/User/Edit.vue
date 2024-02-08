@@ -38,8 +38,15 @@
                     <el-input v-model="form.phone" placeholder="Escribe aqui tu número"
                         :formatter="(value) => `${value}`.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3')"
                         :parser="(value) => value.replace(/\D/g, '')" maxlength="10" clearable />
-                    {{ form.phone }}
                     <InputError :message="form.errors.phone" />
+                </div>
+                <div>
+                    <InputLabel value="Estado" class="ml-3 mb-1" />
+                    <el-select class="w-full" v-model="form.is_active"
+                        placeholder="Selecciona el departamento" no-data-text="No hay opciones registradas"
+                        no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="(item, index) in ['Inactivo', 'Activo']" :key="item" :label="item" :value="index" />
+                    </el-select>
                 </div>
                 <div class="col-span-full">
                     <InputLabel value="Agregar foto " class="ml-3 mb-1" />
@@ -48,7 +55,7 @@
                 </div>
 
                 <div class="col-span-2 text-right">
-                    <PrimaryButton :disabled="form.processing">Guardar</PrimaryButton>
+                    <PrimaryButton type="submit" :disabled="form.processing">Guardar</PrimaryButton>
                 </div>
             </form>
         </div>
@@ -71,6 +78,7 @@ export default {
             name: this.user.name,
             email: this.user.email,
             phone: this.user.phone,
+            is_active: this.user.is_active,
             image: null,
             employee_properties: {
                 department: this.user.employee_properties.department,
@@ -112,16 +120,31 @@ export default {
         user: Object,
     },
     methods: {
-        store() {
-            this.form.post(route("users.store"), {
-                onSuccess: () => {
-                    this.$notify({
-                        title: "Correcto",
-                        message: "Se ha agregado el usuario",
-                        type: "success",
-                    });
-                },
-            });
+        update() {
+            if (this.form.image) {
+                this.form.post(route("users.update-with-media", this.user.id), {
+                    method: '_put',
+                    onSuccess: () => {
+                        this.$notify({
+                            title: "Correcto",
+                            message: "Usuario actualizado",
+                            type: "success",
+                        });
+
+                    },
+                });
+            } else {
+                this.form.put(route("users.update", this.user.id), {
+                    onSuccess: () => {
+                        this.$notify({
+                            title: "Correcto",
+                            message: "Usuario actualizado",
+                            type: "success",
+                        });
+
+                    },
+                });
+            }
         },
         saveImage(image) {
             this.form.image = image;
@@ -132,7 +155,7 @@ export default {
     },
     mounted() {
         // cargar imagen de usuario en componente
-        this.$refs.userImage.image = this.user.media[0].original_url;
+        this.$refs.userImage.image = this.user.profile_photo_url;
     }
 }
 </script>
