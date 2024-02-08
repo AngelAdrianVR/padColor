@@ -64,14 +64,16 @@ Route::get('ticket-solutions-fetch-all-solutions/{ticket}', [TicketSolutionContr
 //Tickets-histories routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('ticket-histories', TicketHistoryController::class)->middleware('auth');
-
-
+Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
+Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
+Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
 
 //users routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('users', UserController::class)->middleware('auth');
 Route::post('users/update-with-media/{user}', [UserController::class, 'updateWithMedia'])->name('users.update-with-media')->middleware('auth');
 Route::post('users/massive-delete', [UserController::class, 'massiveDelete'])->name('users.massive-delete');
+Route::get('users-get-matches/{query}', [UserController::class, 'getMatches'])->name('users.get-matches');
 
 
 //settings routes---------------------------------------------------------------------------
