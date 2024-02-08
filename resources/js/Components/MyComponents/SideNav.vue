@@ -51,7 +51,7 @@
                     <Dropdown align="left" width="48">
                         <template #trigger>
                             <button v-if="$page.props.jetstream.managesProfilePhotos" class="p-2 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
-                                <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
+                                <img class="size-9 rounded-full object-cover " :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
                                 <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
                                 <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
                             </button>

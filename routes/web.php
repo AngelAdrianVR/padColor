@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketSolutionController;
@@ -45,7 +46,9 @@ Route::middleware([
 Route::resource('tickets', TicketController::class)->middleware('auth');
 Route::put('tickets-update-status/{ticket}', [TicketController::class, 'updateStatus'])->name('tickets.update-status')->middleware('auth');
 Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'updateWithMedia'])->name('tickets.update-with-media')->middleware('auth');
-Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
+Route::post('tickets-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
+Route::post('tickets/{ticket}/comment', [TicketController::class, 'comment'])->name('tickets.comment')->middleware('auth');
+Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fetchConversation'])->name('tickets.fetch-conversation')->middleware('auth');
 
 
 //Tickets-solutions routes---------------------------------------------------------------------------
@@ -68,4 +71,10 @@ Route::resource('settings', SettingController::class)->middleware('auth');
 //categories routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('categories', CategoryController::class)->middleware('auth');
+
+
+
+//comments routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('comments', CommentController::class)->middleware('auth');
 

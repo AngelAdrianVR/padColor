@@ -3,7 +3,7 @@
         <!-- foto -->
         <div class="flex text-sm rounded-full w-10">
             <img class="size-9 rounded-full object-cover" :src="solution.user.profile_photo_url"
-            :alt="$page.props.auth.user.name" />
+            :alt="solution.user.name" />
         </div>
         <i class="fa-solid fa-chevron-left text-2xl bg-white text-grayD9 absolute top-4 left-7"></i>
         <i @click.stop="optionsDropdown = !optionsDropdown" v-if="$page.props.auth.user.id === solution.user.id" class="fa-solid fa-ellipsis-vertical text-sm text-primary py-1 px-3 rounded-full cursor-pointer hover:bg-gray-100 absolute right-3 top-4"></i>
