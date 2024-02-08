@@ -35,7 +35,7 @@ methods:{
             case 'avi':
             case 'mkv':
             case 'mov':
-                return 'fa-regular fa-file-video text-sky-400';
+                return '/images/video.png';
             default:
                 return '/images/doc.png';
         }

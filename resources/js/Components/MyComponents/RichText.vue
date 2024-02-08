@@ -17,7 +17,7 @@
             </button> 
         </header> -->
         <div contenteditable="true" @input="onInput" ref="editor" id="editor" @keypress="checkForAtSign"
-            class="bg-transparent border border-[#9A9A9A] placeholder:text-gray-400 text-gray-700 text-sm rounded-lg focus:border-primary block w-full p-2.5 min-h-[85px] focus:outline-none"
+            class="bg-transparent border border-[#9A9A9A] placeholder:text-gray-400 text-gray-700 text-sm rounded-t-lg focus:border-primary block w-full p-2.5 min-h-[85px] focus:outline-none"
             :class="{ 'rounded-none': withFooter || hasMedia }">
         </div>
 
@@ -47,7 +47,7 @@
         <footer v-if="hasMedia"
             class="border border-t-0 border-[#9A9A9A] bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
             <FileUploader @files-selected="this.media = $event" />
-            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment')" :disabled="disabled">Publicar
+            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment', media)" :disabled="disabled">Publicar
             </PrimaryButton>
         </footer>
 

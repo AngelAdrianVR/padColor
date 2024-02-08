@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CommentResource;
+use App\Http\Resources\TicketHistoryResource;
 use App\Http\Resources\TicketResource;
 use App\Models\Category;
+use App\Models\Comment;
 use App\Models\Ticket;
+use App\Models\TicketHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -47,16 +51,22 @@ class TicketController extends Controller
             $ticket->addMediaFromRequest('media')->toMediaCollection();
         }
 
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'creó el ticket #' . $ticket->id . ' "' . $ticket->title . '".',
+            'user_id' =>  auth()->id(),
+            'ticket_id' =>  $ticket->id,
+        ]);
+
         return to_route('tickets.index');
     }
 
 
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::with('responsible', 'user')->find($ticket_id));
+        $ticket = TicketResource::make(Ticket::with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
         $users = User::all(['id', 'name', 'profile_photo_path']);
 
-        // return $ticket;
         return inertia('Ticket/Show', compact('ticket', 'users'));
     }
 
@@ -82,7 +92,21 @@ class TicketController extends Controller
             'expired_date' => 'required|date|after:yesterday',
         ]);
 
+        //guarda al responsable antes de edición
+        $current_responsible_id = $ticket->responsible_id;
+
         $ticket->update($request->all());
+
+        //Crear registro de actividad si se cambio al responsable
+        if ($current_responsible_id == $request->responsible_id) {
+        } else {
+            $new_responsible = User::find($request->responsible_id);
+            TicketHistory::create([
+                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'user_id' =>  auth()->id(),
+                'ticket_id' =>  $ticket->id,
+            ]);
+        }
 
         return to_route('tickets.index');
     }
@@ -100,10 +124,24 @@ class TicketController extends Controller
             'expired_date' => 'required|date|after:yesterday',
         ]);
 
+        //guarda al responsable antes de edición
+        $current_responsible_id = $ticket->responsible_id;
+
         $ticket->update($request->all());
 
         // Guardar media
         $ticket->addMediaFromRequest('media')->toMediaCollection();
+
+        //Crear registro de actividad si se cambio al responsable
+        if ($current_responsible_id != $request->responsible_id) {
+            $new_responsible = User::find($request->responsible_id);
+
+            TicketHistory::create([
+                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'user_id' =>  auth()->id(),
+                'ticket_id' =>  $ticket->id,
+            ]);
+        }
 
         return to_route('tickets.index');
     }
@@ -131,9 +169,57 @@ class TicketController extends Controller
             'updated_at' => now(),
         ]);
 
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'cambió el estado del ticket a "' . $ticket->status . '".',
+            'user_id' =>  auth()->id(),
+            'ticket_id' =>  $ticket->id,
+        ]);
+
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
 
+    public function comment(Request $request, Ticket $ticket)
+    {
+        $comment = new Comment([
+            'body' => $request->comment,
+            'user_id' => auth()->id(),
+        ]);
+
+        $ticket->comments()->save($comment);
+
+        // $mentions = $request->mentions;
+        // foreach ($mentions as $mention) {
+        //     $user = User::find($mention['id']);
+        //     $user->notify(new MentionNotification($oportunity_task, "", 'opportunities'));
+        // }
+
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  'realizó un comentario "' . $comment->body . '".',
+            'user_id' =>  auth()->id(),
+            'ticket_id' =>  $ticket->id,
+        ]);
+
+
+        return response()->json(['item' => $comment->fresh('user')]);
+    }
+
+    public function fetchConversation($ticket)
+    {
+        $conversation = CommentResource::collection(Comment::where('commentable_type', 'App\Models\Ticket')->where('commentable_id', $ticket)->with('user:id,name,profile_photo_path')->get());
+
+
+        return response()->json(['items' => $conversation]);
+    }
+
+    public function fetchHistory($ticket)
+    {
+        $ticket_history = TicketHistoryResource::collection(TicketHistory::with('user:id,name,profile_photo_path', 'ticket')->where('ticket_id', $ticket)->get());
+
+        return response()->json(['items' => $ticket_history]);
+    }
+    
     public function getMatches($query)
     {
         $tickets = TicketResource::collection(Ticket::where('id', 'LIKE', "%$query%")
@@ -172,17 +258,17 @@ class TicketController extends Controller
 
             $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Mes pasado') {
-            $start = now()->subMonth()->startOfMonth(); 
+            $start = now()->subMonth()->startOfMonth();
             $end = now()->subMonth()->endOfMonth();
 
             $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Este año') {
-            $start = now()->startOfYear(); 
+            $start = now()->startOfYear();
             $end = now()->endOfYear();
 
             $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Año pasado') {
-            $start = now()->subYear()->startOfYear(); 
+            $start = now()->subYear()->startOfYear();
             $end = now()->subYear()->endOfYear();
 
             $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();

@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketHistoryController;
+use App\Http\Controllers\TicketSolutionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +47,23 @@ Route::middleware([
 Route::resource('tickets', TicketController::class)->middleware('auth');
 Route::put('tickets-update-status/{ticket}', [TicketController::class, 'updateStatus'])->name('tickets.update-status')->middleware('auth');
 Route::post('tickets/update-with-media/{ticket}', [TicketController::class, 'updateWithMedia'])->name('tickets.update-with-media')->middleware('auth');
+Route::post('tickets-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
+Route::post('tickets/{ticket}/comment', [TicketController::class, 'comment'])->name('tickets.comment')->middleware('auth');
+Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fetchConversation'])->name('tickets.fetch-conversation')->middleware('auth');
+Route::get('tickets-fetch-history/{ticket}', [TicketController::class, 'fetchHistory'])->name('tickets.fetch-history')->middleware('auth');
+
+
+
+//Tickets-solutions routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('ticket-solutions', TicketSolutionController::class)->middleware('auth');
+Route::post('ticket-solutions/update-with-media/{ticket_solution}', [TicketSolutionController::class, 'updateWithMedia'])->name('ticket-solutions.update-with-media')->middleware('auth');
+Route::get('ticket-solutions-fetch-all-solutions/{ticket}', [TicketSolutionController::class, 'fetchSolutions'])->name('ticket-solutions.fetch-solutions')->middleware('auth');
+
+
+//Tickets-histories routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('ticket-histories', TicketHistoryController::class)->middleware('auth');
 Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
 Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
 Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
@@ -64,4 +84,10 @@ Route::resource('settings', SettingController::class)->middleware('auth');
 //categories routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('categories', CategoryController::class)->middleware('auth');
+
+
+
+//comments routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('comments', CommentController::class)->middleware('auth');
 

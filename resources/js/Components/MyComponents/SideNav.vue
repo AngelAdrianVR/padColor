@@ -1,6 +1,6 @@
 <template>
     <!-- sidebar -->
-    <div class="h-screen hidden md:block shadow-lg relative">
+    <div class="h-screen hidden lg:block shadow-lg relative">
         <i @click="small = false" v-if="small" class="fa-solid fa-angle-right text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
         <i @click="small = true" v-else class="fa-solid fa-angle-left text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
         <div class="bg-black1 h-full overflow-auto px-1">
@@ -50,8 +50,9 @@
                 <div class="mt-24 text-center">
                     <Dropdown align="left" width="48">
                         <template #trigger>
-                            <button v-if="$page.props.jetstream.managesProfilePhotos" class="p-2 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
+                            <button v-if="$page.props.jetstream.managesProfilePhotos" class="relative p-2 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
                                 <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
+                                <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
                                 <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
                                 <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
                             </button>
