@@ -52,62 +52,59 @@
 
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
-                    <button v-if="$page.props.jetstream.managesProfilePhotos"
-                        class="size-12 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
+                    <button v-if="$page.props.jetstream.managesProfilePhotos" @click="showProfileCard = !showProfileCard"
+                        class="size-12 flex justify-center items-center space-x-2 text-sm border rounded-full focus:outline-none transition"
+                        :class="showProfileCard ? 'border-primary' : 'border-[#999999]'">
                         <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                             :alt="$page.props.auth.user.name">
                         <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
                         <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
                         <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
                     </button>
-                    <div class="h-64 w-56 border border-grayD9 absolute bottom-3 left-[calc(100%+0.75rem)] rounded-[10px]">
+                    <div v-if="showProfileCard" class="h-64 w-56 bg-white shadow-md border border-grayD9 absolute bottom-3 left-[calc(100%+0.75rem)] rounded-[10px]">
                         <div
                             class="h-[40%] bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% rounded-t-[10px]">
-                            <button class="absolute top-1 right-2 text-xs text-black">
+                            <button @click="showProfileCard = false" class="absolute top-1 right-2 text-xs text-black">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
-                            <button
-                                class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-xs text-primary bg-primarylight">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
+                            <Link :href="route('profile.show')">
+                                <button
+                                    class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-[11px] text-primary bg-primarylight">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </Link>
                         </div>
                         <figure class="size-28 rounded-[5px] bg-gray-500 absolute top-6 left-[calc(50%-3.5rem)]">
                             <img :src="$page.props.auth.user.profile_photo_url" class="size-28 object-cover rounded-[5px]">
                         </figure>
-                        <div class="text-black text-left">
-                            <span>{{ $page.props.auth.user.name }}</span>
+                        <div class="flex flex-col text-black text-left mt-11 mx-7">
+                            <span class="text-sm">{{ $page.props.auth.user.name }}</span>
+                            <span class="text-[10px] text-gray66">{{ $page.props.auth.user.employee_properties.job_position
+                            }}</span>
+                            <p class="mt-3 flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="size-3 text-gray66">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                                </svg>
+                                <span class="text-[10px]">{{ $page.props.auth.user.email }}</span>
+                            </p>
+                            <p class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="size-3 text-gray66">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                                </svg>
+                                <span class="text-[10px]">{{ $page.props.auth.user.phone }}</span>
+                            </p>
                         </div>
+                        <form method="POST" @submit.prevent="logout"
+                            class="flex mr-3 mt-2 justify-end text-redpad text-xs text-right">
+                            <button>
+                                Cerrar sesión
+                            </button>
+                        </form>
                     </div>
-                    <!-- <Dropdown align="left" width="48">
-                        <template #trigger>
-
-                            <span v-else class="inline-flex rounded-md">
-                                <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-[#999999] hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-                                    {{ $page.props.auth.user.name }}
-
-                                    <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                    </svg>
-                                </button>
-                            </span>
-                        </template>
-                        <template #content>
-                            <div class="block px-4 py-2 text-xs text-gray-400">
-                                Opciones de usuario
-                            </div>
-
-                            <DropdownLink :href="route('profile.show')">
-                                Perfil
-                            </DropdownLink>
-
-                            <div class="border-t border-gray-200" />
-                            <form method="POST" @submit.prevent="logout" class="text-red-500 text-sm text-center px-2">
-                                <button>
-                                <i class="fa-solid fa-arrow-right-from-bracket mr-[7px]"></i> Cerrar sesión
-                                </button>
-                            </form>
-                        </template>
-                    </Dropdown> -->
                 </div>
             </nav>
         </div>
@@ -125,6 +122,7 @@ export default {
     data() {
         return {
             small: true,
+            showProfileCard: false,
             collapsedMenu: null,
             menus: [
                 {
