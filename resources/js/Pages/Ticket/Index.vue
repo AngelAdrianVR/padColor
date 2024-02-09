@@ -6,7 +6,7 @@
         </div>
 
         <!-- Buscador y filtros -->
-        <div class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
+        <div v-if="tickets.data.length" class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
 
             <div class="lg:w-1/4 relative">
                 <input class="input w-full pl-9" placeholder="Buscar tickets" type="text">
@@ -24,7 +24,7 @@
             <Loading />
         </div>
         <div v-else class="mt-7">
-            <div class="flex items-center space-x-9 border-b border-grayD9 pb-2">
+            <div v-if="tickets.data.length" class="flex items-center space-x-9 border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-2 lg:ml-24">
                     <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
