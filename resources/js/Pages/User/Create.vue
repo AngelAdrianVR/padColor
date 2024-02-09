@@ -45,7 +45,17 @@
                     <InputFilePreview ref="petImage" @imagen="saveImage" @cleared="clearImage" />
                     <InputError :message="form.errors.image" />
                 </div>
-
+                <el-divider content-position="left" class="col-span-full">Roles</el-divider>
+                <br>
+                <div class="col-span-full grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    <InputLabel v-for="role in roles" :key="role.id" class="flex items-center">
+                        <input type="checkbox" v-model="form.roles" :value="role.id"
+                            class="rounded text-primary shadow-sm focus:ring-primary bg-transparent" />
+                        <span class="ml-2 text-sm">{{ role.name }}</span>
+                    </InputLabel>
+                </div>
+                <InputError :message="form.errors.roles" />
+                
                 <div class="col-span-2 text-right">
                     <PrimaryButton :disabled="form.processing">Guardar</PrimaryButton>
                 </div>
@@ -75,6 +85,7 @@ export default {
                 department: null,
                 job_position: null,
             },
+            roles: [],
         });
 
         return {
