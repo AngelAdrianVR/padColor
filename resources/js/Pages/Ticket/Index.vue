@@ -6,13 +6,15 @@
         </div>
 
         <!-- Buscador y filtros -->
-        <div v-if="tickets.data.length" class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
-
-            <div class="lg:w-1/4 relative">
-                <input class="input w-full pl-9" placeholder="Buscar tickets" type="text">
+        <div class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
+            <div class="lg:w-1/4 relative lg:mr-12">
+                <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
+                    placeholder="Buscar tickets" type="search">
                 <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
             </div>
-
+            <el-tag v-if="search" size="large" closable @close="handleTagClose">
+                Estas buscando: <b>{{ search }}</b>
+            </el-tag>
             <div class="flex items-center space-x-3 lg:w-1/4">
                 <el-cascader class="w-full" v-model="filter" :options="options" @change="handleChangeFilter" clearable
                     placeholder="Filtrar" />
@@ -58,6 +60,8 @@ export default {
             selectAllTickets: false,
             loading: false,
             filter: null,
+            searchTemp: null,
+            search: null,
             selectedTicketsId: [],
             ticketsBuffer: [],
             options: [
@@ -185,6 +189,20 @@ export default {
         tickets: Object
     },
     methods: {
+        handleSearch() {
+            this.filter = null;
+            this.search = this.searchTemp;
+            this.searchTemp = null;
+            if (this.search) {
+                this.fetchMatches();
+            } else {
+                this.showAllTickets();
+            }
+        },
+        handleTagClose() {
+            this.search = null;
+            this.showAllTickets();
+        },
         selectedTicket(ticket_id) {
             this.selectedTicketsId.push(ticket_id);
         },
@@ -197,10 +215,9 @@ export default {
             }
         },
         handleChangeFilter() {
+            this.handleTagClose();
             if (this.filter) {
                 this.fetchFiltered();
-            } else {
-                this.showAllTickets();
             }
         },
         showAllTickets() {
@@ -210,10 +227,27 @@ export default {
                 this.ticketsBuffer = [];
             }
         },
+        async fetchMatches() {
+            try {
+                this.loading = true;
+                const response = await axios.get(route('tickets.get-matches', { query: this.search }));
+
+                if (response.status === 200) {
+                    if (!this.ticketsBuffer.length) {
+                        this.ticketsBuffer = this.tickets.data;
+                    }
+                    this.tickets.data = response.data.items;
+                }
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.loading = false;
+            }
+        },
         async fetchFiltered() {
             try {
                 this.loading = true;
-                const response = await axios.get(route('tickets.get-filters', {prop: this.filter[0], value: this.filter[1]}));
+                const response = await axios.get(route('tickets.get-filters', { prop: this.filter[0], value: this.filter[1] }));
 
                 if (response.status === 200) {
                     // si el bufer no tiene nada aun, guardar los tickets

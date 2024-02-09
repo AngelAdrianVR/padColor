@@ -22,7 +22,7 @@
             <Loading />
         </div>
         <div v-else class="mt-7">
-            <div class="flex items-center border-b border-grayD9 pb-2">
+            <div v-if="users.data.length" class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-7 lg:ml-24">
                     <Checkbox @change="handleAllUsersChecked" v-model:checked="allUsers" name="all"
                         :disabled="!users.data.length" />
