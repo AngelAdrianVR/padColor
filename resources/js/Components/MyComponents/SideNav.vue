@@ -1,18 +1,20 @@
 <template>
     <!-- sidebar -->
     <div class="h-screen hidden lg:block shadow-lg relative">
-        <i @click="small = false" v-if="small" class="fa-solid fa-angle-right text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
-        <i @click="small = true" v-else class="fa-solid fa-angle-left text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
+        <i @click="small = false" v-if="small"
+            class="fa-solid fa-angle-right text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
+        <i @click="small = true" v-else
+            class="fa-solid fa-angle-left text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
         <div class="bg-black1 h-full overflow-auto px-1">
             <!-- Logo -->
             <div class="flex items-center justify-center mt-7">
                 <Link v-if="small" :href="route('dashboard')">
-                    <ApplicationMark />
+                <ApplicationMark />
                 </Link>
                 <Link v-else :href="route('dashboard')">
-                    <figure class="">
-                        <img class="w-20" src="@/../../public/images/authLogo.png" alt="logo">
-                    </figure>
+                <figure class="">
+                    <img class="w-20" src="@/../../public/images/authLogo.png" alt="logo">
+                </figure>
                 </Link>
             </div>
             <nav class="px-2 pt-20 text-white">
@@ -38,24 +40,46 @@
                                 </button>
                             </div>
                         </Accordion>
-                        <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
+                        <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
+                            :title="menu.label"
                             class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
                             :class="menu.active ? 'bg-gradient-to-r from-gray-800 to-black1 text-primary' : 'hover:text-primary hover:bg-gradient-to-r from-gray-800 to-black1 text-[#999999]'">
-                            <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label }}</p>
+                            <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
+                            }}</p>
                         </button>
                     </div>
                 </template>
 
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
-                    <Dropdown align="left" width="48">
-                        <template #trigger>
-                            <button v-if="$page.props.jetstream.managesProfilePhotos" class="relative p-2 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
-                                <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
-                                <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
-                                <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
-                                <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
+                    <button v-if="$page.props.jetstream.managesProfilePhotos"
+                        class="size-12 flex justify-center items-center space-x-2 text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
+                        <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                            :alt="$page.props.auth.user.name">
+                        <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
+                        <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
+                        <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
+                    </button>
+                    <div class="h-64 w-56 border border-grayD9 absolute bottom-3 left-[calc(100%+0.75rem)] rounded-[10px]">
+                        <div
+                            class="h-[40%] bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% rounded-t-[10px]">
+                            <button class="absolute top-1 right-2 text-xs text-black">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
+                            <button
+                                class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-xs text-primary bg-primarylight">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                        <figure class="size-28 rounded-[5px] bg-gray-500 absolute top-6 left-[calc(50%-3.5rem)]">
+                            <img :src="$page.props.auth.user.profile_photo_url" class="size-28 object-cover rounded-[5px]">
+                        </figure>
+                        <div class="text-black text-left">
+                            <span>{{ $page.props.auth.user.name }}</span>
+                        </div>
+                    </div>
+                    <!-- <Dropdown align="left" width="48">
+                        <template #trigger>
 
                             <span v-else class="inline-flex rounded-md">
                                 <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-[#999999] hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
@@ -68,7 +92,6 @@
                             </span>
                         </template>
                         <template #content>
-                            <!-- Account Management -->
                             <div class="block px-4 py-2 text-xs text-gray-400">
                                 Opciones de usuario
                             </div>
@@ -78,15 +101,13 @@
                             </DropdownLink>
 
                             <div class="border-t border-gray-200" />
-
-                            <!-- Authentication -->
                             <form method="POST" @submit.prevent="logout" class="text-red-500 text-sm text-center px-2">
                                 <button>
                                 <i class="fa-solid fa-arrow-right-from-bracket mr-[7px]"></i> Cerrar sesión
                                 </button>
                             </form>
                         </template>
-                    </Dropdown>
+                    </Dropdown> -->
                 </div>
             </nav>
         </div>
@@ -142,7 +163,7 @@ export default {
                     dropdown: false,
                     show: true
                 },
-               
+
                 //     label: 'Comunidad',
                 //     icon: '<i class="fa-solid fa-people-roof text-sm mr-2"></i>',
                 //     // route: route('posts.index'),
@@ -188,13 +209,13 @@ export default {
             } else {
                 this.goToRoute(this.menus[index].route)
             }
-            },
-            goToRoute(route) {
-                this.$inertia.get(route);
-            },
-            logout() {
-                this.$inertia.post(route('logout'));
-            }
+        },
+        goToRoute(route) {
+            this.$inertia.get(route);
+        },
+        logout() {
+            this.$inertia.post(route('logout'));
+        }
     },
     mounted() {
     }
