@@ -49,7 +49,9 @@ const switchToTeam = (team) => {
                                 <!-- Logo -->
                                 <div class="shrink-0 flex items-center md:hidden">
                                     <Link :href="route('dashboard')">
-                                        <ApplicationMark class="block h-9 w-auto" />
+                                        <figure class="">
+                                            <img class="w-32" src="@/../../public/images/authLogo_horizontal.png" alt="logo">
+                                        </figure>
                                     </Link>
                                 </div>
                             </div>
