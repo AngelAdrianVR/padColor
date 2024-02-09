@@ -42,10 +42,10 @@
                 </div>
                 <div>
                     <InputLabel value="Estado" class="ml-3 mb-1" />
-                    <el-select class="w-full" v-model="form.is_active"
-                        placeholder="Selecciona el departamento" no-data-text="No hay opciones registradas"
-                        no-match-text="No se encontraron coincidencias">
-                        <el-option v-for="(item, index) in ['Inactivo', 'Activo']" :key="item" :label="item" :value="index" />
+                    <el-select class="w-full" v-model="form.is_active" placeholder="Selecciona el departamento"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="(item, index) in ['Inactivo', 'Activo']" :key="item" :label="item"
+                            :value="index" />
                     </el-select>
                 </div>
                 <div class="col-span-full">
@@ -53,6 +53,17 @@
                     <InputFilePreview ref="userImage" @imagen="saveImage" @cleared="clearImage" />
                     <InputError :message="form.errors.image" />
                 </div>
+                <!-- roles -->
+                <el-divider content-position="left" class="col-span-full">Roles</el-divider>
+                <br>
+                <div class="col-span-full grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    <InputLabel v-for="role in roles" :key="role.id" class="flex items-center">
+                        <input type="checkbox" v-model="form.roles" :value="role.id"
+                            class="rounded text-primary shadow-sm focus:ring-primary bg-transparent" />
+                        <span class="ml-2 text-sm">{{ role.name }}</span>
+                    </InputLabel>
+                </div>
+                <InputError :message="form.errors.roles" />
 
                 <div class="col-span-2 text-right">
                     <PrimaryButton type="submit" :disabled="form.processing">Guardar</PrimaryButton>
@@ -84,6 +95,7 @@ export default {
                 department: this.user.employee_properties.department,
                 job_position: this.user.employee_properties.job_position,
             },
+            roles: this.user_roles,
         });
 
         return {
@@ -118,6 +130,7 @@ export default {
     },
     props: {
         user: Object,
+        user_roles: Array,
     },
     methods: {
         update() {

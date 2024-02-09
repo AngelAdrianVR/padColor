@@ -74,11 +74,23 @@ Route::resource('users', UserController::class)->middleware('auth');
 Route::post('users/update-with-media/{user}', [UserController::class, 'updateWithMedia'])->name('users.update-with-media')->middleware('auth');
 Route::post('users/massive-delete', [UserController::class, 'massiveDelete'])->name('users.massive-delete');
 Route::get('users-get-matches/{query}', [UserController::class, 'getMatches'])->name('users.get-matches');
+Route::post('users-get-notifications', [UserController::class, 'getNotifications'])->middleware('auth')->name('users.get-notifications');
+Route::post('users-read-notifications', [UserController::class, 'readNotifications'])->middleware('auth')->name('users.read-notifications');
+Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-notifications');
 
 
 //settings routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('settings', SettingController::class)->middleware('auth');
+Route::get('role-permission', [SettingController::class, 'index'])->middleware('auth')->name('settings.role-permission.index');
+Route::put('role-permission/{role}/edit-role', [SettingController::class, 'updateRole'])->middleware('auth')->name('settings.role-permission.update-role');
+Route::post('role-permission/store-role', [SettingController::class, 'storeRole'])->middleware('auth')->name('settings.role-permission.store-role');
+Route::delete('role-permission/{role}/destroy-role', [SettingController::class, 'deleteRole'])->middleware('auth')->name('settings.role-permission.delete-role');
+Route::put('role-permission/{permission}/edit-permission', [SettingController::class, 'updatePermission'])->middleware('auth')->name('settings.role-permission.update-permission');
+Route::post('role-permission/store-permission', [SettingController::class, 'storePermission'])->middleware('auth')->name('settings.role-permission.store-permission');
+Route::delete('role-permission/{permission}/destroy-permission', [SettingController::class, 'deletePermission'])->middleware('auth')->name('settings.role-permission.delete-permission');
+Route::post('role-permission/roles-massive-delete', [SettingController::class, 'rolesMassiveDelete'])->name('settings.role-permission.roles-massive-delete');
+Route::post('role-permission/permissions-massive-delete', [SettingController::class, 'permissionsMassiveDelete'])->name('settings.role-permission.permissions-massive-delete');
 
 
 //categories routes---------------------------------------------------------------------------
@@ -90,4 +102,3 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //comments routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('comments', CommentController::class)->middleware('auth');
-
