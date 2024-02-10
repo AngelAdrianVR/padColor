@@ -1,40 +1,40 @@
 <template>
     <AppLayout :title="ticket.data.title">
-        <div class="lg:p-9 p-1">
+        <div class="lg:p-9 p-1 text-sm">
             <div class="flex items-center justify-between">
                 <Back />
-                <p class="text-gray66">Información sobre el ticket</p>
-                <ThirthButton @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar</ThirthButton>
+                <ThirthButton class="!rounded-[3px]" @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar</ThirthButton>
             </div>
-            <div class="lg:mx-16 mt-5">
+            <h1 class="text-gray66 lg:mx-[72px] mt-2">Información sobre el ticket</h1>
+            <div class="lg:mx-16 mt-2">
                 <!-- Info general -->
-                <h1 class="font-bold text-lg my-2 ml-2">{{ ticket.data.title }}</h1>
-                <div class="border rounded-md text-sm p-2 my-2">
+                <h1 class="font-bold ml-2">{{ ticket.data.title }}</h1>
+                <div class="border rounded-md  p-2 my-2">
                     <p class="text-gray66">Descripción</p>
                     <span class="text-black">{{ ticket.data.description }}</span>
                 </div>
-                <div class="lg:flex items-center space-x-3">
-                    <p class="text-gray66 text-sm">Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
-                    <p class="text-gray66 text-sm">Creado por: <span class="text-black ml-1">{{
+                <div class="lg:flex items-center space-x-3 ml-2 text-gray66">
+                    <p>Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
+                    <span>•</span>
+                    <p>Creado por: <span class="text-black ml-1">{{
                         ticket.data.responsible?.name }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
-                    <p class="text-gray66 text-sm">Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
+                    <span>•</span>
+                    <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
                     }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
-                    <p class="text-gray66 text-sm">Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
+                    <span>•</span>
+                    <p>Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
                     }}</span></p>
-                    <i class="fa-solid fa-circle text-[3px]"></i>
+                    <span>•</span>
                     <div class="flex items-center space-x-3">
-                        <p class="text-gray66 text-sm">Prioridad: <span class="text-black ml-1">{{ ticket.data.priority
+                        <p>Prioridad: <span class="text-black ml-1">{{ ticket.data.priority
                         }}</span></p>
                         <i :class="getPriorityColor()" class="fa-solid fa-circle text-[7px]"></i>
                     </div>
                 </div>
-                <div class="flex justify-between my-2">
+                <div class="flex justify-between my-6 ml-2">
                     <!-- Estatus -->
                     <div class="flex items-center space-x-3 w-full">
-                        <p class="text-gray66 text-sm">Estatus:</p>
+                        <p class="text-gray66">Estatus:</p>
                         <div class="lg:w-1/4">
                             <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
                                 no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
@@ -46,37 +46,37 @@
                                 </el-option>
                             </el-select>
                         </div>
-                        <i class="fa-solid fa-circle text-[3px]"></i>
-                        <p class="text-gray66 text-sm"><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
+                        <span class="text-gray66">•</span>
+                        <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
                         }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
-                        <i class="fa-solid fa-circle text-[3px]"></i>
+                        <span class="text-gray66">•</span>
                         <div class="flex items-center space-x-3">
-                            <p class="text-gray66 text-sm">Responsable: </p>
-                            <div class="flex text-sm rounded-full w-10">
+                            <p class="text-gray66 ">Responsable: </p>
+                            <div class="flex  rounded-full w-10">
                                 <img class="size-9 rounded-full object-cover"
                                     :src="ticket.data.responsible.profile_photo_url" :alt="ticket.data.responsible.name" />
                             </div>
-                            <p class="text-sm">{{ ticket.data.responsible.name }}</p>
+                            <p>{{ ticket.data.responsible.name }}</p>
                         </div>
                     </div>
                 </div>
 
-                <p class="text-gray66 text-sm py-2">Archivos adjuntos</p>
+                <p class="text-gray66  py-2">Archivos adjuntos</p>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2" v-if="ticket.data.media?.length > 0">
                     <FileView v-for="file in ticket.data.media" :key="file" :file="file" />
                 </div>
-                <p v-else class="text-sm text-gray-400">No hay archivos adjuntos</p>
+                <p v-else class=" text-gray-400 mx-4 text-xs">No hay archivos adjuntos</p>
             </div>
 
-            <el-tabs v-model="activeTab" @tab-click="handleClick">
+            <el-tabs v-model="activeTab" class="lg:mx-20 mt-10">
                 <el-tab-pane name="1">
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-solid fa-check-double mr-1"></i>
-                            <span>Resoluciones ({{ ticketSolutions?.length ?? '0' }})</span>
+                            <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions />
+                    <Solutions :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
                     <template #label>
@@ -85,7 +85,7 @@
                             <span>Conversaciones</span>
                         </div>
                     </template>
-                    <Comments />
+                    <Comments :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
                 <el-tab-pane name="3">
                     <template #label>
@@ -94,7 +94,7 @@
                             <span>Registro de actividad</span>
                         </div>
                     </template>
-                    <Historical />
+                    <Historical :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
             </el-tabs>
         </div>
@@ -117,14 +117,7 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            currentTab: 1,
-            loading: false,
-            // solutionDescription: null, //texto para la solución 
-            solutionMedia: null, //Archivos adjuntos para la solución
-            conversationComment: null,
-            conversation: null, //todos los comentarios del ticket
-            ticketSolutions: null, //Todas las soluciones
-            ticketHistory: null, //Toda la actividad del ticket
+            activeTab: '1',
             status: this.ticket.data.status,
             statuses: [
                 {
@@ -175,7 +168,7 @@ export default {
     },
     props: {
         ticket: Object,
-        users: Array,
+        solutions_count: Number,
     },
     methods: {
         getPriorityColor() {
@@ -227,130 +220,7 @@ export default {
                 });
             }
         },
-        // updateSolutionDescription(content) {
-        //     this.solutionDescription = content;
-        // },
-        updateConversationComment(content) {
-            this.conversationComment = content;
-        },
-        async storeComment() {
-            const editor = this.$refs.commentEditor;
-            this.loading = true;
-            try {
-                const response = await axios.post(route("tickets.comment", this.ticket.data.id), {
-                    comment: this.conversationComment,
-                    mentions: editor.mentions,
-                });
-                if (response.status === 200) {
-                    // this.taskComponentLocal?.comments.push(response.data.item);
-                }
-            } catch (error) {
-                console.log(error);
-            } finally {
-                this.loading = false;
-                this.conversationComment = null;
-                // editor.clearContent();
-                this.fetchConversation(); //recupera los comentarios de nuevo
-            }
-        },
-        // async storeSolution(solutionMedia) {
-        //     this.loading = true;
-        //     try {
-        //         const response = await axios.post(route("ticket-solutions.store"), {
-        //             ticketId: this.ticket.data.id,
-        //             solutionDescription: this.solutionDescription,
-        //             solution_media: solutionMedia,
-        //         });
-        //         if (response.status === 200) {
-        //             console.log(response);
-        //             this.$notify({
-        //                 title: "Correcto",
-        //                 message: "Se ha publicado tu solución",
-        //                 type: "success",
-        //             });
-        //             this.solutionDescription = null;
-        //         }
-        //     } catch (error) {
-        //         console.log(error);
-        //         this.$notify({
-        //             title: "Error de servidor",
-        //             message: "Hubo un problema al publicar tu solución. Inténta más tarde",
-        //             type: "error",
-        //         });
-
-        //     } finally {
-        //         this.loading = false;
-        //         this.fetchSolutions(); //recupera las soluciones de nuevo
-        //     }
-        // },
-        // async fetchSolutions() {
-        //     this.loading = true;
-        //     try {
-        //         const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticket.data.id));
-        //         if (response.status === 200) {
-        //             this.ticketSolutions = response.data.items;
-        //         }
-        //     } catch (error) {
-        //         console.log(error);
-        //     } finally {
-        //         this.loading = false;
-        //     }
-        // },
-        // async fetchConversation() {
-        //     this.loading = true;
-        //     try {
-        //         const response = await axios.get(route("tickets.fetch-conversation", this.ticket.data.id));
-        //         if (response.status === 200) {
-        //             this.conversation = response.data.items;
-        //         }
-        //     } catch (error) {
-        //         console.log(error);
-        //         this.$notify({
-        //             title: "Error de servidor",
-        //             message: "Hubo un problema al publicar tu solución. Inténta más tarde",
-        //             type: "error",
-        //         });
-
-        //     } finally {
-        //         this.loading = false;
-        //     }
-        // },
-        async fetchHistory() {
-            this.loading = true;
-            try {
-                const response = await axios.get(route("tickets.fetch-history", this.ticket.data.id));
-                if (response.status === 200) {
-                    this.ticketHistory = response.data.items;
-                    this.loading = false;
-                    this.fetchSolutions(); //recupera las soluciones de nuevo
-                }
-            } catch (error) {
-                console.log(error);
-
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // solutionDeleted(solutionId) {
-        //     const indexToDelete = this.ticketSolutions.findIndex(item => item.id === solutionId);
-
-        //     if (indexToDelete !== -1) {
-        //         this.ticketSolutions.splice(indexToDelete, 1);
-        //     }
-        // },
-        commentDeleted(commentId) {
-            const indexToDelete = this.conversation.findIndex(item => item.id === commentId);
-
-            if (indexToDelete !== -1) {
-                this.conversation.splice(indexToDelete, 1);
-            }
-        },
+        
     },
-    mounted() {
-        // this.fetchSolutions(); //carga todas las soluciones
-        // this.fetchConversation(); //carga todos los comentarios
-        // this.fetchHistory(); //carga todo el historial de actividad
-    }
 }
 </script>

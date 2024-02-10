@@ -1,13 +1,13 @@
 <template>
-    <div class="lg:mx-7">
-        <Loading v-if="loading" />
+    <div class="mt-8">
+        <Loading v-if="loading" class="mt-10" />
         <div v-else>
             <div class="flex space-x-3 mt-5">
                 <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
                     <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                         :alt="$page.props.auth.user.name" />
                 </div>
-                <RichText @submitComment="storeSolution($event)" @content="updatedescription($event)" class="flex-1"
+                <RichText @submitComment="storeSolution($event)" @content="updateDescription($event)" class="flex-1"
                     hasMedia :userList="users" :disabled="loading || !description" />
             </div>
 
@@ -26,6 +26,7 @@ export default {
         return {
             solutions: [],
             loading: true,
+            solutionMedia: null,
             description: null,
             users: [],
         }
@@ -35,6 +36,9 @@ export default {
         RichText,
         Loading,
     },
+    props: {
+        ticketId: String,
+    },
     methods: {
         solutionDeleted(solutionId) {
             const indexToDelete = this.solutions.findIndex(item => item.id === solutionId);
@@ -43,19 +47,18 @@ export default {
                 this.solutions.splice(indexToDelete, 1);
             }
         },
-        updatedescription(content) {
+        updateDescription(content) {
             this.description = content;
         },
         async storeSolution(solutionMedia) {
             this.loading = true;
             try {
                 const response = await axios.post(route("ticket-solutions.store"), {
-                    ticketId: this.ticket.data.id,
+                    ticketId: this.ticketId,
                     description: this.description,
                     solution_media: solutionMedia,
                 });
                 if (response.status === 200) {
-                    console.log(response);
                     this.$notify({
                         title: "Correcto",
                         message: "Se ha publicado tu solución",
@@ -79,7 +82,7 @@ export default {
         async fetchSolutions() {
             this.loading = true;
             try {
-                const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticket.data.id));
+                const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticketId));
                 if (response.status === 200) {
                     this.solutions = response.data.items;
                 }
