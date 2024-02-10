@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
+use App\Models\Category;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -101,5 +102,33 @@ class SettingController extends Controller
         }
 
         return response()->json(['message' => 'Permiso(s) eliminado(s)']);
+    }
+
+    public function categoriesMassiveDelete(Request $request)
+    {
+        foreach ($request->items_ids as $id) {
+            $item = Category::find($id);
+            $item?->delete();
+        }
+
+        return response()->json(['message' => 'categoría(s) eliminada(s)']);
+    }
+
+    public function getAllCategories()
+    {
+        $categories = Category::all();
+
+        return response()->json(['items' => $categories]);
+    }
+
+    public function storeCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+        
+        $category = Category::create($validated);
+
+        return response()->json(['item' => $category]);
     }
 }

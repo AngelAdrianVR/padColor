@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
 use App\Models\User;
+use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
 
 class TicketController extends Controller
@@ -57,6 +58,10 @@ class TicketController extends Controller
             'user_id' =>  auth()->id(),
             'ticket_id' =>  $ticket->id,
         ]);
+
+        // notificar a los demas usuarios
+        $users = User::where('id', '!=', auth()->id())->get();
+        $users->each(fn ($user) => new BasicNotification($user->name, $user->profile_photo_url, route('tickets.show', $ticket->id)));
 
         return to_route('tickets.index');
     }

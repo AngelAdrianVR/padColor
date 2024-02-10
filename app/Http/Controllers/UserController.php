@@ -22,7 +22,9 @@ class UserController extends Controller
 
     public function create()
     {
-        return inertia('User/Create');
+        $roles = Role::all();
+
+        return inertia('User/Create', compact('roles'));
     }
 
 
@@ -34,7 +36,7 @@ class UserController extends Controller
             'phone' => 'required|string|max:15',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
-            // 'roles' => 'required|array|min:1',
+            'roles' => 'required|array|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -44,10 +46,10 @@ class UserController extends Controller
         if ($request->hasFile('image')) {
             $this->storeProfilePhoto($request, $user);
             // convertir a int los roles para que no ocurra error
-            // $roles = array_map('intval', $request->roles);
-            // $user->syncRoles($roles);
+            $roles = array_map('intval', $request->roles);
+            $user->syncRoles($roles);
         } else {
-            // $user->syncRoles($request->roles);
+            $user->syncRoles($request->roles);
         }
 
         return to_route('users.show', $user->id);
@@ -65,8 +67,9 @@ class UserController extends Controller
     public function edit(user $user)
     {
         $roles = Role::all();
+        $user_roles = $user->roles->pluck('id');
 
-        return inertia('User/Edit', compact('user', 'user_roles'));
+        return inertia('User/Edit', compact('user', 'roles', 'user_roles'));
     }
 
 
