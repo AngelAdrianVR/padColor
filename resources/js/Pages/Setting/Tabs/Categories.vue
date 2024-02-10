@@ -6,7 +6,15 @@
             </PrimaryButton>
         </div>
         <div class="text-sm">
-            <div class="flex items-center border-b border-grayD9 pb-2">
+            <p v-if="selectedItems.length" class="text-sm text-redpad flex items-center space-x-2 pb-5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                <span>Al eliminar alguna categoría, también se eliminarán los tickets asociados</span>
+            </p>
+            <div v-if="categories.length" class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-3">
                     <Checkbox @change="handleAllItemsChecked" v-model:checked="allItems" name="all"
                         :disabled="!categories.length" />
@@ -24,7 +32,9 @@
             </div>
             <CategoryRow :ref="'category' + category.id" v-for="(category, index) in categories" :key="category.id"
                 @open="editCategory(category, index)" @checked="handleCheckedItem" :item="category" />
+            <el-empty v-if="!categories.length" description="No hay categorías para mostrar" />
         </div>
+
         <DialogModal :show="showCategoryModal" @close="showCategoryModal = false">
             <template #title>
                 <p v-if="editFlag">Categoría {{ currentCategory.name }}</p>
@@ -32,7 +42,8 @@
             </template>
             <template #content>
                 <div>
-                    <form @submit.prevent="editFlag ? updateCategory() : storeCategory()" ref="myform" class="grid grid-cols-3">
+                    <form @submit.prevent="editFlag ? updateCategory() : storeCategory()" ref="myform"
+                        class="grid grid-cols-3">
                         <div class="col-span-full mb-4">
                             <InputLabel value="Nombre de categoría *" class="ml-2" />
                             <input v-model="form.name" class="input" type="text">

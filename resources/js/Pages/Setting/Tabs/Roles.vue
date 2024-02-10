@@ -6,7 +6,7 @@
             </PrimaryButton>
         </div>
         <div class="text-sm">
-            <div class="flex items-center border-b border-grayD9 pb-2">
+            <div v-if="roles.data.length" class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-3">
                     <Checkbox @change="handleAllItemsChecked" v-model:checked="allItems" name="all"
                         :disabled="!roles.data.length" />
@@ -24,6 +24,7 @@
             </div>
             <RoleRow :ref="'role' + role.id" v-for="(role, index) in roles.data" :key="role.id"
                 @open="editRole(role, index)" @checked="handleCheckedItem" :item="role" />
+            <el-empty v-if="!roles.data.length" description="No hay roles para mostrar" />
         </div>
         <DialogModal :show="showRoleModal" @close="showRoleModal = false">
             <template #title>
