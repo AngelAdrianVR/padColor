@@ -59,7 +59,7 @@
                         <p>{{ user.email }}</p>
                     </div>
                     <div class="w-1/2 grid grid-cols-2 gap-x-3 gap-y-2 pl-16">
-                        <p class="flex items-center space-x-2 text-gray99">
+                        <p class="flex items-start space-x-2 text-gray99">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-4">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -68,7 +68,7 @@
                             <span>Teléfono:</span>
                         </p>
                         <p>{{ user.phone }}</p>
-                        <p class="flex items-center space-x-2 text-gray99">
+                        <p class="flex items-start space-x-2 text-gray99">
                             <svg v-if="user.is_active" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="size-4">
                                 <path stroke-linecap="round" stroke-linejoin="round"

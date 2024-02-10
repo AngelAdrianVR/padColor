@@ -96,6 +96,7 @@ export default {
                 job_position: this.user.employee_properties.job_position,
             },
             roles: this.user_roles,
+            selectedImage: this.user.profile_photo_url
         });
 
         return {
@@ -130,6 +131,7 @@ export default {
     },
     props: {
         user: Object,
+        roles: Array,
         user_roles: Array,
     },
     methods: {
@@ -164,6 +166,9 @@ export default {
         },
         clearImage() {
             this.form.image = null;
+
+            // se eliminó la foto
+            this.form.selectedImage = null;
         },
     },
     mounted() {
