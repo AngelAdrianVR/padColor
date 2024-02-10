@@ -91,6 +91,9 @@ Route::post('role-permission/store-permission', [SettingController::class, 'stor
 Route::delete('role-permission/{permission}/destroy-permission', [SettingController::class, 'deletePermission'])->middleware('auth')->name('settings.role-permission.delete-permission');
 Route::post('role-permission/roles-massive-delete', [SettingController::class, 'rolesMassiveDelete'])->name('settings.role-permission.roles-massive-delete');
 Route::post('role-permission/permissions-massive-delete', [SettingController::class, 'permissionsMassiveDelete'])->name('settings.role-permission.permissions-massive-delete');
+Route::post('categories/massive-delete', [SettingController::class, 'categoriesMassiveDelete'])->name('settings.categories.massive-delete');
+Route::get('categories/get-all', [SettingController::class, 'getAllCategories'])->middleware('auth')->name('settings.categories.get-all');
+Route::post('categories/store', [SettingController::class, 'storeCategory'])->middleware('auth')->name('settings.categories.store');
 
 
 //categories routes---------------------------------------------------------------------------

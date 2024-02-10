@@ -10,7 +10,7 @@
                 <label class="flex items-center ml-3">
                     <Checkbox @change="handleAllItemsChecked" v-model:checked="allItems" name="all"
                         :disabled="!roles.data.length" />
-                    <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
+                    <span class="ms-2 text-sm font-bold">Todos los roles</span>
                 </label>
                 <div v-if="selectedItems.length" class="lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
@@ -23,7 +23,7 @@
                 </div>
             </div>
             <RoleRow :ref="'role' + role.id" v-for="(role, index) in roles.data" :key="role.id"
-                @open="editRole(role, index)" :item="role" />
+                @open="editRole(role, index)" @checked="handleCheckedItem" :item="role" />
         </div>
         <DialogModal :show="showRoleModal" @close="showRoleModal = false">
             <template #title>
@@ -106,8 +106,24 @@ export default {
         permissions: Object,
     },
     methods: {
-        // roles
-        handleAllItemChecked() {
+        submitForm() {
+            this.$refs.myform.dispatchEvent(new Event('submit', { cancelable: true }));
+        },
+        handleCheckedItem(evt) {
+            if (evt.isActive) {
+                this.selectedItems.push(evt.id);
+            } else {
+                const index = this.selectedItems.findIndex(item => item === evt.id);
+                this.selectedItems.splice(index, 1);
+            }
+
+            if (this.selectedItems.length === this.roles.data.length) {
+                this.allItems = true;
+            } else if (this.selectedItems.length < this.roles.data.length && this.allItems) {
+                this.allItems = false;
+            }
+        },
+        handleAllItemsChecked() {
             if (this.allItems) {
                 this.selectedItems = this.roles.data.map(role => role.id);
             } else {
@@ -232,9 +248,6 @@ export default {
                 });
                 console.log(err);
             }
-        },
-        submitForm() {
-            this.$refs.myform.dispatchEvent(new Event('submit', { cancelable: true }));
         },
     },
 };
