@@ -23,7 +23,7 @@
                         no-match-text="No se encontraron coincidencias">
                         <el-option v-for="user in users" :key="user" :label="user.name" :value="user.id">
                             <figure style="float: left">
-                                <img class="object-contain bg-no-repeat size-7 rounded-full mt-1" :src="user.profile_photo_url"
+                                <img class="object-cover bg-no-repeat size-7 rounded-full mt-1" :src="user.profile_photo_url"
                                     alt="" />
                             </figure>
                             <span class="ml-2">{{ user.name }}</span>

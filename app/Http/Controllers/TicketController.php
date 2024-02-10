@@ -61,7 +61,8 @@ class TicketController extends Controller
 
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
-        $users->each(fn ($user) => new BasicNotification($user->name, $user->profile_photo_url, route('tickets.show', $ticket->id)));
+        $description = "Ha creado un nuevo ticket";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $user->name, $user->profile_photo_url, route('tickets.show', $ticket->id))) );
 
         return to_route('tickets.index');
     }
@@ -180,6 +181,11 @@ class TicketController extends Controller
             'user_id' =>  auth()->id(),
             'ticket_id' =>  $ticket->id,
         ]);
+
+        // notificar a los demas usuarios
+        $users = User::where('id', '!=', auth()->id())->get();
+        $description = "ha cambiado el estatus del ticket #$ticket->id";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $user->name, $user->profile_photo_url, route('tickets.show', $ticket->id))) );
 
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }

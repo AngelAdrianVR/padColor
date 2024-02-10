@@ -28,6 +28,7 @@ export default {
                 gray66: '#666666',
                 grayD9: '#D9D9D9',
                 gray99: '#999999',
+                grayED: '#EDEDED',
             },
         },
     },

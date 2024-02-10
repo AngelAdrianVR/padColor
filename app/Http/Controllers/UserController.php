@@ -173,25 +173,32 @@ class UserController extends Controller
         return response()->json(['items' => $users]);
     }
 
-    public function getNotifications(Request $request)
+    public function getNotifications()
     {
-        $notifications = auth()->user()->notifications()->where('data->module', $request->module)->get();
+        $items = NotificationResource::collection(auth()->user()->notifications);
 
-        return response()->json(['items' => NotificationResource::collection($notifications)]);
+        return response()->json(compact('items'));
     }
 
-    public function readNotifications(Request $request)
+    public function deleteNotifications()
     {
-        $notifications = auth()->user()->notifications()->whereIn('id', $request->notifications_ids)->get();
-        $notifications->markAsRead();
+        auth()->user()->notifications()->delete();
 
-        return response()->json([]);
+        return response()->json(['message' => "Se han eliminado todas las notificaciones"]);
     }
 
-    public function deleteNotifications(Request $request)
+    public function readNotifications()
     {
-        $notifications = auth()->user()->notifications()->whereIn('id', $request->notifications_ids)->delete();
+        $unread = auth()->user()->unreadNotifications->count();
+        auth()->user()->notifications->markAsRead();
 
-        return response()->json([]);
+        return response()->json(compact('unread'));
+    }
+
+    public function getAll()
+    {
+        $users = User::all(['id', 'name', 'profile_photo_path']);
+
+        return response()->json(['items' => $users]);
     }
 }
