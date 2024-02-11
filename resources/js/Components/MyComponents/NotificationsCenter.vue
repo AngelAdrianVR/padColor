@@ -23,17 +23,17 @@
                     <div class="relative">
                         <div v-if="item.read_at === null"
                             class="size-1 bg-primary rounded-full absolute top-[6px] -right-2"></div>
-                        <div class="flex space-x-2">
-                            <label>
+                        <div class="flex">
+                            <label class="w-[8%]">
                                 <input type="checkbox" @change="handleItemChecked()" @click.stop v-model="selectedItems"
                                     :value="item.id"
                                     class="size-3 rounded-sm border-[#999999] text-primary shadow-sm focus:ring-primary bg-transparent disabled:border-gray-300 disabled:bg-gray-200 disabled:cursor-not-allowed" />
                             </label>
-                            <figure class="size-8 rounded-full">
+                            <figure class="w-[14%] rounded-full">
                                 <img class="size-7 rounded-full object-cover" :src="item.data.user_photo"
                                     :alt="item.data.user_name">
                             </figure>
-                            <section class="text-xs">
+                            <section class="w-[78%] text-xs">
                                 <p :class="{ 'text-primary': item.read_at === null }">
                                     <span class="text-gray66 mr-1">{{ item.data.user_name }}</span>
                                     {{ item.data.description }}
@@ -111,10 +111,11 @@ export default {
         },
         async deleteNotifications() {
             try {
-                const response = await axios.delete(route('users.delete-user-notifications'));
+                const response = await axios.post(route('users.delete-user-notifications'), {notifications_ids: this.selectedItems});
 
                 if (response.status === 200) {
-                    this.notifications = [];
+                    // Filtrar el arreglo excluyendo los elementos con IDs en 'selectedItems'
+                    this.notifications = this.notifications.filter(item => !this.selectedItems.includes(item.id));
                     this.$notify({
                         title: "Éxito",
                         message: response.data.message,

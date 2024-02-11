@@ -180,11 +180,11 @@ class UserController extends Controller
         return response()->json(compact('items'));
     }
 
-    public function deleteNotifications()
+    public function deleteNotifications(Request $request)
     {
-        auth()->user()->notifications()->delete();
+        auth()->user()->notifications()->whereIn('id', $request->notifications_ids)->delete();
 
-        return response()->json(['message' => "Se han eliminado todas las notificaciones"]);
+        return response()->json(['message' => "Se han eliminado las notificaciones seleccionadas"]);
     }
 
     public function readNotifications()

@@ -216,7 +216,7 @@ class TicketController extends Controller
         foreach ($mentions as $mention) {
             $user = User::find($mention['id']);
             $owner = auth()->user();
-            $description = "ha cambiado el estatus del ticket #$ticket->id";
+            $description = "te ha mencionado en un comentario del ticket #$ticket->id";
             $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
         }
 

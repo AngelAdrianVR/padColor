@@ -30,7 +30,7 @@
             </PrimaryButton>
             <transition name="fade">
                 <ul v-if="showUsersList"
-                    class="z-20 border border-[#a9a9a9] absolute -top-40 left-0 rounded-[3px] bg-gray-100 w-60 h-40 overflow-y-auto">
+                    class="z-20 border border-[#a9a9a9] absolute -bottom-32 left-0 rounded-[3px] bg-gray-100 w-60 h-32 overflow-y-auto">
                     <template v-for="item in userList" :key="item.id">
                         <li v-if="item.id !== $page.props.auth.user.id" type="button" @click="mentionUser(item)"
                             class="flex items-center px-2 py-1 space-x-2 text-xs mb-1 hover:bg-gray-200 cursor-pointer">
