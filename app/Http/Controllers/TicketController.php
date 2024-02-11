@@ -63,7 +63,7 @@ class TicketController extends Controller
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
         $description = "Ha creado un nuevo ticket";
-        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.index');
     }
@@ -118,7 +118,7 @@ class TicketController extends Controller
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
         $description = "ha editado el ticket #$ticket->id";
-        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.index');
     }
@@ -159,7 +159,7 @@ class TicketController extends Controller
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
         $description = "ha editado el ticket #$ticket->id";
-        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.index');
     }
@@ -198,7 +198,7 @@ class TicketController extends Controller
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
         $description = "ha cambiado el estatus del ticket #$ticket->id";
-        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
@@ -245,10 +245,11 @@ class TicketController extends Controller
 
         return response()->json(['items' => $ticket_history]);
     }
-    
+
     public function getMatches($query)
     {
-        $tickets = TicketResource::collection(Ticket::where('id', 'LIKE', "%$query%")
+        $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+            ->where('id', 'LIKE', "%$query%")
             ->orWhere('title', 'LIKE', "%$query%")
             ->orWhere('description', 'LIKE', "%$query%")
             ->get());

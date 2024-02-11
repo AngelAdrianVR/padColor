@@ -30,10 +30,10 @@
             </PrimaryButton>
             <transition name="fade">
                 <ul v-if="showUsersList"
-                    class="z-20 border border-[#a9a9a9] absolute -bottom-32 left-0 rounded-[3px] bg-gray-100 w-60 h-32 overflow-y-auto">
+                    class="z-20 border border-[#a9a9a9] absolute -bottom-32 left-0 rounded-[3px] bg-white w-60 h-32 overflow-y-auto">
                     <template v-for="item in userList" :key="item.id">
                         <li v-if="item.id !== $page.props.auth.user.id" type="button" @click="mentionUser(item)"
-                            class="flex items-center px-2 py-1 space-x-2 text-xs mb-1 hover:bg-gray-200 cursor-pointer">
+                            class="flex items-center px-2 py-1 space-x-2 text-xs mb-1 hover:bg-primarylight cursor-pointer">
                             <img class="size-8 rounded-full object-cover" :src="item.profile_photo_url" :alt="item.name" />
                             <p>{{ item.name }}</p>
                         </li>
@@ -46,8 +46,8 @@
         <!-- If has media -->
         <footer v-if="hasMedia"
             class="border border-t-0 border-grayD9 bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
-            <FileUploader @files-selected="this.media = $event" />
-            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment', media)" :disabled="disabled">Publicar
+            <FileUploader @files-selected="filesChanged" />
+            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment')" :disabled="disabled">Publicar
             </PrimaryButton>
         </footer>
 
@@ -100,8 +100,11 @@ export default {
             default: ''
         },
     },
-    emits: ['content', 'submitComment'], // Emite un evento personalizado para actualizar "value",
+    emits: ['content', 'submitComment'],
     methods: {
+        filesChanged(files) {
+            this.media = files;
+        },
         clearContent() {
             const editor = this.$refs.editor;
             editor.innerHTML = null;

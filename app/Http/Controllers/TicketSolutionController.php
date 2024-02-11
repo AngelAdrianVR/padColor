@@ -26,7 +26,6 @@ class TicketSolutionController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         $ticket_solution = TicketSolution::create([
             'description' => $request->description,
             'ticket_id' => $request->ticketId,

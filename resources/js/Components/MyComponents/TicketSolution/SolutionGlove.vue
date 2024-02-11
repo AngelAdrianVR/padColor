@@ -5,7 +5,7 @@
             <img class="size-9 rounded-full object-cover" :src="solution.user.profile_photo_url"
                 :alt="solution.user.name" />
         </div>
-        
+
         <i @click.stop="optionsDropdown = !optionsDropdown" v-if="$page.props.auth.user.id === solution.user.id"
             class="fa-solid fa-ellipsis-vertical text-xs text-primary py-1 px-3 rounded-full cursor-pointer hover:bg-gray-100 absolute right-5 top-5"></i>
 
@@ -31,14 +31,16 @@
                     solution?.created_at['diffForHumans'] }})</span></p>
             </div>
             <p v-html="solution.description"></p>
-            <figure v-for="file in solution.media" :key="file">
-                <img class="object-cover w-32" :src="file.original_url">
-            </figure>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
+                <FileView v-for="file in solution.media" :key="file" :file="file" />
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
+
 export default {
     data() {
         return {
@@ -48,6 +50,9 @@ export default {
     props: {
         solution: Object,
         index: Number
+    },
+    components: {
+        FileView,
     },
     emits: ['solution-deleted'],
     methods: {

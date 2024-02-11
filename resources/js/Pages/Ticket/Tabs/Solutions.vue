@@ -7,8 +7,8 @@
                     <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                         :alt="$page.props.auth.user.name" />
                 </div>
-                <RichText @submitComment="storeSolution($event)" @content="updateDescription($event)" class="flex-1"
-                    hasMedia :userList="users" :disabled="loading || !description" />
+                <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
+                    class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
             </div>
 
             <SolutionGlove v-for="(solution, index) in solutions" :key="solution" :solution="solution" :index="index"
@@ -26,7 +26,6 @@ export default {
         return {
             solutions: [],
             loading: true,
-            solutionMedia: null,
             description: null,
             users: [],
         }
@@ -50,13 +49,17 @@ export default {
         updateDescription(content) {
             this.description = content;
         },
-        async storeSolution(solutionMedia) {
+        async storeSolution() {
             this.loading = true;
             try {
                 const response = await axios.post(route("ticket-solutions.store"), {
                     ticketId: this.ticketId,
                     description: this.description,
-                    solution_media: solutionMedia,
+                    media: this.$refs.mySolution.media,
+                }, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
                 });
                 if (response.status === 200) {
                     this.$notify({

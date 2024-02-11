@@ -3,8 +3,10 @@
         <Loading v-if="loading" class="mt-10" />
         <el-timeline v-else>
             <el-timeline-item v-for="(activity, index) in historical" :key="index" :timestamp="activity.created_at">
-                <p class="font-bold text-secondary text-sm">{{ activity.user.name + ' ' }}<span class="font-normal">{{
-                    activity.description }}</span></p>
+                <p class="font-bold text-secondary text-sm">
+                    {{ activity.user.name + ' ' }}
+                    <span v-html="activity.description" class="font-normal"></span>
+                </p>
             </el-timeline-item>
         </el-timeline>
     </div>

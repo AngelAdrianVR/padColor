@@ -78,7 +78,7 @@
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Fecha de vencimiento" class="ml-3 mb-1" />
-                    <el-date-picker v-model="form.expired_date" type="date" placeholder="Seleccione"
+                    <el-date-picker class="!w-full" v-model="form.expired_date" type="date" placeholder="Seleccione"
                         :disabled-date="disabledDate" />
                     <InputError :message="form.errors.expired_date" />
                 </div>
