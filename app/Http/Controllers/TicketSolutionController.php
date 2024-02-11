@@ -26,16 +26,16 @@ class TicketSolutionController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         $ticket_solution = TicketSolution::create([
             'description' => $request->description,
             'ticket_id' => $request->ticketId,
             'user_id' => auth()->id(),
         ]);
 
-        // Guardar la media si existe
-        if ($request->hasFile('solution_media')) {
-            $ticket_solution->addMediaFromRequest('solution_media')->toMediaCollection();
-        }
+
+        // Guardar media
+        $ticket_solution->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
 
         //Crear registro de actividad
         TicketHistory::create([

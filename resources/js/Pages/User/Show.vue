@@ -1,16 +1,18 @@
 <template>
     <AppLayout title="Detalles usuario">
         <header class="lg:px-9 px-1 mt-3">
-            
+
             <section class="flex items-center justify-between mt-2">
                 <h1 class="font-bold text-base">Detalles de usuario</h1>
                 <div class="flex items-center space-x-2">
                     <PrimaryButton @click="$inertia.get(route('users.edit', user.id))">Editar</PrimaryButton>
-                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]"><i class="fa-solid fa-plus"></i></SecondaryButton>
+                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]"><i
+                            class="fa-solid fa-plus"></i></SecondaryButton>
                 </div>
             </section>
             <!-- buscador -->
-            <el-select @change="$inertia.get(route('users.show', selectedItem))" v-model="selectedItem" class="w-full lg:!w-1/4 mt-5" placeholder="Buscar usuario" filterable
+            <el-select @change="$inertia.get(route('users.show', selectedItem))" v-model="selectedItem"
+                class="w-full lg:!w-1/4 mt-5" placeholder="Buscar usuario" filterable
                 no-data-text="No hay más usuarios registrados" no-match-text="No se encontraron coincidencias">
                 <el-option v-for="item in users" :key="item.id" :label="item.name" :value="item.id" />
             </el-select>
@@ -21,7 +23,10 @@
         </header>
         <main class="relative mt-5">
             <div class="bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% h-32 pt-px">
-                <Back class="ml-3 mt-3" />
+                <button @click="$inertia.get(route('users.index'))"
+                    class="flex justify-center items-center rounded-full py-[9px] px-3 focus:outline-none bg-grayD9 ml-3 mt-3">
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
             </div>
             <figure class="size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-5rem)]">
                 <img :src="user.profile_photo_url" :alt="user.name" class="size-40 object-cover rounded-[5px]">
