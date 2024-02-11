@@ -9,17 +9,17 @@
         <section @click="$inertia.get(route('users.show', user.id))" class="flex flex-col pl-6 cursor-pointer">
             <div class="flex items-center space-x-3 text-gray66 text-xs font-bold">
                 <span>Dpto. {{ user.employee_properties?.department }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <span>{{ user.employee_properties?.job_position }}</span>
             </div>
             <h2 class="font-bold">{{ user.name }}</h2>
             <div class="flex items-center space-x-3 text-xs text-gray66">
                 <span>#{{ user.id }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <span>{{ user.email }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <span>{{ user.phone }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <span :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' : 'Inactivo' }}</span>
             </div>
         </section>

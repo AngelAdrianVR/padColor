@@ -1,18 +1,23 @@
 <template>
     <AppLayout :title="ticket.data.title">
+<<<<<<< HEAD
         <div class="lg:p-9 p-2">
+=======
+        <div class="lg:p-9 p-1 text-sm">
+>>>>>>> Miguel
             <div class="flex items-center justify-between">
                 <Back />
-                <p class="text-gray66">Información sobre el ticket</p>
-                <ThirthButton @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar</ThirthButton>
+                <ThirthButton class="!rounded-[3px]" @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar</ThirthButton>
             </div>
-            <div class="lg:mx-16 mt-5">
+            <h1 class="text-gray66 lg:mx-[72px] mt-2">Información sobre el ticket</h1>
+            <div class="lg:mx-16 mt-2">
                 <!-- Info general -->
-                <h1 class="font-bold text-lg my-2 ml-2">{{ ticket.data.title }}</h1>
-                <div class="border rounded-md text-sm p-2 my-2">
+                <h1 class="font-bold ml-2">{{ ticket.data.title }}</h1>
+                <div class="border rounded-md  p-2 my-2">
                     <p class="text-gray66">Descripción</p>
                     <span class="text-black">{{ ticket.data.description }}</span>
                 </div>
+<<<<<<< HEAD
                 <div class="md:flex items-center space-x-3">
                     <p class="text-gray66 text-sm">Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
                     <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
@@ -22,11 +27,27 @@
                     <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <p class="text-gray66 text-sm">Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date }}</span></p>
                     <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
+=======
+                <div class="lg:flex items-center space-x-3 ml-2 text-gray66">
+                    <p>Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
+                    <span>•</span>
+                    <p>Creado por: <span class="text-black ml-1">{{
+                        ticket.data.responsible?.name }}</span></p>
+                    <span>•</span>
+                    <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
+                    }}</span></p>
+                    <span>•</span>
+                    <p>Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
+                    }}</span></p>
+                    <span>•</span>
+>>>>>>> Miguel
                     <div class="flex items-center space-x-3">
-                        <p class="text-gray66 text-sm">Prioridad: <span class="text-black ml-1">{{ ticket.data.priority }}</span></p>
+                        <p>Prioridad: <span class="text-black ml-1">{{ ticket.data.priority
+                        }}</span></p>
                         <i :class="getPriorityColor()" class="fa-solid fa-circle text-[7px]"></i>
                     </div>
                 </div>
+<<<<<<< HEAD
                 <div class="md:flex items-center my-2 space-x-4">
                     <!-- Estatus -->
                     <div class="flex items-center space-x-3 lg:w-1/4">
@@ -35,6 +56,15 @@
                             <el-select @change="updateStatus" v-model="status"
                                 placeholder="Seleccione" no-data-text="No hay opciones registradas"
                                 no-match-text="No se encontraron coincidencias">
+=======
+                <div class="flex justify-between my-6 ml-2">
+                    <!-- Estatus -->
+                    <div class="flex items-center space-x-3 w-full">
+                        <p class="text-gray66">Estatus:</p>
+                        <div class="lg:w-1/4">
+                            <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
+                                no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+>>>>>>> Miguel
                                 <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
                                     <p class="w-4" style="float: left">
                                         <span v-html="item.icon"></span>
@@ -43,6 +73,7 @@
                                 </el-option>
                             </el-select>
                         </div>
+<<<<<<< HEAD
                     </div>
                     <i class="hidden md:block fa-solid fa-circle text-[3px]"></i>
                     <p class="text-gray66 text-sm my-2 md:my-0"><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el' }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
@@ -54,16 +85,31 @@
                             :alt="ticket.data.responsible.name" />
                         </div>  
                         <p class="text-sm">{{ticket.data.responsible.name}}</p>
+=======
+                        <span class="text-gray66">•</span>
+                        <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
+                        }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
+                        <span class="text-gray66">•</span>
+                        <div class="flex items-center space-x-3">
+                            <p class="text-gray66 ">Responsable: </p>
+                            <div class="flex  rounded-full w-10">
+                                <img class="size-9 rounded-full object-cover"
+                                    :src="ticket.data.responsible.profile_photo_url" :alt="ticket.data.responsible.name" />
+                            </div>
+                            <p>{{ ticket.data.responsible.name }}</p>
+                        </div>
+>>>>>>> Miguel
                     </div>
                 </div>
 
-                <p class="text-gray66 text-sm py-2">Archivos adjuntos</p>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2" v-if="ticket.data.media?.length > 0 ">
+                <p class="text-gray66  py-2">Archivos adjuntos</p>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2" v-if="ticket.data.media?.length > 0">
                     <FileView v-for="file in ticket.data.media" :key="file" :file="file" />
                 </div>
-                <p v-else class="text-sm text-gray-400">No hay archivos adjuntos</p>
+                <p v-else class=" text-gray-400 mx-4 text-xs">No hay archivos adjuntos</p>
             </div>
 
+<<<<<<< HEAD
             <!-- Pestañas -->
             <div class="lg:w-3/4 w-full flex items-center space-x-7 text-sm border-b border-gray4 lg:mx-16 mx-2 mt-16 mb-5 contenedor">
               <div @click="currentTab = 1" :class="currentTab == 1 ? 'text-primary border-b-2 border-primary pb-1 px-3 font-bold' : 'px-3 pb-1 text-gray66 font-semibold' " class="flex items-center space-x-2 cursor-pointer text-base">
@@ -156,6 +202,37 @@
             </div>
             <!-- ----------------------------------------- -->
 
+=======
+            <el-tabs v-model="activeTab" class="lg:mx-20 mt-10">
+                <el-tab-pane name="1">
+                    <template #label>
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-check-double mr-1"></i>
+                            <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
+                        </div>
+                    </template>
+                    <Solutions :ticketId="this.ticket.data.id" />
+                </el-tab-pane>
+                <el-tab-pane name="2">
+                    <template #label>
+                        <div class="flex items-center">
+                            <i class="fa-regular fa-comment-dots mr-1"></i>
+                            <span>Conversaciones</span>
+                        </div>
+                    </template>
+                    <Comments :ticketId="this.ticket.data.id" />
+                </el-tab-pane>
+                <el-tab-pane name="3">
+                    <template #label>
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                            <span>Registro de actividad</span>
+                        </div>
+                    </template>
+                    <Historical :ticketId="this.ticket.data.id" />
+                </el-tab-pane>
+            </el-tabs>
+>>>>>>> Miguel
         </div>
     </AppLayout>
 </template>
@@ -169,26 +246,23 @@ import RichText from "@/Components/MyComponents/RichText.vue";
 import Comment from "@/Components/MyComponents/Ticket/Comment.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
 import Back from "@/Components/MyComponents/Back.vue";
+import Solutions from "./Tabs/Solutions.vue";
+import Comments from "./Tabs/Comments.vue";
+import Historical from "./Tabs/Historical.vue";
 import axios from 'axios';
 
 export default {
-data() {
-    return {
-        currentTab: 1,
-        loading: false,
-        solutionDescription: null, //texto para la solución 
-        solutionMedia: null, //Archivos adjuntos para la solución
-        conversationComment: null,
-        conversation: null, //todos los comentarios del ticket
-        ticketSolutions: null, //Todas las soluciones
-        ticketHistory: null, //Toda la actividad del ticket
-        status: this.ticket.data.status,
-        statuses: [
-            {
-                label: 'Abierto',
-                color: 'text-[#0355B5]',
-                icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
+    data() {
+        return {
+            activeTab: '1',
+            status: this.ticket.data.status,
+            statuses: [
+                {
+                    label: 'Abierto',
+                    color: 'text-[#0355B5]',
+                    icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
 
+<<<<<<< HEAD
             },
             {
                 label:'En espera',
@@ -240,173 +314,105 @@ methods:{
             return 'text-[#D68D1F]';
         } else if (this.ticket.data.priority === 'Alta') {
             return 'text-[#C1202A]';
+=======
+                },
+                {
+                    label: 'En espera',
+                    color: 'text-[#FD8827]',
+                    icon: '<i class="fa-regular fa-clock text-[#FD8827]"></i>',
+                },
+                {
+                    label: 'En espera de 3ro',
+                    color: 'text-[#B927FD]',
+                    icon: '<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
+                },
+                {
+                    label: 'Completado',
+                    color: 'text-[#3F9C30]',
+                    icon: '<i class="fa-solid fa-check text-[#3F9C30]"></i>',
+                },
+                {
+                    label: 'Re-abierto',
+                    color: 'text-[#FD4646]',
+                    icon: '<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
+                },
+                {
+                    label: 'En proceso',
+                    color: 'text-[#3D3D3D]',
+                    icon: '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D]"></i>',
+                },
+            ],
+>>>>>>> Miguel
         }
     },
-    getIcon() {
-        if (this.ticket.data.status === 'Abierto') {
-            return '<i class="fa-solid fa-arrow-up text-[#0355B5] mr-2"></i>';
-        } else if (this.ticket.data.status === 'En espera') {
-            return '<i class="fa-regular fa-clock text-[#FD8827] mr-2"></i>';
-        } else if (this.ticket.data.status === 'En espera de 3ro') {
-            return '<i class="fa-regular fa-hourglass-half text-[#B927FD] mr-2"></i>';
-        } else if (this.ticket.data.status === 'Completado') {
-            return '<i class="fa-solid fa-check text-[#3F9C30] mr-2"></i>';
-        } else if (this.ticket.data.status === 'Re-abierto') {
-            return '<i class="fa-solid fa-rotate-right text-[#FD4646] mr-2"></i>';
-        } else if (this.ticket.data.status === 'En proceso') {
-            return '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D] mr-2"></i>';
-        }
+    components: {
+        AppLayout,
+        ThirthButton,
+        SolutionGlove,
+        FileView,
+        RichText,
+        Comment,
+        Back,
+        Solutions,
+        Comments,
+        Historical,
     },
-    async updateStatus() {
-        try {
-            const response = await axios.put(route('tickets.update-status', this.ticket.data.id), { status: this.status });
+    props: {
+        ticket: Object,
+        solutions_count: Number,
+    },
+    methods: {
+        getPriorityColor() {
+            if (this.ticket.data.priority === 'Baja') {
+                return 'text-[#A49C9D]';
+            } else if (this.ticket.data.priority === 'Media') {
+                return 'text-[#D68D1F]';
+            } else if (this.ticket.data.priority === 'Alta') {
+                return 'text-[#C1202A]';
+            }
+        },
+        getIcon() {
+            if (this.ticket.data.status === 'Abierto') {
+                return '<i class="fa-solid fa-arrow-up text-[#0355B5] mr-2"></i>';
+            } else if (this.ticket.data.status === 'En espera') {
+                return '<i class="fa-regular fa-clock text-[#FD8827] mr-2"></i>';
+            } else if (this.ticket.data.status === 'En espera de 3ro') {
+                return '<i class="fa-regular fa-hourglass-half text-[#B927FD] mr-2"></i>';
+            } else if (this.ticket.data.status === 'Completado') {
+                return '<i class="fa-solid fa-check text-[#3F9C30] mr-2"></i>';
+            } else if (this.ticket.data.status === 'Re-abierto') {
+                return '<i class="fa-solid fa-rotate-right text-[#FD4646] mr-2"></i>';
+            } else if (this.ticket.data.status === 'En proceso') {
+                return '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D] mr-2"></i>';
+            }
+        },
+        async updateStatus() {
+            try {
+                const response = await axios.put(route('tickets.update-status', this.ticket.data.id), { status: this.status });
 
-            if (response.status === 200) {
+                if (response.status === 200) {
 
-                this.ticket.data.status = response.data.item.status;
-                this.ticket.data.updated_at = response.data.item.updated_at;
+                    this.ticket.data.status = response.data.item.status;
+                    this.ticket.data.updated_at = response.data.item.updated_at;
 
+                    this.$notify({
+                        title: "Correcto",
+                        message: "Se ha actualizado el estatus",
+                        type: "success",
+                    });
+                    this.fetchHistory();
+                }
+            } catch (error) {
+                console.log(error);
                 this.$notify({
-                    title: "Correcto",
-                    message: "Se ha actualizado el estatus",
-                    type: "success",
+                    title: "Error de servidor",
+                    message: "No se pudo completar tu petición. Inténtalo más tarde",
+                    type: "error",
                 });
-                this.fetchHistory();
             }
-        } catch (error) {
-            console.log(error);
-            this.$notify({
-                title: "Error de servidor",
-                message: "No se pudo completar tu petición. Inténtalo más tarde",
-                type: "error",
-            });
-        }
+        },
+        
     },
-    updateSolutionDescription(content) {
-      this.solutionDescription = content;
-    },
-    updateConversationComment(content) {
-      this.conversationComment = content;
-    },
-    async storeComment() {
-      const editor = this.$refs.commentEditor;
-        this.loading = true;
-        try {
-          const response = await axios.post(route("tickets.comment", this.ticket.data.id), {
-            comment: this.conversationComment,
-            mentions: editor.mentions,
-          });
-          if (response.status === 200) {
-            // this.taskComponentLocal?.comments.push(response.data.item);
-          }
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.loading = false;
-            this.conversationComment = null;
-            // editor.clearContent();
-            this.fetchConversation(); //recupera los comentarios de nuevo
-        }
-    },
-    async storeSolution(solutionMedia) {
-        this.loading = true;
-        try {
-          const response = await axios.post(route("ticket-solutions.store"), {
-            ticketId: this.ticket.data.id,
-            solutionDescription: this.solutionDescription,
-            solution_media: solutionMedia,
-          });
-          if (response.status === 200) {
-            console.log(response);
-            this.$notify({
-                title: "Correcto",
-                message: "Se ha publicado tu solución",
-                type: "success",
-            });
-            this.solutionDescription = null;
-          }
-        } catch (error) {
-          console.log(error);
-          this.$notify({
-                title: "Error de servidor",
-                message: "Hubo un problema al publicar tu solución. Inténta más tarde",
-                type: "error",
-            });
-
-        } finally {
-            this.loading = false;
-            this.fetchSolutions(); //recupera las soluciones de nuevo
-        }
-    },
-    async fetchSolutions() {
-        this.loading = true;
-        try {
-          const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticket.data.id));
-          if (response.status === 200) {
-            this.ticketSolutions = response.data.items;            
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          this.loading = false;
-        }
-    },
-    async fetchConversation() {
-        this.loading = true;
-        try {
-          const response = await axios.get(route("tickets.fetch-conversation", this.ticket.data.id));
-          if (response.status === 200) {
-            this.conversation = response.data.items;            
-          }
-        } catch (error) {
-          console.log(error);
-          this.$notify({
-                title: "Error de servidor",
-                message: "Hubo un problema al publicar tu solución. Inténta más tarde",
-                type: "error",
-            });
-
-        } finally {
-          this.loading = false;
-        }
-    },
-    async fetchHistory() {
-        this.loading = true;
-        try {
-          const response = await axios.get(route("tickets.fetch-history", this.ticket.data.id));
-          if (response.status === 200) {
-            this.ticketHistory = response.data.items;            
-            this.loading = false;
-            this.fetchSolutions(); //recupera las soluciones de nuevo
-            }
-        } catch (error) {
-          console.log(error);
-
-        } finally {
-          this.loading = false;
-        }
-    },
-   
-    solutionDeleted(solutionId) {
-        const indexToDelete = this.ticketSolutions.findIndex(item => item.id === solutionId);
-
-        if (indexToDelete !== -1) {
-            this.ticketSolutions.splice(indexToDelete, 1);
-        }
-    },
-    commentDeleted(commentId) {
-        const indexToDelete = this.conversation.findIndex(item => item.id === commentId);
-
-        if (indexToDelete !== -1) {
-            this.conversation.splice(indexToDelete, 1);
-        }
-    },
-},
-mounted() {
-    this.fetchSolutions(); //carga todas las soluciones
-    this.fetchConversation(); //carga todos los comentarios
-    this.fetchHistory(); //carga todo el historial de actividad
-}
 }
 </script>
 

@@ -14,7 +14,7 @@ class BasicNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(public $user_name, public $user_photo, public $url)
+    public function __construct(public $description, public $user_name, public $user_photo, public $url)
     {
         //
     }
@@ -50,7 +50,7 @@ class BasicNotification extends Notification
         return [
             'user_name' => $this->user_name,
             'user_photo' => $this->user_photo,
-            'description' => "Ha creado un nuevo ticket",
+            'description' => $this->description,
             'url' => $this->url
         ];
     }

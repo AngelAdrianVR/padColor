@@ -13,9 +13,9 @@
             </label>
             <div class="flex items-center space-x-2 pl-6">
                 <span class="text-gray66 text-xs">#{{ ticket.id }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <span class="text-gray66 text-xs">{{ ticket.user?.name }}</span>
-                <i class="fa-solid fa-circle text-[3px]"></i>
+                <span>•</span>
                 <p class="text-gray66 text-xs"><span v-html="getIcon(ticket)"></span>{{ ticket.updated_at }}</p>
             </div>
         </section>

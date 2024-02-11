@@ -14,6 +14,10 @@ const props = defineProps({
         type: Array,
         default: () => ['py-1', 'bg-white'],
     },
+    closeInClick: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 let open = ref(false);
@@ -30,7 +34,7 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 const widthClass = computed(() => {
     return {
         '48': 'w-48',
-        'notifications': 'w-60',
+        'notifications': 'w-80',
     }[props.width.toString()];
 });
 
@@ -69,7 +73,7 @@ const alignmentClasses = computed(() => {
                 class="absolute z-50 mt-2 rounded-md shadow-lg"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none;"
-                @click="open = false"
+                @click="open = !closeInClick"
             >
                 <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
                     <slot name="content" />

@@ -53,25 +53,27 @@
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
                     <button v-if="$page.props.jetstream.managesProfilePhotos" @click="showProfileCard = !showProfileCard"
-                        class="size-12 flex justify-center items-center space-x-2 text-sm border rounded-full focus:outline-none transition"
-                        :class="showProfileCard ? 'border-primary' : 'border-[#999999]'">
-                        <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
-                            :alt="$page.props.auth.user.name">
-                        <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
-                        <p v-if="!small" class="text-sm w-32">{{ $page.props.auth.user.name }}</p>
-                        <i v-if="!small" class="fa-solid fa-angle-right text-center text-sm text-[#999999]"></i>
+                        class="flex items-center space-x-2 text-sm border rounded-full focus:outline-none transition"
+                        :class="{ 'border-primary': showProfileCard, 'border-[#999999]': !showProfileCard, 'size-12 justify-center': small, 'h-12 w-full px-2 justify-between': !small }">
+                        <div class="flex items-center">
+                            <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                                :alt="$page.props.auth.user.name">
+                            <p v-if="!small" class="text-[11px] text-gray99 leading-snug text-start mt-1 ml-2">{{ $page.props.auth.user.name }}</p>
+                        </div>
+                        <i v-if="!small" class="fa-solid fa-angle-right text-center text-xs text-[#999999]"></i>
                     </button>
-                    <div v-if="showProfileCard" class="h-64 w-56 bg-white shadow-md border border-grayD9 absolute bottom-3 left-[calc(100%+0.75rem)] rounded-[10px]">
+                    <div v-if="showProfileCard"
+                        class="z-50 h-64 w-56 bg-white shadow-md border border-grayD9 absolute bottom-3 left-[calc(100%+0.75rem)] rounded-[10px]">
                         <div
                             class="h-[40%] bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% rounded-t-[10px]">
                             <button @click="showProfileCard = false" class="absolute top-1 right-2 text-xs text-black">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                             <Link :href="route('profile.show')">
-                                <button
-                                    class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-[11px] text-primary bg-primarylight">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
+                            <button
+                                class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-[11px] text-primary bg-primarylight">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
                             </Link>
                         </div>
                         <figure class="size-28 rounded-[5px] bg-gray-500 absolute top-6 left-[calc(50%-3.5rem)]">

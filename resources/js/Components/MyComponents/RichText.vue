@@ -2,35 +2,35 @@
     <div v-if="showUsersList" @click="showUsersList = false" class="inset-0 absolute top-0 left-0 z-10"></div>
     <div class="relative w-full">
         <!-- <header
-            class="border border-b-0 border-[#9A9A9A] bg-[#CCCCCC] rounded-tl-[3px] rounded-tr-[3px] h-7 flex items-center">
+            class="border border-b-0 border-grayD9 bg-[#CCCCCC] rounded-tl-[3px] rounded-tr-[3px] h-7 flex items-center">
            <button type="button" @click="toggleStyle('bold')" :class="{ 'text-primary': styles.bold }"
-                class="border-r border-[#9A9A9A] px-3 text-sm">
+                class="border-r border-grayD9 px-3 text-sm">
                 <i class="fa-solid fa-bold"></i>
             </button>
             <button type="button" @click="toggleStyle('italic')" :class="{ 'text-primary': styles.italic }"
-                class="border-r border-[#9A9A9A] px-3 text-sm">
+                class="border-r border-grayD9 px-3 text-sm">
                 <i class="fa-solid fa-italic"></i>
             </button>
             <button type="button" @click="toggleStyle('underline')" :class="{ 'text-primary': styles.underline }"
-                class="border-r border-[#9A9A9A] px-3 text-sm">
+                class="border-r border-grayD9 px-3 text-sm">
                 <i class="fa-solid fa-underline"></i>
             </button> 
         </header> -->
         <div contenteditable="true" @input="onInput" ref="editor" id="editor" @keypress="checkForAtSign"
-            class="bg-transparent border border-[#9A9A9A] placeholder:text-gray-400 text-gray-700 text-sm rounded-t-lg focus:border-primary block w-full p-2.5 min-h-[85px] focus:outline-none"
+            class="bg-transparent border border-grayD9 placeholder:text-gray-400 text-gray-700 text-sm rounded-t-lg focus:border-primary block w-full p-2.5 min-h-[85px] focus:outline-none"
             :class="{ 'rounded-none': withFooter || hasMedia }">
         </div>
 
         <!-- Make mentions -->
         <footer v-if="withFooter"
-            class="border border-t-0 border-[#9A9A9A] bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
+            class="border border-t-0 border-grayD9 bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
             <button @click="showUsersList = !showUsersList" type="button"
                 class="text-primary text-sm cursor-pointer">@Mención</button>
             <PrimaryButton type="button" @click="$emit('submitComment')" :disabled="disabled">Agregar comentarios
             </PrimaryButton>
             <transition name="fade">
                 <ul v-if="showUsersList"
-                    class="z-20 border border-[#a9a9a9] absolute -top-40 left-0 rounded-[3px] bg-gray-100 w-60 h-40 overflow-y-auto">
+                    class="z-20 border border-[#a9a9a9] absolute -bottom-32 left-0 rounded-[3px] bg-gray-100 w-60 h-32 overflow-y-auto">
                     <template v-for="item in userList" :key="item.id">
                         <li v-if="item.id !== $page.props.auth.user.id" type="button" @click="mentionUser(item)"
                             class="flex items-center px-2 py-1 space-x-2 text-xs mb-1 hover:bg-gray-200 cursor-pointer">
@@ -45,7 +45,7 @@
 
         <!-- If has media -->
         <footer v-if="hasMedia"
-            class="border border-t-0 border-[#9A9A9A] bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
+            class="border border-t-0 border-grayD9 bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
             <FileUploader @files-selected="this.media = $event" />
             <PrimaryButton class="self-start" type="button" @click="$emit('submitComment', media)" :disabled="disabled">Publicar
             </PrimaryButton>

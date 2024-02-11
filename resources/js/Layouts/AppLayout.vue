@@ -35,7 +35,7 @@ const switchToTeam = (team) => {
 
         <div class="overflow-hidden h-screen md:flex bg-white">
             <!-- sidenav -->
-            <aside class="col-span-2 w-auto">
+            <aside class="col-span-2">
                 <SideNav />
             </aside>
 

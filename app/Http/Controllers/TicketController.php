@@ -19,7 +19,7 @@ class TicketController extends Controller
     public function index()
     {
         $tickets = TicketResource::collection(Ticket::latest()->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->get());
-        // return $tickets;
+
         return inertia('Ticket/Index', compact('tickets'));
     }
 
@@ -61,7 +61,9 @@ class TicketController extends Controller
 
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
-        $users->each(fn ($user) => new BasicNotification($user->name, $user->profile_photo_url, route('tickets.show', $ticket->id)));
+        $owner = auth()->user();
+        $description = "Ha creado un nuevo ticket";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
 
         return to_route('tickets.index');
     }
@@ -69,10 +71,9 @@ class TicketController extends Controller
 
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
-        $users = User::all(['id', 'name', 'profile_photo_path']);
+        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
 
-        return inertia('Ticket/Show', compact('ticket', 'users'));
+        return inertia('Ticket/Show', compact('ticket'));
     }
 
 
@@ -113,6 +114,12 @@ class TicketController extends Controller
             ]);
         }
 
+        // notificar a los demas usuarios
+        $users = User::where('id', '!=', auth()->id())->get();
+        $owner = auth()->user();
+        $description = "ha editado el ticket #$ticket->id";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+
         return to_route('tickets.index');
     }
 
@@ -148,6 +155,12 @@ class TicketController extends Controller
             ]);
         }
 
+        // notificar a los demas usuarios
+        $users = User::where('id', '!=', auth()->id())->get();
+        $owner = auth()->user();
+        $description = "ha editado el ticket #$ticket->id";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+
         return to_route('tickets.index');
     }
 
@@ -181,6 +194,12 @@ class TicketController extends Controller
             'ticket_id' =>  $ticket->id,
         ]);
 
+        // notificar a los demas usuarios
+        $users = User::where('id', '!=', auth()->id())->get();
+        $owner = auth()->user();
+        $description = "ha cambiado el estatus del ticket #$ticket->id";
+        $users->each( fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))) );
+
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
 
@@ -193,11 +212,13 @@ class TicketController extends Controller
 
         $ticket->comments()->save($comment);
 
-        // $mentions = $request->mentions;
-        // foreach ($mentions as $mention) {
-        //     $user = User::find($mention['id']);
-        //     $user->notify(new MentionNotification($oportunity_task, "", 'opportunities'));
-        // }
+        $mentions = $request->mentions;
+        foreach ($mentions as $mention) {
+            $user = User::find($mention['id']);
+            $owner = auth()->user();
+            $description = "te ha mencionado en un comentario del ticket #$ticket->id";
+            $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+        }
 
         //Crear registro de actividad
         TicketHistory::create([

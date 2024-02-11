@@ -74,9 +74,10 @@ Route::resource('users', UserController::class)->middleware('auth');
 Route::post('users/update-with-media/{user}', [UserController::class, 'updateWithMedia'])->name('users.update-with-media')->middleware('auth');
 Route::post('users/massive-delete', [UserController::class, 'massiveDelete'])->name('users.massive-delete');
 Route::get('users-get-matches/{query}', [UserController::class, 'getMatches'])->name('users.get-matches');
-Route::post('users-get-notifications', [UserController::class, 'getNotifications'])->middleware('auth')->name('users.get-notifications');
-Route::post('users-read-notifications', [UserController::class, 'readNotifications'])->middleware('auth')->name('users.read-notifications');
-Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-notifications');
+Route::get('users-get-notifications', [UserController::class, 'getNotifications'])->middleware('auth')->name('users.get-notifications');
+Route::post('users-read-notifications', [UserController::class, 'readNotifications'])->middleware('auth')->name('users.read-user-notifications');
+Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-user-notifications');
+Route::get('users-get-all', [UserController::class, 'getAll'])->middleware('auth')->name('users.get-all');
 
 
 //settings routes---------------------------------------------------------------------------

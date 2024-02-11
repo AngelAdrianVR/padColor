@@ -23,7 +23,7 @@
         </div>
         <div class="border border-grayD9 rounded-b-xl rounded-r-lg px-3 pt-3 pb-5 mt-1">
             <input v-model="form.body" class="input !border-transparent" type="text" v-if="in_edition" autofocus />
-            <p v-else>{{ comment.body }}</p>
+            <p v-else v-html="comment.body"></p>
         </div>
     </div>
 </template>
