@@ -1,7 +1,8 @@
 <template>
     <div>
         <div class="flex justify-end mt-5 mx-14">
-            <PrimaryButton @click="createRole()" class="rounded-full">
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear roles')" @click="createRole()"
+                class="rounded-full">
                 Agregar rol
             </PrimaryButton>
         </div>
@@ -12,7 +13,8 @@
                         :disabled="!roles.data.length" />
                     <span class="ms-2 text-sm font-bold">Todos los roles</span>
                 </label>
-                <div v-if="selectedItems.length" class="lg:ml-36">
+                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar roles')"
+                    class="lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
                         :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
                         @confirm="deleteItems()">
@@ -139,15 +141,15 @@ export default {
             });
         },
         editRole(role, index) {
-            // if (this.$page.props.auth.user.permissions.includes('Editar roles y permisos')) {
-            this.currentRole = role;
-            this.editFlag = true;
-            this.indexRoleEdit = index;
-            this.showRoleModal = true;
+            if (this.$page.props.auth.user.permissions.includes('Editar roles')) {
+                this.currentRole = role;
+                this.editFlag = true;
+                this.indexRoleEdit = index;
+                this.showRoleModal = true;
 
-            this.form.name = role.name;
-            this.form.permissions = role.permissions.ids;
-            // }
+                this.form.name = role.name;
+                this.form.permissions = role.permissions.ids;
+            }
         },
         createRole() {
             this.currentRole = null;

@@ -23,17 +23,19 @@
             </el-popconfirm>
         </div>
         <!-- cuerpo de la solucion -->
-        <div class="w-full border border-grayD9 rounded-[50px] rounded-tl-none py-3 px-9 mt-2">
+        <div class="w-full border border-grayD9 rounded-[30px] lg:rounded-[50px] rounded-tl-none py-3 px-3 lg:px-9 mt-2">
             <h1 class="font-bold mb-2">Resolución {{ (index + 1) }}</h1>
             <div class="flex justify-between items-center">
                 <p class="text-secondary font-semibold">{{ solution.user?.name }}</p>
-                <p class="text-gray66 text-xs">{{ solution.created_at['isoFormat'] }}<span class="ml-2">({{
+                <p class="hidden lg:block text-gray66 text-xs">{{ solution.created_at['isoFormat'] }}<span class="ml-2">({{
                     solution?.created_at['diffForHumans'] }})</span></p>
             </div>
             <p v-html="solution.description"></p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
                 <FileView v-for="file in solution.media" :key="file" :file="file" />
             </div>
+            <p class="lg:hidden text-gray66 text-xs text-right mt-3">{{ solution.created_at['isoFormat'] }}<span class="ml-2">({{
+                solution?.created_at['diffForHumans'] }})</span></p>
         </div>
     </div>
 </template>

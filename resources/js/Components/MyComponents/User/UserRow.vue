@@ -5,16 +5,16 @@
                 :disabled="$page.props.auth.user.id === user.id" />
         </label>
         <figure class="flex justify-center items-center text-sm rounded-full ml-2">
-            <img class="md:size-14 size-12 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">
+            <img class="size-9 md:size-14 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">
         </figure>
-        <section @click="$inertia.get(route('users.show', user.id))" class="flex flex-col pl-6 cursor-pointer">
-            <div class="flex items-center space-x-3 text-gray66 text-xs font-bold">
+        <section @click="$inertia.get(route('users.show', user.id))" class="flex flex-col pl-4 lg:pl-6 cursor-pointer">
+            <div class="flex items-center space-x-1 lg:space-x-3 text-gray66 text-xs font-bold">
                 <span>Dpto. {{ user.employee_properties?.department }}</span>
                 <span>•</span>
                 <span>{{ user.employee_properties?.job_position }}</span>
             </div>
             <h2 class="font-bold">{{ user.name }}</h2>
-            <div class="flex items-center space-x-3 text-xs text-gray66">
+            <div class="flex items-center space-x-1 lg:space-x-3 text-xs text-gray66">
                 <span>#{{ user.id }}</span>
                 <span>•</span>
                 <span>{{ user.email }}</span>

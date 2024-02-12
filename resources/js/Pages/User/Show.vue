@@ -29,13 +29,13 @@
                     <i class="fa-solid fa-angle-left"></i>
                 </button>
             </div>
-            <figure class="size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-5rem)]">
-                <img :src="user.profile_photo_url" :alt="user.name" class="size-40 object-cover rounded-[5px]">
+            <figure class="size-32 lg:size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-4rem)]">
+                <img :src="user.profile_photo_url" :alt="user.name" class="size-32 lg:size-40 object-cover rounded-[5px]">
             </figure>
-            <section class="mt-20">
+            <section class="mt-10 lg:mt-20">
                 <h1 class="font-bold text-center">{{ user.name }}</h1>
-                <article class="flex mt-12 mx-36 text-sm">
-                    <div class="w-1/2 border-r border-grayD9 grid grid-cols-2 gap-x-3 gap-y-2 pr-16">
+                <article class="lg:flex mt-4 lg:mt-12 mx-4 lg:mx-36 text-xs lg:text-sm">
+                    <div class="lg:w-1/2 lg:border-r border-grayD9 grid grid-cols-2 gap-x-3 gap-y-2 lg:pr-16">
                         <p class="flex items-center space-x-2 text-gray99">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-4">
@@ -64,7 +64,7 @@
                         </p>
                         <p>{{ user.email }}</p>
                     </div>
-                    <div class="w-1/2 grid grid-cols-2 gap-x-3 gap-y-2 pl-16">
+                    <div class="lg:w-1/2 grid grid-cols-2 gap-x-3 gap-y-2 lg:pl-16 mt-2 lg:mt-0">
                         <p class="flex items-start space-x-2 text-gray99">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-4">

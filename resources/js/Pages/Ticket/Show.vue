@@ -17,16 +17,16 @@
                 </div>
                 <div class="lg:flex items-center space-x-3 ml-2 text-gray66">
                     <p>Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
-                    <span>•</span>
+                    <span class="hidden lg:block">•</span>
                     <p>Creado por: <span class="text-black ml-1">{{
                         ticket.data.responsible?.name }}</span></p>
-                    <span>•</span>
+                    <span class="hidden lg:block">•</span>
                     <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
                     }}</span></p>
-                    <span>•</span>
+                    <span class="hidden lg:block">•</span>
                     <p>Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
                     }}</span></p>
-                    <span>•</span>
+                    <span class="hidden lg:block">•</span>
                     <div class="flex items-center space-x-3">
                         <p>Prioridad: <span class="text-black ml-1">{{ ticket.data.priority
                         }}</span></p>
@@ -35,7 +35,7 @@
                 </div>
                 <div class="flex justify-between my-6 ml-2">
                     <!-- Estatus -->
-                    <div class="flex items-center space-x-3 w-full">
+                    <div class="lg:flex items-center space-x-3 w-full">
                         <p class="text-gray66">Estatus:</p>
                         <div class="lg:w-1/4">
                             <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
@@ -48,10 +48,10 @@
                                 </el-option>
                             </el-select>
                         </div>
-                        <span class="text-gray66">•</span>
+                        <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
                         }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
-                        <span class="text-gray66">•</span>
+                        <span class="text-gray66 hidden lg:block">•</span>
                         <div class="flex items-center space-x-3">
                             <p class="text-gray66 ">Responsable: </p>
                             <div class="flex  rounded-full w-10">

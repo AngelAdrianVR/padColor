@@ -1,9 +1,11 @@
 <template>
-    <div @click="openFile" class="flex space-x-4 border border-grayD9 rounded-md p-2 cursor-pointer hover:border-primary">
-        <img class="h-8" :src="getFileTypeIcon()" alt="">
-        <div>
-            <p :title="file.file_name" class="font-bold text-sm truncate w-40 lg:w-56">{{ file.file_name }}</p>
-            <p class="text-sm text-gray99">{{ (file.size/1000) }}KB</p>
+    <div @click="openFile" class="flex space-x-2 border border-grayD9 rounded-md p-2 cursor-pointer hover:border-primary">
+        <figure class="h-8 w-1/5">
+            <img class="object-contain" :src="getFileTypeIcon()">
+        </figure>
+        <div class="w-4/5">
+            <p :title="file.file_name" class="font-bold text-xs lg:text-sm truncate">{{ file.file_name }}</p>
+            <p class="text-[10px] lg:text-xs text-gray99">{{ (file.size/1000).toFixed(2) }}KB</p>
         </div>
     </div>
 </template>

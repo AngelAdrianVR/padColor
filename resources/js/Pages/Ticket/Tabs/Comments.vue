@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-8">
+    <div class="mt-8 mb-20">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
             <div class="flex space-x-3 mt-5">

@@ -9,10 +9,10 @@
             </div>
             <div v-if="$page.props.auth.user.id === comment.user.id" class="flex items-center space-x-2">
                 <PrimaryButton @click="update" class="!py-1" v-if="in_edition">Actualizar</PrimaryButton>
-                <i v-if="!in_edition" @click="in_edition = true" class="fa-solid fa-pencil text-xs text-primary rounded-md bg-pink-200 py-1 px-[5px] cursor-pointer"></i>
-                <el-tag v-else closable :type="primary" @close="in_edition = false">
+                <!-- <i v-if="!in_edition" @click="in_edition = true" class="fa-solid fa-pencil text-xs text-primary rounded-md bg-pink-200 py-1 px-[5px] cursor-pointer"></i> -->
+                <!-- <el-tag v-else closable :type="primary" @close="in_edition = false">
                     En edición
-                </el-tag>
+                </el-tag> -->
                 <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#ff4d4d"
                     title="¿Continuar?" @confirm="deleteItem">
                     <template #reference>

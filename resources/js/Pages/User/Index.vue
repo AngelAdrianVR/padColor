@@ -1,13 +1,13 @@
 <template>
     <AppLayout title="Usuarios">
-        <div class="flex justify-between items-center mt-4 mx-10">
-            <h1 class="text-lg font-bold">Todos los usuarios</h1>
+        <div class="flex justify-between items-center mt-4 mx-2 lg:mx-10">
+            <h1 class="text-sm lg:text-lg font-bold">Todos los usuarios</h1>
             <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear usuarios')"
                 @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
         </div>
 
         <!-- Buscador -->
-        <div class="flex items-center mt-4 mx-2 lg:mx-10">
+        <div class="flex flex-col lg:flex-row space-y-2 lg:items-center mt-4 mx-2 lg:mx-10">
             <div class="lg:w-1/4 relative lg:mr-12">
                 <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
                     placeholder="Buscar usuario" type="search">
@@ -24,7 +24,7 @@
         </div>
         <div v-else class="mt-7">
             <div v-if="users.data.length" class="flex items-center border-b border-grayD9 pb-2">
-                <label class="flex items-center ml-7 lg:ml-24">
+                <label class="flex items-center ml-2 lg:ml-24">
                     <Checkbox @change="handleAllUsersChecked" v-model:checked="allUsers" name="all"
                         :disabled="!users.data.length" />
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>

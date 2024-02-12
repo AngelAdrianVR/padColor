@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex justify-end mt-5 mx-14">
-            <PrimaryButton @click="createCategory()" class="rounded-full">
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear categorias')" @click="createCategory()" class="rounded-full">
                 Agregar categoría
             </PrimaryButton>
         </div>
@@ -20,7 +20,7 @@
                         :disabled="!categories.length" />
                     <span class="ms-2 text-sm font-bold">Todas las categorías</span>
                 </label>
-                <div v-if="selectedItems.length" class="lg:ml-36">
+                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar categorias')" class="lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
                         :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
                         @confirm="deleteItems()">

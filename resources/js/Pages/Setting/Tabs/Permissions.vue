@@ -1,7 +1,8 @@
 <template>
     <div>
         <div class="flex justify-end mt-5 mx-14">
-            <PrimaryButton @click="createPermission()" class="rounded-full">
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear permisos')" @click="createPermission()"
+                class="rounded-full">
                 Agregar permiso
             </PrimaryButton>
         </div>
@@ -14,8 +15,9 @@
                         <p @click="editPermission(permission, index2)" class="hover:underline cursor-pointer">{{
                             permission.name
                         }}</p>
-                        <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#FFFFFF"
-                            title="¿Continuar?" @confirm="deletePermission(permission, index2)">
+                        <el-popconfirm v-if="$page.props.auth.user.permissions.includes('Eliminar permisos')"
+                            confirm-button-text="Si" cancel-button-text="No" icon-color="#FFFFFF" title="¿Continuar?"
+                            @confirm="deletePermission(permission, index2)">
                             <template #reference>
                                 <i class="fa-solid fa-trash-can text-primary cursor-pointer"></i>
                             </template>
@@ -115,15 +117,15 @@ export default {
             }
         },
         editPermission(permission, index) {
-            // if (this.$page.props.auth.user.permissions.includes('Editar roles y permisos')) {
-            this.currentPermission = permission;
-            this.editFlag = true;
-            this.indexPermissionEdit = index;
-            this.showPermissionModal = true;
+            if (this.$page.props.auth.user.permissions.includes('Editar permisos')) {
+                this.currentPermission = permission;
+                this.editFlag = true;
+                this.indexPermissionEdit = index;
+                this.showPermissionModal = true;
 
-            this.form.name = permission.name;
-            this.form.category = permission.category;
-            // }
+                this.form.name = permission.name;
+                this.form.category = permission.category;
+            }
         },
         createPermission() {
             this.currentPermission = null;

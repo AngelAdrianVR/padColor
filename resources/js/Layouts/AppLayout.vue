@@ -146,9 +146,14 @@ const switchToTeam = (team) => {
                             <i class="fa-regular fa-user text-xl"></i>
                         </div>
                         <div @click="$inertia.get(route('settings.index'))" :class="route().current('settings.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
-                            <p v-if="route().current('settings.*')" class="text-[13px] absolute -top-6 -left-2">Config</p>
+                            <p v-if="route().current('settings.*')" class="text-[13px] absolute -top-6 -left-2">Config...</p>
                             <div v-if="route().current('settings.*')" class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-solid fa-gears text-xl"></i>
+                        </div>
+                        <div @click="$inertia.get(route('notifications'))" :class="route().current('notifications') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                            <p v-if="route().current('notifications')" class="text-center text-[13px] absolute -top-6 -left-2">Notifica...</p>
+                            <div v-if="route().current('notifications')" class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
+                            <i class="fa-solid fa-bell text-xl"></i>
                         </div>
                         <button @click="$inertia.get(route('profile.show'))" :class="{'border-primary': route().current('profile.*')}" class="relative size-10 flex justify-center items-center text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
                             <img class="size-9 p-1 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">

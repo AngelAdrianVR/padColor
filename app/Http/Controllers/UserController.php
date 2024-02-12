@@ -187,10 +187,14 @@ class UserController extends Controller
         return response()->json(['message' => "Se han eliminado las notificaciones seleccionadas"]);
     }
 
-    public function readNotifications()
+    public function readNotifications(Request $request)
     {
         $unread = auth()->user()->unreadNotifications->count();
-        auth()->user()->notifications->markAsRead();
+        if ($request->notifications_ids) {
+            auth()->user()->notifications->whereIn('id', $request->notifications_ids)->markAsRead();
+        } else {
+            auth()->user()->notifications->markAsRead();
+        }
 
         return response()->json(compact('unread'));
     }
