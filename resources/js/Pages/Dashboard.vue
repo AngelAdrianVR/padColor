@@ -1,11 +1,11 @@
 <template>
     <AppLayout title="Inicio">
-        <h1 class="font-bold lg:mx-32 mt-4">Inicio</h1>
-        <section class="lg:mx-14 mt-6 grid grid-cols-2 lg:grid-cols-4 md:grid-cols-3 gap-5">
+        <h1 class="font-bold mx-4 lg:mx-32 mt-4">Inicio</h1>
+        <section class="mx-2 lg:mx-14 mt-6 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3 gap-1 lg:gap-5">
             <SimpleKPI v-for="(item, index) in simpleKpis" :key="index" :title="item.title" :icon="item.icon"
                 :value="item.value" />
         </section>
-        <section class="lg:mx-14 mt-6 lg:grid grid-cols-2 gap-8">
+        <section class="mx-2 lg:mx-14 mt-6 grid-cols-1 grid lg:grid-cols-2 gap-1 lg:gap-8">
             <PolarAreaChart :options="prioritiesChartOptions" title="Estado de Prioridades"
                 icon='<i class="fa-solid fa-stopwatch ml-2"></i>' />
             <PieChart :options="ticketsStatusChartOptions" title="Estado de los tickets"

@@ -1,13 +1,13 @@
 <template>
     <AppLayout title="Tickets">
         <div class="flex justify-between items-center mt-4 mx-10">
-            <h1 class="text-lg font-bold">Todos los tickets</h1>
+            <h1 class="font-bold">Todos los tickets</h1>
             <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
                 @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
         </div>
 
         <!-- Buscador y filtros -->
-        <div class="flex justify-between space-x-3 items-center mt-4 mx-2 lg:mx-10">
+        <div class="flex flex-col lg:flex-row justify-between space-y-3 space-x-3 lg:items-center mt-4 mx-2 lg:mx-10">
             <div class="lg:w-1/4 relative lg:mr-12">
                 <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
                     placeholder="Buscar tickets" type="search">

@@ -1,25 +1,26 @@
 <template>
   <div class="md:flex justify-between border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] pl-2">
-        <section>
-            <div class="flex items-center space-x-4">
-                <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>
-                <el-tooltip :content="'Prioridad: ' + ticket.priority" placement="top">
-                    <i :class="getPriorityColor(ticket)" class="fa-solid fa-circle text-[7px]"></i>
-                </el-tooltip>
-            </div>
+        <section class="flex items-center">
             <label class="flex items-center py-1">
                 <Checkbox @change="ticketSelection" v-model:checked="selected" />
-                <span class="ms-2 text-sm font-bold">{{ ticket.title }}</span>
             </label>
-            <div class="flex items-center space-x-2 pl-6">
-                <span class="text-gray66 text-xs">#{{ ticket.id }}</span>
-                <span>•</span>
-                <span class="text-gray66 text-xs">{{ ticket.user?.name }}</span>
-                <span>•</span>
-                <p class="text-gray66 text-xs"><span v-html="getIcon(ticket)"></span>{{ ticket.updated_at }}</p>
+            <div @click="$inertia.get(route('tickets.show', ticket.id))" class="flex flex-col cursor-pointer">
+                <div class="flex items-center space-x-4">
+                    <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>
+                    <el-tooltip :content="'Prioridad: ' + ticket.priority" placement="top">
+                        <i :class="getPriorityColor(ticket)" class="fa-solid fa-circle text-[7px]"></i>
+                    </el-tooltip>
+                </div>
+                <span class="text-sm font-bold ml-6">{{ ticket.title }}</span>
+                <div class="flex items-center space-x-2 ml-6">
+                    <span class="text-gray66 text-xs">#{{ ticket.id }}</span>
+                    <span>•</span>
+                    <span class="text-gray66 text-xs">{{ ticket.user?.name }}</span>
+                    <span>•</span>
+                    <p class="text-gray66 text-xs"><span v-html="getIcon(ticket)"></span>{{ ticket.updated_at }}</p>
+                </div>
             </div>
         </section>
-
         <section @click="$inertia.get(route('tickets.show', ticket.id))" class="flex justify-end items-center space-x-3 w-3/4 lg:pr-7 cursor-pointer">
             <div class="lg:w-1/4 w-1/2">
                 <el-select @change="updateStatus" v-model="status"
@@ -35,7 +36,7 @@
             </div>
             <el-tooltip :content="ticket.responsible?.name ? 'Responsable: ' + ticket.responsible?.name : 'Responsable: Sin asignar'" placement="top">
                 <figure v-if="ticket.responsible" class="flex justify-center items-center space-x-2 text-sm rounded-full">
-                    <img class="size-14 rounded-full object-cover" :src="ticket.responsible?.profile_photo_url" :alt="ticket.responsible?.name">
+                    <img class="size-10 lg:size-14 rounded-full object-cover" :src="ticket.responsible?.profile_photo_url" :alt="ticket.responsible?.name">
                 </figure>
                 <div @click.stop="$inertia.get(route('tickets.edit', ticket.id))" v-else class="rounded-full border size-14 flex items-center justify-center px-4 cursor-pointer hover:border-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">

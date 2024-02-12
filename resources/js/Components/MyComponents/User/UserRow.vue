@@ -1,7 +1,8 @@
 <template>
     <div class="flex items-center border-b border-grayD9 hover:border-primary pb-2 mt-3 lg:pl-[95px] px-2">
         <label class="flex items-center py-1">
-            <Checkbox v-model:checked="selected" @change="$emit('checked', {id: user.id, isActive: selected})" :disabled="$page.props.auth.user.id === user.id" />
+            <Checkbox v-model:checked="selected" @change="$emit('checked', { id: user.id, isActive: selected })"
+                :disabled="$page.props.auth.user.id === user.id" />
         </label>
         <figure class="flex justify-center items-center text-sm rounded-full ml-2">
             <img class="md:size-14 size-12 rounded-full object-cover" :src="user.profile_photo_url" :alt="user.name">
@@ -20,7 +21,8 @@
                 <span>•</span>
                 <span>{{ user.phone }}</span>
                 <span>•</span>
-                <span :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' : 'Inactivo' }}</span>
+                <span :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' : 'Inactivo'
+                }}</span>
             </div>
         </section>
     </div>
@@ -45,7 +47,7 @@ export default {
         user: Object
     },
     methods: {
-        
+
     }
 }
 </script>
