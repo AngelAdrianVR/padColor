@@ -21,7 +21,7 @@ export default {
                 primary: '#D72C8A',
                 primarylight: '#FAE6F1',
                 secondary: '#25346D',
-                secondarylight: '#25346D',
+                secondarylight: '#B8C1E5',
                 redpad: '#C1202A',
                 greenpad: '#278E16',
                 black1: '#1A1A1A',

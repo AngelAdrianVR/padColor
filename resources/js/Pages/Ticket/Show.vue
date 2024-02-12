@@ -76,7 +76,7 @@
                             <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions :ticketId="this.ticket.data.id" />
+                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
                     <template #label>
