@@ -3,7 +3,9 @@
         <div class="lg:p-9 p-1 text-sm">
             <div class="flex items-center justify-between">
                 <Back />
-                <ThirthButton class="!rounded-[3px]" @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar</ThirthButton>
+                <ThirthButton v-if="$page.props.auth.user.permissions.includes('Editar tickets')"
+                    class="!rounded-[3px]" @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar
+                </ThirthButton>
             </div>
             <h1 class="text-gray66 lg:mx-[72px] mt-2">Información sobre el ticket</h1>
             <div class="lg:mx-16 mt-2">
@@ -76,7 +78,7 @@
                             <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="" />
+                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="ticket.data.solutions_count++" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
                     <template #label>
@@ -220,7 +222,7 @@ export default {
                 });
             }
         },
-        
+
     },
 }
 </script>

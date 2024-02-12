@@ -5,7 +5,8 @@
             <section class="flex items-center justify-between mt-2">
                 <h1 class="font-bold text-base">Detalles de usuario</h1>
                 <div class="flex items-center space-x-2">
-                    <PrimaryButton @click="$inertia.get(route('users.edit', user.id))">Editar</PrimaryButton>
+                    <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar usuarios')"
+                        @click="$inertia.get(route('users.edit', user.id))">Editar</PrimaryButton>
                     <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]"><i
                             class="fa-solid fa-plus"></i></SecondaryButton>
                 </div>

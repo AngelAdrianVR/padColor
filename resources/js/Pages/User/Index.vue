@@ -2,7 +2,8 @@
     <AppLayout title="Usuarios">
         <div class="flex justify-between items-center mt-4 mx-10">
             <h1 class="text-lg font-bold">Todos los usuarios</h1>
-            <PrimaryButton @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear usuarios')"
+                @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
         </div>
 
         <!-- Buscador -->
@@ -28,9 +29,11 @@
                         :disabled="!users.data.length" />
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
                 </label>
-                <div v-if="selectedItems.length" class="lg:ml-36">
+                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar usuarios')"
+                    class="lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
-                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'" @confirm="deleteItems()">
+                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
+                        @confirm="deleteItems()">
                         <template #reference>
                             <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
                         </template>

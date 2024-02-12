@@ -39,8 +39,12 @@ class SettingController extends Controller
     public function updateRole(Request $request, Role $role)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
             'permissions' => 'array|min:1'
         ]);
+        
+        $role->name = $request->name;
+        $role->save();
         $role->syncPermissions($request->permissions);
 
         return response()->json(['item' => RoleResource::make($role)]);

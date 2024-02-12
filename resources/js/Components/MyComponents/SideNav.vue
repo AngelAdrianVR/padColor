@@ -134,7 +134,7 @@ export default {
                     active: route().current('dashboard'),
                     options: [],
                     dropdown: false,
-                    show: true
+                    show: this.$page.props.auth.user.permissions.includes('Ver dashboard'),
                 },
                 {
                     label: 'Tickets',
@@ -143,7 +143,7 @@ export default {
                     active: route().current('tickets.*'),
                     options: [],
                     dropdown: false,
-                    show: true
+                    show: this.$page.props.auth.user.permissions.includes('Ver tickets'),
                 },
                 {
                     label: 'Usuarios',
@@ -152,7 +152,7 @@ export default {
                     active: route().current('users.*'),
                     options: [],
                     dropdown: false,
-                    show: true
+                    show: this.$page.props.auth.user.permissions.includes('Ver usuarios'),
                 },
                 {
                     label: 'Configuraciones',
@@ -161,7 +161,7 @@ export default {
                     active: route().current('settings.*'),
                     options: [],
                     dropdown: false,
-                    show: true
+                    show: this.$page.props.auth.user.permissions.includes('Ver configuraciones'),
                 },
 
                 //     label: 'Comunidad',

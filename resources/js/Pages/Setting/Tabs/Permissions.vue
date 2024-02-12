@@ -5,7 +5,7 @@
                 Agregar permiso
             </PrimaryButton>
         </div>
-        <div class="text-sm overflow-scroll">
+        <div class="text-sm overflow-scroll mt-3">
             <div class="lg:grid grid-cols-4">
                 <div v-for="(guard, index) in Object.keys(permissions.data)" :key="index" class="border p-3">
                     <h1 class="font-bold">{{ guard.replace(/_/g, " ") }}</h1>

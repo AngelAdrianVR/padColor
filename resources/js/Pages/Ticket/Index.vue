@@ -2,7 +2,8 @@
     <AppLayout title="Tickets">
         <div class="flex justify-between items-center mt-4 mx-10">
             <h1 class="text-lg font-bold">Todos los tickets</h1>
-            <PrimaryButton @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
+                @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
         </div>
 
         <!-- Buscador y filtros -->
@@ -31,7 +32,7 @@
                     <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
                 </label>
-                <el-popconfirm v-if="selectAllTickets || selectedTicketsId.length > 0" confirm-button-text="Si"
+                <el-popconfirm v-if="(selectAllTickets || selectedTicketsId.length) && $page.props.auth.user.permissions.includes('Eliminar tickets')" confirm-button-text="Si"
                     cancel-button-text="No" icon-color="#D72C8A" title="¿Continuar?" @confirm="massiveDelete">
                     <template #reference>
                         <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>

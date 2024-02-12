@@ -5,7 +5,7 @@
                 Agregar categoría
             </PrimaryButton>
         </div>
-        <div class="text-sm">
+        <div class="text-sm mt-3">
             <p v-if="selectedItems.length" class="text-sm text-redpad flex items-center space-x-2 pb-5">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="size-4">

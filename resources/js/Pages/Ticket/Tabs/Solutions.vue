@@ -69,6 +69,7 @@ export default {
                         type: "success",
                     });
                     this.description = null;
+                    this.$emit('updateCountSolutions', this.solutions.length);
                 }
             } catch (error) {
                 console.log(error);
@@ -89,7 +90,6 @@ export default {
                 const response = await axios.get(route("ticket-solutions.fetch-solutions", this.ticketId));
                 if (response.status === 200) {
                     this.solutions = response.data.items;
-                    this.$emit('updateCountSolutions', this.solutions.length);
                 }
             } catch (error) {
                 console.log(error);

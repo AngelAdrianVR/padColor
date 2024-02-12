@@ -5,7 +5,7 @@
                 Agregar rol
             </PrimaryButton>
         </div>
-        <div class="text-sm">
+        <div class="text-sm mt-3">
             <div v-if="roles.data.length" class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-3">
                     <Checkbox @change="handleAllItemsChecked" v-model:checked="allItems" name="all"
