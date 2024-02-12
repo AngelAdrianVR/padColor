@@ -48,6 +48,7 @@ watchEffect(async () => {
                             </svg>
                         </button>
                     </div>
+                    <p class="border border-primary"></p>
                 </div>
             </div>
         </div>

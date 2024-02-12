@@ -15,7 +15,7 @@ class TicketResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => str_pad($this->id, 2, "0", STR_PAD_LEFT),
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status,
@@ -24,9 +24,10 @@ class TicketResource extends JsonResource
             'user' => $this->whenLoaded('user'),
             'responsible' => $this->whenLoaded('responsible'),
             'category' => $this->whenLoaded('category'),
+            'solutions_count' => $this->whenCounted('ticketSolutions'),
             'media' => $this->getMedia()->all(),
-            'created_at' => $this->created_at?->isoFormat('DD MMM YYYY h:mm'),
-            'updated_at' => $this->created_at?->isoFormat('DD MMM YYYY h:mm'),
+            'created_at' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'updated_at' => $this->updated_at?->isoFormat('DD MMM YYYY'),
         ];
     }
 }

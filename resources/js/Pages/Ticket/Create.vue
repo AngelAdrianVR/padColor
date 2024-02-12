@@ -3,12 +3,12 @@
         <div class="lg:p-9 p-1">
             <Back />
 
-            <form @submit.prevent="store" class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 grid grid-cols-2 gap-x-3">
+            <form @submit.prevent="store" class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 lg:grid grid-cols-2 gap-x-3">
                 <h1 class="font-bold ml-2 col-span-2">Crear ticket</h1>
                 <div class="relative mt-5">
                     <InputLabel value="Categoría*" class="ml-3 mb-1" />
                     <p @click="showCategoryModal = true"
-                        class="text-primary text-xs cursor-pointer absolute right-2 top-[2px]">Agregar categoría</p>
+                        class="text-primary text-xs cursor-pointer absolute md:right-2 right-0 top-[2px]">Agregar categoría</p>
                     <el-select class="w-full" v-model="form.category_id" clearable
                         placeholder="Seleccione" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">
@@ -23,7 +23,7 @@
                         no-match-text="No se encontraron coincidencias">
                         <el-option v-for="user in users" :key="user" :label="user.name" :value="user.id">
                             <figure style="float: left">
-                                <img class="object-contain bg-no-repeat size-7 rounded-full mt-1" :src="user.profile_photo_url"
+                                <img class="object-cover bg-no-repeat size-7 rounded-full mt-1" :src="user.profile_photo_url"
                                     alt="" />
                             </figure>
                             <span class="ml-2">{{ user.name }}</span>
@@ -47,12 +47,12 @@
                         <InputLabel value="Estatus" class="" />
                         <i v-if="form.status" :class="getStatusColor()" class="fa-solid fa-circle text-[8px]"></i>
                     </div>
-                    <el-select class="w-full" v-model="form.status" clearable
+                    <el-select v-model="form.status"
                         placeholder="Seleccione" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">
                         <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
-                            <p style="float: left">
-                                <i :class="item.color" class="fa-solid fa-circle text-[8px]"></i>
+                            <p class="w-4" style="float: left">
+                                <span v-html="item.icon"></span>
                             </p>
                             <span class="ml-2">{{ item.label }}</span>
                         </el-option>
@@ -78,7 +78,7 @@
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Fecha de vencimiento" class="ml-3 mb-1" />
-                    <el-date-picker v-model="form.expired_date" type="date" placeholder="Seleccione"
+                    <el-date-picker class="!w-full" v-model="form.expired_date" type="date" placeholder="Seleccione"
                         :disabled-date="disabledDate" />
                     <InputError :message="form.errors.expired_date" />
                 </div>
@@ -90,13 +90,38 @@
                 </div>
             </form>
         </div>
+
+        <!-- agregar categoria modal -------------------------------------------------->
+        <Modal :show="showCategoryModal" @close="showCategoryModal = false">
+            <div class="mx-5 my-4 space-y-4 relative">
+                <div @click="showCategoryModal = false"
+                    class="cursor-pointer w-5 h-5 rounded-full border-2 border-black flex items-center justify-center absolute top-0 -right-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+
+                <h1 class="font-bold">Agregar nueva categoría</h1>
+
+                <div class="mt-3 col-span-2">
+                    <InputLabel value="Nombre de la categoría*" class="ml-3 mb-1" />
+                    <el-input v-model="categoryForm.name" placeholder="Escribe el nombre de la categoría" :maxlength="100" clearable />
+                    <InputError :message="categoryForm.errors.name" />
+                </div>
+
+                <div class="flex justify-end space-x-1 pt-5 pb-1">
+                <CancelButton @click="categoryForm.reset(); showCategoryModal = false">Cancelar</CancelButton>
+                <PrimaryButton
+                    :disabled="categoryForm.processing"
+                    @click="storeCategory">Guardar</PrimaryButton>
+                </div>
+            </div>
+        </Modal>
     </AppLayout>
-  
 </template>
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import CancelButton from "@/Components/MyComponents/CancelButton.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import InputError from "@/Components/InputError.vue";
 import FileUploader from "@/Components/MyComponents/FileUploader.vue";
@@ -116,34 +141,46 @@ data() {
       expired_date: null,
       media: null
     });
+
+     const categoryForm = useForm({
+      name: null,
+    });
+
     return {
         form,
+        categoryForm,
         showCategoryModal: false,
         statuses: [
             {
                 label: 'Abierto',
                 color: 'text-[#0355B5]',
+                icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
 
             },
             {
                 label:'En espera',
                 color:'text-[#FD8827]',
+                icon:'<i class="fa-regular fa-clock text-[#FD8827]"></i>',
             },
             {
                 label:'En espera de 3ro',
                 color:'text-[#B927FD]',
+                icon:'<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
             },
             {
                 label:'Completado',
                 color:'text-[#3F9C30]',
+                icon:'<i class="fa-solid fa-check text-[#3F9C30]"></i>',
             },
             {
                 label:'Re-abierto',
                 color:'text-[#FD4646]',
+                icon:'<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
             },
             {
                 label:'En proceso',
                 color:'text-[#3D3D3D]',
+                icon:'<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D]"></i>',
             },
         ],
         priorities: [
@@ -166,6 +203,7 @@ data() {
 components:{
 AppLayout,
 PrimaryButton,
+CancelButton,
 FileUploader,
 InputLabel,
 InputError,
@@ -185,6 +223,19 @@ methods:{
                 message: "Se ha agregado el ticket",
                 type: "success",
             });
+            },
+        });
+    },
+    storeCategory() {
+        this.categoryForm.post(route("categories.store"), {
+            onSuccess: () => {
+            this.$notify({
+                title: "Correcto",
+                message: "Se ha agregado una nueva categoría",
+                type: "success",
+            });
+            this.showCategoryModal = false;
+            this.categoryForm.reset();
             },
         });
     },

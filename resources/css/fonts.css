@@ -1,0 +1,47 @@
+/* Hamlet Regular */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Hamlet Bold */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Hamlet Medium */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* Hamlet Light */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* Hamlet Thin */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-Thin.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+}
+
+/* Hamlet Semibold */
+@font-face {
+    font-family: 'Hahmlet';
+    src: url('/fonts/Hahmlet-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}

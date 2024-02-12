@@ -4,11 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -17,6 +20,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -26,7 +30,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'employee_properties',
+        'is_active',
+        'phone',
         'password',
+        'profile_photo_path',
     ];
 
     /**
@@ -48,6 +56,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'employee_properties' => 'array',
     ];
 
     /**
@@ -58,4 +67,20 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    //relationships
+    public function ticketSolution() :HasOne
+    {
+        return $this->hasOne(TicketSolution::class);
+    }
+
+    public function tickets() :HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function ticketHistories() :HasMany
+    {
+        return $this->hasMany(TicketHistory::class);
+    }
 }

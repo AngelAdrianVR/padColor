@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('priority');
             $table->date('expired_date');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('responsible_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('responsible_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
