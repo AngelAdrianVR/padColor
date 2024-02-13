@@ -72,11 +72,9 @@
                 </div>
             </footer>
         </div>
-
     </AppLayout>
 </template>
 <script>
-// import DropdownLink from '@/Components/DropdownLink.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
 import Checkbox from '@/Components/Checkbox.vue';
@@ -96,7 +94,6 @@ export default {
     },
     components: {
         AppLayout,
-        // DropdownLink,
         PrimaryButton,
         Checkbox,
         Loading,

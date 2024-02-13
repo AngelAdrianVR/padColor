@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NotificationsMarkedAsRead;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -192,9 +193,11 @@ class UserController extends Controller
         $unread = auth()->user()->unreadNotifications->count();
         if ($request->notifications_ids) {
             auth()->user()->notifications->whereIn('id', $request->notifications_ids)->markAsRead();
+            event(new NotificationsMarkedAsRead(auth()->user()));
         } else {
             auth()->user()->notifications->markAsRead();
         }
+
 
         return response()->json(compact('unread'));
     }
