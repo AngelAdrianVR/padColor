@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+// import Echo from 'laravel-echo';
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
@@ -8,6 +9,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import SideNav from '@/Components/MyComponents/SideNav.vue';
+import ProfileCard from '@/Components/MyComponents/ProfileCard.vue';
 import NotificationsCenter from '@/Components/MyComponents/NotificationsCenter.vue';
 import axios from 'axios';
 
@@ -16,19 +18,47 @@ defineProps({
 });
 
 const showingNavigationDropdown = ref(false);
+const notifications = ref([]);
+const showProfileCard = ref(false);
 
-const switchToTeam = (team) => {
-    router.put(route('current-team.update'), {
-        team_id: team.id,
-    }, {
-        preserveState: false,
-    });
+const fetchNotifications = async () => {
+    try {
+        const response = await axios.get(route('users.get-notifications'))
+
+        if (response.status === 200) {
+            notifications.value = response.data.items;
+        }
+    } catch (error) {
+        console.log(error)
+    }
 };
+
+const getUnreadNotifications = computed(() => {
+    return notifications.value?.filter(item => item.read_at === null).length;
+});
+
+// Escuchar el evento de broadcast al montar el componente
+const handleNotificationsMarkedAsRead = () => {
+    console.log('ejecutado broadcasting');
+    fetchNotifications();
+};
+
+onMounted(() => {
+    fetchNotifications();
+    Echo.channel('notifications') // Reemplaza 'notifications' con el nombre de tu canal
+        .listen('NotificationsMarkedAsRead', handleNotificationsMarkedAsRead);
+});
+
+// Desmontar el componente y limpiar el evento de broadcast
+onBeforeUnmount(() => {
+    Echo.leave('notifications');
+});
 
 </script>
 
 <template>
     <div>
+
         <Head :title="title" />
 
         <Banner />
@@ -49,9 +79,9 @@ const switchToTeam = (team) => {
                                 <!-- Logo -->
                                 <div class="shrink-0 flex items-center md:hidden">
                                     <Link :href="route('dashboard')">
-                                        <figure class="">
-                                            <img class="w-32" src="@/../../public/images/authLogo_horizontal.png" alt="logo">
-                                        </figure>
+                                    <figure class="">
+                                        <img class="w-32" src="@/../../public/images/authLogo_horizontal.png" alt="logo">
+                                    </figure>
                                     </Link>
                                 </div>
                             </div>
@@ -62,11 +92,15 @@ const switchToTeam = (team) => {
                                     <Dropdown v-if="$page.props.jetstream.hasTeamFeatures" align="right" width="60">
                                         <template #trigger>
                                             <span class="inline-flex rounded-md">
-                                                <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
+                                                <button type="button"
+                                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
                                                     {{ $page.props.auth.user.current_team.name }}
 
-                                                    <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                                    <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                                     </svg>
                                                 </button>
                                             </span>
@@ -80,11 +114,13 @@ const switchToTeam = (team) => {
                                                 </div>
 
                                                 <!-- Team Settings -->
-                                                <DropdownLink :href="route('teams.show', $page.props.auth.user.current_team)">
+                                                <DropdownLink
+                                                    :href="route('teams.show', $page.props.auth.user.current_team)">
                                                     Team Settings
                                                 </DropdownLink>
 
-                                                <DropdownLink v-if="$page.props.jetstream.canCreateTeams" :href="route('teams.create')">
+                                                <DropdownLink v-if="$page.props.jetstream.canCreateTeams"
+                                                    :href="route('teams.create')">
                                                     Create New Team
                                                 </DropdownLink>
 
@@ -96,12 +132,18 @@ const switchToTeam = (team) => {
                                                         Switch Teams
                                                     </div>
 
-                                                    <template v-for="team in $page.props.auth.user.all_teams" :key="team.id">
+                                                    <template v-for="team in $page.props.auth.user.all_teams"
+                                                        :key="team.id">
                                                         <form @submit.prevent="switchToTeam(team)">
                                                             <DropdownLink as="button">
                                                                 <div class="flex items-center">
-                                                                    <svg v-if="team.id == $page.props.auth.user.current_team_id" class="me-2 h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    <svg v-if="team.id == $page.props.auth.user.current_team_id"
+                                                                        class="me-2 h-5 w-5 text-green-400"
+                                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                        viewBox="0 0 24 24" stroke-width="1.5"
+                                                                        stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                     </svg>
 
                                                                     <div>{{ team.name }}</div>
@@ -122,44 +164,67 @@ const switchToTeam = (team) => {
                     </div>
                 </nav>
 
-            
+
                 <div class="overflow-y-auto h-[calc(100vh-9.1rem)] lg:h-[calc(100vh-4.1rem)] bg-white">
                     <slot />
                 </div>
 
-                 <!-- ---------------- footer nave mobile view --------------- -->
+                <!-- ---------------- footer nave mobile view --------------- -->
                 <nav class="lg:hidden fixed bottom-0 w-full z-10">
                     <div class="w-full h-16 flex justify-center items-center px-1 bg-[#131313] space-x-5">
-                        <div @click="$inertia.get(route('dashboard'))" :class="route().current('dashboard') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                        <div @click="$inertia.get(route('dashboard'))"
+                            :class="route().current('dashboard') ? 'bg-gray-800 text-primary' : 'text-[#999999]'"
+                            class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
                             <p v-if="route().current('dashboard')" class="text-[13px] absolute -top-6 left-1">Inicio</p>
-                            <div v-if="route().current('dashboard')" class="-z-10 absolute -top-7 -left-[34px] w-28 h-28 bg-[#131313] rounded-full"></div>
+                            <div v-if="route().current('dashboard')"
+                                class="-z-10 absolute -top-7 -left-[34px] w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-solid fa-house text-xl"></i>
                         </div>
-                        <div @click="$inertia.get(route('tickets.index'))" :class="route().current('tickets.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                        <div @click="$inertia.get(route('tickets.index'))"
+                            :class="route().current('tickets.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'"
+                            class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
                             <p v-if="route().current('tickets.*')" class="text-[13px] absolute -top-6 left-0">Tickets</p>
-                            <div v-if="route().current('tickets.*')" class="-z-10 absolute -top-7 -left-[34px] w-28 h-28 bg-[#131313] rounded-full"></div>
+                            <div v-if="route().current('tickets.*')"
+                                class="-z-10 absolute -top-7 -left-[34px] w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-regular fa-square-check text-xl"></i>
                         </div>
-                        <div @click="$inertia.get(route('users.index'))" :class="route().current('users.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                        <div @click="$inertia.get(route('users.index'))"
+                            :class="route().current('users.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'"
+                            class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
                             <p v-if="route().current('users.*')" class="text-[13px] absolute -top-6 -left-2">Usuarios</p>
-                            <div v-if="route().current('users.*')" class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
+                            <div v-if="route().current('users.*')"
+                                class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-regular fa-user text-xl"></i>
                         </div>
-                        <div @click="$inertia.get(route('settings.index'))" :class="route().current('settings.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
-                            <p v-if="route().current('settings.*')" class="text-[13px] absolute -top-6 -left-2">Config...</p>
-                            <div v-if="route().current('settings.*')" class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
+                        <div @click="$inertia.get(route('settings.index'))"
+                            :class="route().current('settings.*') ? 'bg-gray-800 text-primary' : 'text-[#999999]'"
+                            class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                            <p v-if="route().current('settings.*')" class="text-[13px] absolute -top-6 -left-2">Config...
+                            </p>
+                            <div v-if="route().current('settings.*')"
+                                class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-solid fa-gears text-xl"></i>
                         </div>
-                        <div @click="$inertia.get(route('notifications'))" :class="route().current('notifications') ? 'bg-gray-800 text-primary' : 'text-[#999999]'" class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
-                            <p v-if="route().current('notifications')" class="text-center text-[13px] absolute -top-6 -left-2">Notifica...</p>
-                            <div v-if="route().current('notifications')" class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
+                        <div @click="$inertia.get(route('notifications'))"
+                            :class="route().current('notifications') ? 'bg-gray-800 text-primary' : 'text-[#999999]'"
+                            class="relative flex flex-col justify-center text-center px-3 rounded-[10px] my-2 py-1">
+                            <p v-if="route().current('notifications')"
+                                class="text-center text-[13px] absolute -top-6 -left-2">Notifica...</p>
+                            <div v-if="route().current('notifications')"
+                                class="-z-10 absolute -top-7 -left-9 w-28 h-28 bg-[#131313] rounded-full"></div>
                             <i class="fa-solid fa-bell text-xl"></i>
+                            <span v-if="getUnreadNotifications"
+                                class="size-4 rounded-full bg-primary text-white text-[10px] absolute top-0 right-0">{{
+                                    getUnreadNotifications }}</span>
                         </div>
-                        <button @click="$inertia.get(route('profile.show'))" :class="{'border-primary': route().current('profile.*')}" class="relative size-10 flex justify-center items-center text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
-                            <img class="size-9 p-1 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
-                            <!-- <span class="animate-ping absolute -left-0 inline-flex size-8 rounded-full bg-primarylight opacity-50"></span> -->
+                        <button @click="showProfileCard = !showProfileCard"
+                            :class="{ 'border-primary': route().current('profile.*') }"
+                            class="relative size-10 flex justify-center items-center text-sm border border-[#999999] rounded-full focus:outline-none focus:border-primary transition">
+                            <img class="size-9 p-1 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                                :alt="$page.props.auth.user.name">
                         </button>
-                    </div>  
+                        <ProfileCard @close="showProfileCard = false" v-if="showProfileCard" />
+                    </div>
                 </nav>
             </main>
         </div>

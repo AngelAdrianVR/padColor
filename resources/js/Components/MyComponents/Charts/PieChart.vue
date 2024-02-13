@@ -29,7 +29,7 @@ export default {
                     breakpoint: 480,
                     options: {
                         chart: {
-                            width: 280
+                            width: 320
                         },
                         legend: {
                             position: 'right'

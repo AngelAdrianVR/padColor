@@ -23,7 +23,7 @@
             </el-popconfirm>
         </div>
         <!-- cuerpo de la solucion -->
-        <div class="w-full border border-grayD9 rounded-[30px] lg:rounded-[50px] rounded-tl-none py-3 px-3 lg:px-9 mt-2">
+        <div class="w-full border border-grayD9 rounded-[30px] lg:rounded-[50px] rounded-tl-none lg:rounded-tl-none py-3 px-3 lg:px-9 mt-2">
             <h1 class="font-bold mb-2">Resolución {{ (index + 1) }}</h1>
             <div class="flex justify-between items-center">
                 <p class="text-secondary font-semibold">{{ solution.user?.name }}</p>
