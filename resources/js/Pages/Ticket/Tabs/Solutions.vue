@@ -3,10 +3,10 @@
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
             <div class="flex space-x-3 mt-5">
-                <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
+                <!-- <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
                     <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                         :alt="$page.props.auth.user.name" />
-                </div>
+                </div> -->
                 <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
                     class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
             </div>

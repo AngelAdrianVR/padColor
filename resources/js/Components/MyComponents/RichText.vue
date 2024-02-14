@@ -16,9 +16,15 @@
                 <i class="fa-solid fa-underline"></i>
             </button> 
         </header> -->
-        <div contenteditable="true" @input="onInput" ref="editor" id="editor" @keypress="checkForAtSign"
-            class="bg-transparent border border-grayD9 placeholder:text-gray-400 text-gray-700 text-sm rounded-t-lg focus:border-primary block w-full p-2.5 min-h-[85px] focus:outline-none"
-            :class="{ 'rounded-none': withFooter || hasMedia }">
+        <div class="flex border border-grayD9 rounded-t-lg focus:border-primary">
+            <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full pl-1 pt-2 w-8">
+                <img class="size-7 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                    :alt="$page.props.auth.user.name" />
+            </div>
+            <div contenteditable="true" @input="onInput" ref="editor" id="editor" @keypress="checkForAtSign"
+                class="bg-transparent placeholder:text-gray-400 text-gray-700 text-sm block w-full py-3 px-1 min-h-[85px] focus:outline-none"
+                :class="{ 'rounded-none': withFooter || hasMedia }">
+            </div>
         </div>
 
         <!-- Make mentions -->
@@ -38,7 +44,8 @@
                             <p>{{ item.name }}</p>
                         </li>
                     </template>
-                    <p v-if="!userList.length" class="text-gray-500 text-xs text-center my-8">No hay usuarios para mencionar</p>
+                    <p v-if="!userList.length" class="text-gray-500 text-xs text-center my-8">No hay usuarios para mencionar
+                    </p>
                 </ul>
             </transition>
         </footer>
