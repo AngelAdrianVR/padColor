@@ -48,6 +48,7 @@ Route::post('tickets-massive-delete', [TicketController::class, 'massiveDelete']
 Route::post('tickets/{ticket}/comment', [TicketController::class, 'comment'])->name('tickets.comment')->middleware('auth');
 Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fetchConversation'])->name('tickets.fetch-conversation')->middleware('auth');
 Route::get('tickets-fetch-history/{ticket}', [TicketController::class, 'fetchHistory'])->name('tickets.fetch-history')->middleware('auth');
+Route::get('tickets-get-by-page/{currentPage}', [TicketController::class, 'getItemsByPage'])->name('tickets.get-by-page')->middleware('auth');
 
 
 
@@ -75,6 +76,7 @@ Route::get('users-get-notifications', [UserController::class, 'getNotifications'
 Route::post('users-read-notifications', [UserController::class, 'readNotifications'])->middleware('auth')->name('users.read-user-notifications');
 Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-user-notifications');
 Route::get('users-get-all', [UserController::class, 'getAll'])->middleware('auth')->name('users.get-all');
+Route::get('users-get-by-page/{currentPage}', [UserController::class, 'getItemsByPage'])->name('users.get-by-page')->middleware('auth');
 
 
 //settings routes---------------------------------------------------------------------------
