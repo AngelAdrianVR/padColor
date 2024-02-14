@@ -16,7 +16,7 @@
             <el-tag v-if="search" size="large" closable @close="handleTagClose">
                 Estas buscando: <b>{{ search }}</b>
             </el-tag>
-            <div class="flex items-center space-x-3 lg:w-1/4">
+            <div class="flex items-center space-x-3 lg:w-1/5">
                 <el-cascader class="w-full" v-model="filter" :options="options" @change="handleChangeFilter" clearable
                     placeholder="Filtrar" />
             </div>
