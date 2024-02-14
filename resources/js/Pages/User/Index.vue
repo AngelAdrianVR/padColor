@@ -30,7 +30,7 @@
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
                 </label>
                 <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar usuarios')"
-                    class="lg:ml-36">
+                    class="ml-5 lg:ml-36">
                     <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
                         :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
                         @confirm="deleteItems()">
@@ -39,6 +39,7 @@
                         </template>
                     </el-popconfirm>
                 </div>
+                <p class="flex text-gray66 text-right text-[11px] ml-10">{{ localUsers.length }} de {{ total_users }} elementos</p>
             </div>
             <UserRow v-for="user in localUsers" :key="user" :user="user" @checked="handleCheckedItem"
                 :ref="'user' + user.id" />
