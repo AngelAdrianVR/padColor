@@ -18,7 +18,10 @@ class TicketController extends Controller
 
     public function index()
     {
-        $tickets = TicketResource::collection(Ticket::latest()->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->get());
+        $tickets = TicketResource::collection(Ticket::latest('id')
+        ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+        ->take(15)
+        ->get());
 
         return inertia('Ticket/Index', compact('tickets'));
     }
@@ -266,6 +269,18 @@ class TicketController extends Controller
                 ->where($prop, $value)
                 ->get());
         }
+
+        return response()->json(['items' => $tickets]);
+    }
+
+    public function getItemsByPage($currentPage)
+    {
+        $offset = $currentPage * 15;
+        $tickets = TicketResource::collection(Ticket::latest('id')
+            ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+            ->skip($offset)
+            ->take(15)
+            ->get());
 
         return response()->json(['items' => $tickets]);
     }

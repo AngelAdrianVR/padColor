@@ -41,6 +41,7 @@
             </div>
             <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
                 @selected="selectedTicket" @unselected="unselectedTicket" />
+            <button @click="fetchItemsByPage" class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
             <el-empty v-if="!tickets.data.length" description="No hay tickets para mostrar" />
         </div>
     </AppLayout>
@@ -176,6 +177,9 @@ export default {
                 },
 
             ],
+            // paginacion dinamica
+            currentPage: 1,
+
         }
     },
     components: {
@@ -226,6 +230,19 @@ export default {
             if (this.ticketsBuffer.length) {
                 this.tickets.data = this.ticketsBuffer;
                 this.ticketsBuffer = [];
+            }
+        },
+        async fetchItemsByPage() {
+            try {
+                const response = await axios.get(route('tickets.get-by-page', this.currentPage));
+
+                if (response.status === 200) {
+                    this.tickets.data = [...this.tickets.data, ...response.data.items];
+                    console.log(this.tickets.data);
+                    this.currentPage ++;
+                }
+            } catch (error) {
+                console.log(error)
             }
         },
         async fetchMatches() {
