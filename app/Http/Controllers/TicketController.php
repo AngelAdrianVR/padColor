@@ -20,10 +20,12 @@ class TicketController extends Controller
     {
         $tickets = TicketResource::collection(Ticket::latest('id')
         ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-        ->take(15)
+        ->take(20)
         ->get());
 
-        return inertia('Ticket/Index', compact('tickets'));
+        $total_tickets = Ticket::all()->count();
+
+        return inertia('Ticket/Index', compact('tickets', 'total_tickets'));
     }
 
 
@@ -275,11 +277,11 @@ class TicketController extends Controller
 
     public function getItemsByPage($currentPage)
     {
-        $offset = $currentPage * 15;
+        $offset = $currentPage * 20;
         $tickets = TicketResource::collection(Ticket::latest('id')
             ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
             ->skip($offset)
-            ->take(15)
+            ->take(20)
             ->get());
 
         return response()->json(['items' => $tickets]);

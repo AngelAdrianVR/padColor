@@ -155,7 +155,10 @@ export default {
             // Calculate the percentage
             const percentage = (resolvedBeforeExpiration.length / this.tickets.filter(item => item.ticket_solutions.length).length) * 100;
 
-            return percentage + '%' || 'Sin información'; // Return the percentage or 0 if there are no tickets
+            if (percentage)
+                return percentage + '%'; // Return the percentage or 0 if there are no tickets
+            else
+                return 'Sin información';
         },
     }
 }

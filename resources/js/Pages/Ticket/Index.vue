@@ -27,7 +27,7 @@
             <Loading />
         </div>
         <div v-else class="mt-7">
-            <div v-if="tickets.data.length" class="flex items-center space-x-9 border-b border-grayD9 pb-2">
+            <div v-if="localTickets.length" class="flex items-center space-x-9 border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-2 lg:ml-24">
                     <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
@@ -39,10 +39,13 @@
                     </template>
                 </el-popconfirm>
             </div>
-            <TicketRow v-for="ticket in tickets.data" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
+            <TicketRow v-for="ticket in localTickets" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
                 @selected="selectedTicket" @unselected="unselectedTicket" />
-            <button @click="fetchItemsByPage" class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
-            <el-empty v-if="!tickets.data.length" description="No hay tickets para mostrar" />
+            <p v-if="loadingItems" class="text-xs my-4 text-center">
+                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
+            </p>
+            <button v-else-if="total_tickets > 15 && localTickets.length < total_tickets" @click="fetchItemsByPage" class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
+            <el-empty v-if="!localTickets.length" description="No hay tickets para mostrar" />
         </div>
     </AppLayout>
 </template>
@@ -66,6 +69,7 @@ export default {
             search: null,
             selectedTicketsId: [],
             ticketsBuffer: [],
+            localTickets: this.tickets.data,
             options: [
                 {
                     label: "Por estado",
@@ -179,6 +183,7 @@ export default {
             ],
             // paginacion dinamica
             currentPage: 1,
+            loadingItems: false,
 
         }
     },
@@ -191,7 +196,8 @@ export default {
         Checkbox
     },
     props: {
-        tickets: Object
+        tickets: Object,
+        total_tickets: Number,
     },
     methods: {
         handleSearch() {
@@ -228,21 +234,23 @@ export default {
         showAllTickets() {
             // solo si hay items en el buffer, para no dejar vacio el arreglo principal
             if (this.ticketsBuffer.length) {
-                this.tickets.data = this.ticketsBuffer;
+                this.localTickets = this.ticketsBuffer;
                 this.ticketsBuffer = [];
             }
         },
         async fetchItemsByPage() {
             try {
+                this.loadingItems = true;
                 const response = await axios.get(route('tickets.get-by-page', this.currentPage));
-
+                
                 if (response.status === 200) {
-                    this.tickets.data = [...this.tickets.data, ...response.data.items];
-                    console.log(this.tickets.data);
+                    this.localTickets = [...this.localTickets, ...response.data.items];
                     this.currentPage ++;
                 }
             } catch (error) {
                 console.log(error)
+            } finally {
+                this.loadingItems = false;
             }
         },
         async fetchMatches() {
@@ -252,9 +260,9 @@ export default {
 
                 if (response.status === 200) {
                     if (!this.ticketsBuffer.length) {
-                        this.ticketsBuffer = this.tickets.data;
+                        this.ticketsBuffer = this.localTickets;
                     }
-                    this.tickets.data = response.data.items;
+                    this.localTickets = response.data.items;
                 }
             } catch (error) {
                 console.log(error);
@@ -270,9 +278,9 @@ export default {
                 if (response.status === 200) {
                     // si el bufer no tiene nada aun, guardar los tickets
                     if (!this.ticketsBuffer.length) {
-                        this.ticketsBuffer = this.tickets.data;
+                        this.ticketsBuffer = this.localTickets;
                     }
-                    this.tickets.data = response.data.items;
+                    this.localTickets = response.data.items;
                 }
             } catch (error) {
                 console.log(error);

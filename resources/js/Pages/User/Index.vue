@@ -23,10 +23,10 @@
             <Loading />
         </div>
         <div v-else class="mt-7">
-            <div v-if="users.data.length" class="flex items-center border-b border-grayD9 pb-2">
+            <div v-if="localUsers.length" class="flex items-center border-b border-grayD9 pb-2">
                 <label class="flex items-center ml-2 lg:ml-24">
                     <Checkbox @change="handleAllUsersChecked" v-model:checked="allUsers" name="all"
-                        :disabled="!users.data.length" />
+                        :disabled="!localUsers.length" />
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
                 </label>
                 <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar usuarios')"
@@ -40,9 +40,14 @@
                     </el-popconfirm>
                 </div>
             </div>
-            <UserRow v-for="user in users.data" :key="user" :user="user" @checked="handleCheckedItem"
+            <UserRow v-for="user in localUsers" :key="user" :user="user" @checked="handleCheckedItem"
                 :ref="'user' + user.id" />
-            <el-empty v-if="!users.data.length" description="No hay usuarios para mostrar" />
+            <p v-if="loadingItems" class="text-xs my-4 text-center">
+                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
+            </p>
+            <button v-else-if="total_users > 15 && localUsers.length < total_users" @click="fetchItemsByPage"
+                class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
+            <el-empty v-if="!localUsers.length" description="No hay usuarios para mostrar" />
         </div>
     </AppLayout>
 </template>
@@ -63,6 +68,10 @@ export default {
             search: null,
             selectedItems: [],
             usersBuffer: [], //guarda temporalmente todos los usuarios cargados para solo mostrar las coincidencias cuando se hace busqueda
+            localUsers: this.users.data,
+            // paginacion dinamica
+            currentPage: 1,
+            loadingItems: false,
         }
     },
     components: {
@@ -73,7 +82,8 @@ export default {
         Loading,
     },
     props: {
-        users: Object
+        users: Object,
+        total_users: Number,
     },
     methods: {
         handleSearch() {
@@ -87,7 +97,7 @@ export default {
         },
         showAllUsers() {
             if (this.usersBuffer.length) {
-                this.users.data = this.usersBuffer;
+                this.localUsers = this.usersBuffer;
                 this.usersBuffer = [];
             }
         },
@@ -103,14 +113,14 @@ export default {
                 this.selectedItems.splice(index, 1);
             }
 
-            if (this.selectedItems.length === this.users.data.length) {
+            if (this.selectedItems.length === this.localUsers.length) {
                 this.allUsers = true;
-            } else if (this.selectedItems.length < this.users.data.length && this.allUsers) {
+            } else if (this.selectedItems.length < this.localUsers.length && this.allUsers) {
                 this.allUsers = false;
             }
         },
         setSelectedPropFromUserRow(value) {
-            this.users.data.forEach(element => {
+            this.localUsers.forEach(element => {
                 if (element.id !== this.$page.props.auth.user.id) {
                     const ref = 'user' + element.id;
                     this.$refs[ref][0].selected = value;
@@ -119,13 +129,28 @@ export default {
         },
         handleAllUsersChecked() {
             if (this.allUsers) {
-                this.selectedItems = this.users.data.map(user => user.id);
+                this.selectedItems = this.localUsers.map(user => user.id);
                 const index = this.selectedItems.findIndex(item => item === this.$page.props.auth.user.id);
                 this.selectedItems.splice(index, 1);
             } else {
                 this.selectedItems = [];
             }
             this.setSelectedPropFromUserRow(this.allUsers);
+        },
+        async fetchItemsByPage() {
+            try {
+                this.loadingItems = true;
+                const response = await axios.get(route('users.get-by-page', this.currentPage));
+
+                if (response.status === 200) {
+                    this.localUsers = [...this.localUsers, ...response.data.items];
+                    this.currentPage++;
+                }
+            } catch (error) {
+                console.log(error)
+            } finally {
+                this.loadingItems = false;
+            }
         },
         async fetchMatches() {
             try {
@@ -134,9 +159,9 @@ export default {
 
                 if (response.status === 200) {
                     if (!this.usersBuffer.length) {
-                        this.usersBuffer = this.users.data;
+                        this.usersBuffer = this.localUsers;
                     }
-                    this.users.data = response.data.items;
+                    this.localUsers = response.data.items;
                 }
             } catch (error) {
                 console.log(error);
@@ -158,7 +183,7 @@ export default {
                     });
 
                     // Filtrar el arreglo 'users' excluyendo los elementos con IDs en 'selectedItems'
-                    this.users.data = this.users.data.filter(user => !this.selectedItems.includes(user.id));
+                    this.localUsers = this.localUsers.filter(user => !this.selectedItems.includes(user.id));
                 }
             } catch (err) {
                 this.$notify({

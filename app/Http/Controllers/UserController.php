@@ -15,9 +15,10 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = UserResource::collection(User::all());
+        $users = UserResource::collection(User::all()->take(20));
+        $total_users = User::all()->count();
 
-        return inertia('User/Index', compact('users'));
+        return inertia('User/Index', compact('users', 'total_users'));
     }
 
 
@@ -205,6 +206,14 @@ class UserController extends Controller
     public function getAll()
     {
         $users = User::all(['id', 'name', 'profile_photo_path']);
+
+        return response()->json(['items' => $users]);
+    }
+
+    public function getItemsByPage($currentPage)
+    {
+        $offset = $currentPage * 20;
+        $users = UserResource::collection(UserResource::collection(User::all()->skip($offset)->take(20)));
 
         return response()->json(['items' => $users]);
     }
