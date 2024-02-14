@@ -164,7 +164,8 @@ export default {
                 const response = await axios.post(route("users.read-user-notifications"), { notifications_ids: this.selectedItems });
 
                 if (response.data.unread) {
-                    this.fetchNotifications();
+                    window.location.reload();
+                    //this.fetchNotifications();
                 }
             } catch (error) {
                 console.log(error);

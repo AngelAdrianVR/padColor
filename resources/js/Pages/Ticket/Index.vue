@@ -38,6 +38,7 @@
                         <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
                     </template>
                 </el-popconfirm>
+                <p class="text-gray66 text-right text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
             </div>
             <TicketRow v-for="ticket in localTickets" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
                 @selected="selectedTicket" @unselected="unselectedTicket" />
