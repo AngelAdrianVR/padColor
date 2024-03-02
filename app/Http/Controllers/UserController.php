@@ -42,7 +42,7 @@ class UserController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user = User::create($request->all() + ['password' => bcrypt('padColor.')]);
+        $user = User::create($request->all() + ['password' => bcrypt('12345')]);
 
         // guardar foto de perfil en caso de haberse seleccionado una
         if ($request->hasFile('image')) {

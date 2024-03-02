@@ -35,7 +35,7 @@
                                 <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
                                     :title="option.label"
                                     class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                    :class="option.active ? 'bg-gray-800 text-primary' : 'hover:text-primary hover:bg-gradient-to-r from-gray-800 to-black1 text-[#999999]'">
+                                    :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                                     <p class="w-full truncate"> {{ option.label }}</p>
                                 </button>
                             </div>
@@ -43,7 +43,7 @@
                         <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
                             :title="menu.label"
                             class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-gradient-to-r from-gray-800 to-black1 text-primary' : 'hover:text-primary hover:bg-gradient-to-r from-gray-800 to-black1 text-[#999999]'">
+                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                             <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
                             }}</p>
                         </button>

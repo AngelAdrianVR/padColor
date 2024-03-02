@@ -21,6 +21,7 @@ class TicketFactory extends Factory
             'description' => $this->faker->text(100),
             'status' => $this->faker->randomElement(['Abierto', 'Completado', 'En proceso', 'Re-abierto']),
             'priority' => $this->faker->randomElement(['Baja', 'Media', 'Alta']),
+            'ticket_type' => $this->faker->randomElement(['Solicitud o servicio', 'Soporte o incidencia']),
             'expired_date' => '2024-02-15',
             'user_id' => 1,
             'responsible_id' => 1,

@@ -19,6 +19,7 @@ class Ticket extends Model implements HasMedia
         'description',
         'status',
         'priority',
+        'ticket_type',
         'expired_date',
         'user_id',
         'responsible_id',

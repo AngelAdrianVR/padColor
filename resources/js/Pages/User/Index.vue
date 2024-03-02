@@ -2,8 +2,20 @@
     <AppLayout title="Usuarios">
         <div class="flex justify-between items-center mt-4 mx-2 lg:mx-10">
             <h1 class="text-sm lg:text-lg font-bold">Todos los usuarios</h1>
-            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear usuarios')"
-                @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
+            <div class="flex items-center space-x-2">
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear usuarios')"
+                    @click="$inertia.get(route('users.create'))">Agregar usuario</PrimaryButton>
+                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar usuarios')"
+                    class="ml-5 lg:ml-36">
+                    <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
+                        @confirm="deleteItems()">
+                        <template #reference>
+                            <button class="bg-redpad text-white rounded-full px-3 py-2 text-xs">Eliminar</button>
+                        </template>
+                    </el-popconfirm>
+                </div>
+            </div>
         </div>
 
         <!-- Buscador -->
@@ -29,20 +41,15 @@
                         :disabled="!localUsers.length" />
                     <span class="ms-2 text-sm font-bold">Todos los usuarios</span>
                 </label>
-                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar usuarios')"
-                    class="ml-5 lg:ml-36">
-                    <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
-                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
-                        @confirm="deleteItems()">
-                        <template #reference>
-                            <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
-                        </template>
-                    </el-popconfirm>
-                </div>
-                <p class="flex text-gray66 text-right text-[11px] ml-10">{{ localUsers.length }} de {{ total_users }} elementos</p>
+                <p class="flex text-gray66 text-right text-[11px] ml-10">{{ localUsers.length }} de {{ total_users }}
+                    elementos
+                </p>
             </div>
             <UserRow v-for="user in localUsers" :key="user" :user="user" @checked="handleCheckedItem"
                 :ref="'user' + user.id" />
+                <p class="flex text-gray66 text-left text-[11px] mt-2 ml-10">{{ localUsers.length }} de {{ total_users }}
+                    elementos
+                </p>
             <p v-if="loadingItems" class="text-xs my-4 text-center">
                 Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
             </p>

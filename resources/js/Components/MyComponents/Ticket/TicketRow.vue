@@ -13,7 +13,7 @@
                 </div>
                 <span class="text-sm font-bold ml-6">{{ ticket.title }}</span>
                 <div class="flex items-center space-x-2 ml-6 text-gray66 text-xs">
-                    <span>#{{ ticket.id }}</span>
+                    <span>#{{ getFolio(ticket) }}</span>
                     <span>•</span>
                     <span>{{ ticket.user?.name }}</span>
                     <span>•</span>
@@ -30,7 +30,7 @@
                 <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
                     no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias" size="small" class="!w-full">
                     <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
-                        <p class="w-4" style="float: left">
+                        <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2" style="float: left">
                             <span v-html="item.icon"></span>
                         </p>
                         <span class="ml-2">{{ item.label }}</span>
@@ -111,6 +111,13 @@ export default {
     },
     emits: ['selected', 'unselected'],
     methods: {
+        getFolio(ticket) {
+            if (ticket.ticket_type == 'Soporte o incidencia') {
+                return 'GPCI' + String(ticket.id).padStart(6,'0');
+            } else {
+                return 'GPCS' + String(ticket.id).padStart(6,'0');
+            }
+        },
         getIcon(ticket) {
             if (ticket.status === 'Abierto') {
                 return '<i class="fa-solid fa-arrow-up text-[#0355B5] mr-2"></i>';

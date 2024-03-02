@@ -20,6 +20,7 @@ class TicketResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status,
             'priority' => $this->priority,
+            'ticket_type' => $this->ticket_type,
             'expired_date' => $this->expired_date?->isoFormat('DD MMM YYYY'),
             'user' => $this->whenLoaded('user'),
             'responsible' => $this->whenLoaded('responsible'),

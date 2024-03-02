@@ -6,9 +6,9 @@
         <div id="chart">
             <apexchart type="pie" width="400" :options="chartOptions" :series="series"></apexchart>
         </div>
-        <!-- <div class="flex justify-end mx-6 absolute bottom-3 right-5">
-            <button class="text-primary text-xs">Ver detalles</button>
-        </div> -->
+        <div class="flex justify-end mx-6 absolute bottom-3 left-1">
+            <b>Total: {{ options.series.reduce((total, val) => total + val, 0) }}</b>
+        </div>
     </div>
 </template>
 
