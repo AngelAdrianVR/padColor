@@ -50,9 +50,9 @@
                 @selected="selectedTicket" @unselected="unselectedTicket" />
             <p class="text-gray66 text-left ml-8 mt-2 text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
             <p v-if="loadingItems" class="text-xs my-4 text-center">
-                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
+                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-secondary"></i>
             </p>
-            <button v-else-if="total_tickets > 15 && localTickets.length < total_tickets" @click="fetchItemsByPage"
+            <button v-else-if="localTickets.length && !search && (total_tickets > 15 && localTickets.length < total_tickets)" @click="fetchItemsByPage"
                 class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
             <el-empty v-if="!localTickets.length" description="No hay tickets para mostrar" />
         </div>
@@ -190,33 +190,8 @@ export default {
                 },
                 {
                     label: "Por categoría",
-                    value: "category",
-                    children: [
-                        {
-                            label: 'Hoy',
-                            value: 'Hoy',
-                        },
-                        {
-                            label: 'Esta semana ',
-                            value: 'Esta semana ',
-                        },
-                        {
-                            label: 'Este mes',
-                            value: 'Este mes',
-                        },
-                        {
-                            label: 'Mes pasado',
-                            value: 'Mes pasado',
-                        },
-                        {
-                            label: 'Este año',
-                            value: 'Este año',
-                        },
-                        {
-                            label: 'Año pasado',
-                            value: 'Año pasado',
-                        },
-                    ],
+                    value: "category_id",
+                    children: []
                 },
                 {
                     label: "Por sucursal",
@@ -293,6 +268,7 @@ export default {
     },
     props: {
         tickets: Object,
+        categories: Array,
         total_tickets: Number,
     },
     methods: {
@@ -405,6 +381,13 @@ export default {
                 });
             }
         }
-    }
+    },
+    mounted() {
+        // agregar las categorias en las opciones de filtro
+        this.categories.forEach(element => {
+            const ops = { label: element.name, value: element.id }
+            this.options[4].children.push(ops);
+        });
+    },
 }
 </script>

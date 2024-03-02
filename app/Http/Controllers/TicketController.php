@@ -23,9 +23,10 @@ class TicketController extends Controller
         ->take(20)
         ->get());
 
+        $categories = Category::all();
         $total_tickets = Ticket::all()->count();
 
-        return inertia('Ticket/Index', compact('tickets', 'total_tickets'));
+        return inertia('Ticket/Index', compact('tickets', 'total_tickets', 'categories'));
     }
 
 
