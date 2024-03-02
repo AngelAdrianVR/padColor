@@ -1,5 +1,5 @@
 <template>
     <figure class="">
-        <img class="w-8" src="@/../../public/images/PadColor_Isologo.png" alt="logo">
+        <img class="w-8" src="@/../../public/images/isologo.png" alt="logo">
     </figure>
 </template>

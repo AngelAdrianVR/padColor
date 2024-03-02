@@ -5,7 +5,7 @@
             class="fa-solid fa-angle-right text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
         <i @click="small = true" v-else
             class="fa-solid fa-angle-left text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
-        <div class="bg-black1 h-full overflow-auto px-1">
+        <div class="bg-grayED h-full overflow-auto px-1">
             <!-- Logo -->
             <div class="flex items-center justify-center mt-7">
                 <Link v-if="small" :href="route('dashboard')">
@@ -21,8 +21,8 @@
                 <template v-if="small">
                     <div v-for="(menu, index) in menus" :key="index">
                         <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
-                            class="w-full text-center py-2 px-3 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-gray-800 text-primary' : 'hover:text-primary hover:bg-gray-800 text-[#999999]'">
+                            class="w-full text-center py-2 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
+                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                             <span v-html="menu.icon"></span>
                         </button>
                     </div>

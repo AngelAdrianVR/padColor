@@ -14,14 +14,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::factory(100)->create();
+        // \App\Models\User::factory(100)->create();
 
         \App\Models\User::factory()->create([
-            'name' => 'Angel',
-            'email' => 'angel@gmail.com',
-            'phone' => '3333034738',
+            'name' => 'Soporte DTW',
+            'email' => 'soporte@dtw.com.mx',
+            'phone' => '0000000000',
             'password' => bcrypt('321321321'),
-            'employee_properties' => ["job_position" => "Super admin", "department" => "Desarrollador"],
+            'employee_properties' => ["job_position" => "Soporte", "department" => "Desarrollo"],
         ]);
 
         $this->call([
