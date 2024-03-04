@@ -25,6 +25,7 @@ class TicketResource extends JsonResource
             'user' => $this->whenLoaded('user'),
             'responsible' => $this->whenLoaded('responsible'),
             'category' => $this->whenLoaded('category'),
+            'branch' => $this->branch,
             'solutions_count' => $this->whenCounted('ticketSolutions'),
             'media' => $this->getMedia()->all(),
             'created_at' => $this->created_at?->isoFormat('DD MMM YYYY'),

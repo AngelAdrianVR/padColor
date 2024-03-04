@@ -3,8 +3,8 @@
         <div class="lg:p-9 p-1 text-sm">
             <div class="flex items-center justify-between">
                 <Back />
-                <ThirthButton v-if="$page.props.auth.user.permissions.includes('Editar tickets')"
-                    class="!rounded-[3px]" @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar
+                <ThirthButton v-if="$page.props.auth.user.permissions.includes('Editar tickets')" class="!rounded-[3px]"
+                    @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar
                 </ThirthButton>
             </div>
             <h1 class="text-gray66 lg:mx-[72px] mt-2">Información sobre el ticket</h1>
@@ -15,33 +15,44 @@
                     <p class="text-gray66">Descripción</p>
                     <span class="text-black">{{ ticket.data.description }}</span>
                 </div>
-                <div class="lg:flex items-center space-x-3 ml-2 text-gray66">
-                    <p>Folio: <span class="text-black ml-1">#{{ ticket.data.id }}</span></p>
+                <div class="lg:flex flex-wrap items-center space-x-3 ml-2 text-gray66 mt-3">
+                    <p>Folio: <span class="text-black ml-1">#{{ getFolio(ticket.data) }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Creado por: <span class="text-black ml-1">{{
-                        ticket.data.responsible?.name }}</span></p>
+        ticket.data.responsible?.name }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
-                    }}</span></p>
+                            }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
-                    }}</span></p>
+                            }}</span></p>
+                    <p>Sucursal: <span class="text-black ml-1">{{ 'xxxxxx'
+                            }}</span></p>
+                </div>
+                <div class="lg:flex flex-wrap items-center space-x-3 ml-2 text-gray66 mt-3">
+                    <p>Tipo de ticket: <span class="text-black ml-1">{{ ticket.data.ticket_type
+                            }}</span></p>
+                    <p>Categoría: <span class="text-black ml-1">{{ ticket.data.category.name
+                            }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <div class="flex items-center space-x-3">
                         <p>Prioridad: <span class="text-black ml-1">{{ ticket.data.priority
-                        }}</span></p>
+                                }}</span></p>
                         <i :class="getPriorityColor()" class="fa-solid fa-circle text-[7px]"></i>
                     </div>
                 </div>
-                <div class="flex justify-between my-6 ml-2">
+                <div class="flex justify-between my-3 ml-2">
                     <!-- Estatus -->
                     <div class="lg:flex items-center space-x-3 w-full">
                         <p class="text-gray66">Estatus:</p>
-                        <div class="lg:w-1/4">
+                        <div class="lg:w-[14%]">
                             <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
-                                no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                                :disabled="!$page.props.auth.user.permissions.includes('Editar status de tickets')"
+                                no-data-text="No hay opciones registradas"
+                                no-match-text="No se encontraron coincidencias">
                                 <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
-                                    <p class="w-4" style="float: left">
+                                    <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2"
+                                        style="float: left">
                                         <span v-html="item.icon"></span>
                                     </p>
                                     <span class="ml-2">{{ item.label }}</span>
@@ -50,16 +61,21 @@
                         </div>
                         <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
-                        }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
+                            }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
                         <span class="text-gray66 hidden lg:block">•</span>
                         <div class="flex items-center space-x-3">
                             <p class="text-gray66 ">Responsable: </p>
-                            <div class="flex  rounded-full w-10">
+                            <div class="flex rounded-full w-10">
                                 <img class="size-9 rounded-full object-cover"
-                                    :src="ticket.data.responsible.profile_photo_url" :alt="ticket.data.responsible.name" />
+                                    :src="ticket.data.responsible.profile_photo_url"
+                                    :alt="ticket.data.responsible.name" />
                             </div>
                             <p>{{ ticket.data.responsible.name }}</p>
                         </div>
+                        <p class="text-gray66">
+                            Tiempo de solución:
+                            <span class="text-black ml-1">{{ ticket.data.updated_at }}</span>
+                        </p>
                     </div>
                 </div>
 
@@ -81,6 +97,7 @@
                     <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="ticket.data.solutions_count++" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
+
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-regular fa-comment-dots mr-1"></i>
@@ -90,6 +107,7 @@
                     <Comments :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
                 <el-tab-pane name="3">
+
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-solid fa-clock-rotate-left mr-1"></i>
@@ -173,6 +191,13 @@ export default {
         solutions_count: Number,
     },
     methods: {
+        getFolio(ticket) {
+            if (ticket.ticket_type == 'Soporte o incidencia') {
+                return 'GPCI' + String(ticket.id).padStart(6, '0');
+            } else {
+                return 'GPCS' + String(ticket.id).padStart(6, '0');
+            }
+        },
         getPriorityColor() {
             if (this.ticket.data.priority === 'Baja') {
                 return 'text-[#A49C9D]';
@@ -197,6 +222,20 @@ export default {
                 return '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D] mr-2"></i>';
             }
         },
+        async fetchHistorical() {
+            this.loading = true;
+            try {
+                const response = await axios.get(route("tickets.fetch-history", this.ticketId));
+                if (response.status === 200) {
+                    this.historical = response.data.items;
+                }
+            } catch (error) {
+                console.log(error);
+
+            } finally {
+                this.loading = false;
+            }
+        },
         async updateStatus() {
             try {
                 const response = await axios.put(route('tickets.update-status', this.ticket.data.id), { status: this.status });
@@ -211,7 +250,7 @@ export default {
                         message: "Se ha actualizado el estatus",
                         type: "success",
                     });
-                    this.fetchHistory();
+                    this.fetchHistorical();
                 }
             } catch (error) {
                 console.log(error);

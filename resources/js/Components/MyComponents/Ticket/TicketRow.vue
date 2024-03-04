@@ -13,7 +13,12 @@
                 </div>
                 <span class="text-sm font-bold ml-6">{{ ticket.title }}</span>
                 <div class="flex items-center space-x-2 ml-6 text-gray66 text-xs">
-                    <span>#{{ getFolio(ticket) }}</span>
+                    <el-tooltip :content="ticket.ticket_type" placement="top">
+                        <span
+                            :class="ticket.ticket_type == 'Soporte o incidencia' ? 'text-[#095992]' : 'text-[#A10F3B]'">
+                            #{{ getFolio(ticket) }}
+                        </span>
+                    </el-tooltip>
                     <span>•</span>
                     <span>{{ ticket.user?.name }}</span>
                     <span>•</span>
@@ -26,11 +31,13 @@
         </section>
         <section @click="$inertia.get(route('tickets.show', ticket.id))"
             class="flex justify-end items-center space-x-3 w-1/3 lg:pr-7 cursor-pointer">
-            <div class="w-1/2">
+            <div v-if="$page.props.auth.user.permissions.includes('Editar status de tickets')" class="w-1/2">
                 <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
-                    no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias" size="small" class="!w-full">
+                    no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias"
+                    size="small" class="!w-full">
                     <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
-                        <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2" style="float: left">
+                        <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2"
+                            style="float: left">
                             <span v-html="item.icon"></span>
                         </p>
                         <span class="ml-2">{{ item.label }}</span>
@@ -40,9 +47,10 @@
             <el-tooltip
                 :content="ticket.responsible?.name ? 'Responsable: ' + ticket.responsible?.name : 'Responsable: Sin asignar'"
                 placement="top">
-                <figure v-if="ticket.responsible" class="flex justify-center items-center space-x-2 text-sm rounded-full">
-                    <img class="size-10 lg:size-14 rounded-full object-cover" :src="ticket.responsible?.profile_photo_url"
-                        :alt="ticket.responsible?.name">
+                <figure v-if="ticket.responsible"
+                    class="flex justify-center items-center space-x-2 text-sm rounded-full">
+                    <img class="size-10 lg:size-14 rounded-full object-cover"
+                        :src="ticket.responsible?.profile_photo_url" :alt="ticket.responsible?.name">
                 </figure>
                 <div @click.stop="$inertia.get(route('tickets.edit', ticket.id))" v-else
                     class="rounded-full border size-14 flex items-center justify-center px-4 cursor-pointer hover:border-primary">
@@ -113,9 +121,9 @@ export default {
     methods: {
         getFolio(ticket) {
             if (ticket.ticket_type == 'Soporte o incidencia') {
-                return 'GPCI' + String(ticket.id).padStart(6,'0');
+                return 'GPCI' + String(ticket.id).padStart(6, '0');
             } else {
-                return 'GPCS' + String(ticket.id).padStart(6,'0');
+                return 'GPCS' + String(ticket.id).padStart(6, '0');
             }
         },
         getIcon(ticket) {

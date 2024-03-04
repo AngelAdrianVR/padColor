@@ -13,7 +13,7 @@
                 </Link>
                 <Link v-else :href="route('dashboard')">
                 <figure class="">
-                    <img class="w-20" src="@/../../public/images/authLogo.png" alt="logo">
+                    <img class="w-32" src="@/../../public/images/logo_name.png" alt="logo">
                 </figure>
                 </Link>
             </div>

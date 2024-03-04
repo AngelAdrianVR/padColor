@@ -24,6 +24,7 @@ class Ticket extends Model implements HasMedia
         'user_id',
         'responsible_id',
         'category_id',
+        'branch',
     ];
 
     protected $casts = [
