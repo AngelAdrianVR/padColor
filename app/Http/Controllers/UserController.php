@@ -38,6 +38,7 @@ class UserController extends Controller
             'phone' => 'required|string|max:15',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
+            'employee_properties.branch' => 'required|string|max:255',
             'roles' => 'required|array|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -84,6 +85,7 @@ class UserController extends Controller
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
+            'employee_properties.branch' => 'required|string|max:255',
             'roles' => 'required|array|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -107,6 +109,7 @@ class UserController extends Controller
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
+            'employee_properties.branch' => 'required|string|max:255',
             'roles' => 'required|array|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);

@@ -52,7 +52,7 @@
             <p v-if="loadingItems" class="text-xs my-4 text-center">
                 Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-secondary"></i>
             </p>
-            <button v-else-if="localTickets.length && !search && (total_tickets > 15 && localTickets.length < total_tickets)" @click="fetchItemsByPage"
+            <button v-else-if="localTickets.length && !search && !filtered && (total_tickets > 15 && localTickets.length < total_tickets)" @click="fetchItemsByPage"
                 class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
             <el-empty v-if="!localTickets.length" description="No hay tickets para mostrar" />
         </div>
@@ -255,7 +255,7 @@ export default {
             // paginacion dinamica
             currentPage: 1,
             loadingItems: false,
-
+            filtered: false,
         }
     },
     components: {
@@ -327,6 +327,7 @@ export default {
         },
         async fetchMatches() {
             try {
+                this.filtered = false;
                 this.loading = true;
                 const response = await axios.get(route('tickets.get-matches', { query: this.search }));
 
@@ -353,6 +354,7 @@ export default {
                         this.ticketsBuffer = this.localTickets;
                     }
                     this.localTickets = response.data.items;
+                    this.filtered = true;
                 }
             } catch (error) {
                 console.log(error);

@@ -53,7 +53,7 @@
             <p v-if="loadingItems" class="text-xs my-4 text-center">
                 Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
             </p>
-            <button v-else-if="total_users > 15 && localUsers.length < total_users" @click="fetchItemsByPage"
+            <button v-else-if="total_users > 15 && !search && localUsers.length < total_users" @click="fetchItemsByPage"
                 class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
             <el-empty v-if="!localUsers.length" description="No hay usuarios para mostrar" />
         </div>

@@ -21,12 +21,12 @@
                     <p>Creado por: <span class="text-black ml-1">{{
         ticket.data.responsible?.name }}</span></p>
                     <span class="hidden lg:block">•</span>
-                    <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at
+                    <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at_formatted
                             }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Fecha límite: <span class="text-black ml-1">{{ ticket.data.expired_date
                             }}</span></p>
-                    <p>Sucursal: <span class="text-black ml-1">{{ 'xxxxxx'
+                    <p>Sucursal: <span class="text-black ml-1">{{ ticket.data.branch
                             }}</span></p>
                 </div>
                 <div class="lg:flex flex-wrap items-center space-x-3 ml-2 text-gray66 mt-3">
@@ -74,7 +74,7 @@
                         </div>
                         <p class="text-gray66">
                             Tiempo de solución:
-                            <span class="text-black ml-1">{{ ticket.data.updated_at }}</span>
+                            <span class="text-black ml-1">{{ tiempoTranscurrido(ticket.data.created_at) }}</span>
                         </p>
                     </div>
                 </div>
@@ -94,7 +94,8 @@
                             <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="ticket.data.solutions_count++" />
+                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="ticket.data.solutions_count++"
+                        @decrementCountSolutions="ticket.data.solutions_count--" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
 
@@ -133,6 +134,7 @@ import Solutions from "./Tabs/Solutions.vue";
 import Comments from "./Tabs/Comments.vue";
 import Historical from "./Tabs/Historical.vue";
 import axios from 'axios';
+import { differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 
 export default {
     data() {
@@ -191,6 +193,21 @@ export default {
         solutions_count: Number,
     },
     methods: {
+        tiempoTranscurrido(fecha) {
+            const fechaInicio = new Date(fecha);
+            const fechaActual = new Date();
+            console.log(fecha)
+
+            const minutos = differenceInMinutes(fechaActual, fechaInicio);
+            const horas = differenceInHours(fechaActual, fechaInicio);
+            const dias = differenceInDays(fechaActual, fechaInicio);
+
+            if (dias > 0) {
+                return `${dias} día${dias > 1 ? 's' : ''} ${horas % 24}:${minutos % 60}`;
+            } else {
+                return `${horas}:${minutos % 60}`;
+            }
+        },
         getFolio(ticket) {
             if (ticket.ticket_type == 'Soporte o incidencia') {
                 return 'GPCI' + String(ticket.id).padStart(6, '0');

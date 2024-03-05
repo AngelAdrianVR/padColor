@@ -28,9 +28,17 @@
                     <InputError :message="form.errors['employee_properties.job_position']" />
                 </div>
                 <div>
+                    <InputLabel value="Sucursal*" class="ml-3 mb-1" />
+                    <el-select class="w-full" v-model="form.employee_properties.branch" clearable placeholder="Seleccione"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="item in branches" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors['employee_properties.branch']" />
+                </div>
+                <div>
                     <InputLabel value="Correo electrónico*" class="ml-3 mb-1" />
-                    <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255" type="email"
-                        clearable />
+                    <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255"
+                        type="email" clearable />
                     <InputError :message="form.errors.email" />
                 </div>
                 <div>
@@ -54,7 +62,7 @@
                     </InputLabel>
                 </div>
                 <InputError :message="form.errors.roles" />
-                
+
                 <div class="col-span-2 text-right mt-4">
                     <PrimaryButton :disabled="form.processing">Guardar</PrimaryButton>
                 </div>
@@ -82,6 +90,7 @@ export default {
             image: null,
             employee_properties: {
                 department: null,
+                branch: null,
                 job_position: null,
             },
             roles: [],
@@ -105,6 +114,21 @@ export default {
                 'Recursos Humanos',
                 'Sistemas',
                 'Tesorería',
+            ],
+            branches: [
+                'Alfajayucan',
+                'Morelia',
+                'San Luis Potosí',
+                'Acapulco',
+                'Av. del Tigre',
+                'Calle C',
+                'Calle 2',
+                'Veracruz',
+                'León',
+                'Juárez',
+                'Puebla',
+                'Monterrey',
+                'Federalismo',
             ],
         }
     },

@@ -5,14 +5,19 @@
             <SimpleKPI v-for="(item, index) in simpleKpis" :key="index" :title="item.title" :icon="item.icon"
                 :value="item.value" />
         </section>
-        <section class="mx-2 lg:mx-14 mt-6 grid-cols-1 grid lg:grid-cols-2 gap-1 lg:gap-8">
-            <PolarAreaChart :options="prioritiesChartOptions" title="Estado de Prioridades"
+        <section class="mx-2 lg:mx-14 mt-6 grid-cols-1 grid lg:grid-cols-2 gap-1 lg:gap-8 mb-6">
+            <PieChart :options="ticketsByBranchOptions" title="Tickets por sucursal"
                 icon='<i class="fa-solid fa-stopwatch ml-2"></i>' />
             <PieChart :options="ticketsStatusChartOptions" title="Estado de los tickets"
                 icon='<i class="fa-solid fa-circle-nodes ml-2"></i>' />
+            <PieChart :options="ticketsByCategoriesOptions" title="Tickets por categorías"
+                icon='<i class="fa-solid fa-circle-nodes ml-2"></i>' />
+            <PolarAreaChart :options="prioritiesChartOptions" title="Estado de Prioridades"
+                icon='<i class="fa-solid fa-stopwatch ml-2"></i>' />
         </section>
     </AppLayout>
 </template>
+
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PolarAreaChart from '@/Components/MyComponents/Charts/PolarAreaChart.vue';
@@ -22,15 +27,54 @@ import PieChart from '@/Components/MyComponents/Charts/PieChart.vue';
 export default {
     data() {
         return {
+            branches: [
+                'Alfajayucan',
+                'Morelia',
+                'San Luis Potosí',
+                'Acapulco',
+                'Av. del Tigre',
+                'Calle C',
+                'Calle 2',
+                'Veracruz',
+                'León',
+                'Juárez',
+                'Puebla',
+                'Monterrey',
+                'Federalismo',
+            ],
             ticketsStatusChartOptions: {
                 colors: ['#0355B5', '#FD8827', '#B927FD', '#3F9C30', '#FD4646', '#3D3D3D'],
                 labels: ["Abierto", "En espera", "En espera de 3ro", "Completado", "Re-abierto", "En proceso"],
                 series: this.ticketsByStatus(),
             },
             prioritiesChartOptions: {
-                colors: ['#A49C9D', '#D68D1F', '#C1202A'],
+                colors: ['#0355B5', '#FD8827', '#B927FD', '#3F9C30', '#FD4646', '#3D3D3D'],
                 labels: ['Baja', 'Media', 'Alta'],
                 series: this.ticketsByPriority(),
+            },
+            ticketsByBranchOptions: {
+                colors: ['#0355B5', '#FD8827', '#B927FD', '#3F9C30', '#FD4646', '#3D3D3D'],
+                labels: [
+                    'Alfajayucan',
+                    'Morelia',
+                    'San Luis Potosí',
+                    'Acapulco',
+                    'Av. del Tigre',
+                    'Calle C',
+                    'Calle 2',
+                    'Veracruz',
+                    'León',
+                    'Juárez',
+                    'Puebla',
+                    'Monterrey',
+                    'Federalismo',
+                ],
+                series: this.ticketsByBranch(),
+            },
+            ticketsByCategoriesOptions: {
+                colors: ['#0355B5', '#FD8827', '#B927FD', '#3F9C30', '#FD4646', '#3D3D3D'],
+                labels: this.ticketsByCategory().map(item => item[0]),
+                series: this.ticketsByCategory().map(item => item[1]),
             },
 
             // kpis simples
@@ -60,6 +104,7 @@ export default {
     },
     props: {
         tickets: Array,
+        categories: Array,
     },
     components: {
         AppLayout,
@@ -85,6 +130,58 @@ export default {
 
             // Convertir el objeto a un arreglo de recuento
             const result = statuses.map(status => byStatus[status]);
+
+            return result;
+        },
+        ticketsByCategory() {
+            const categories = {};
+
+            this.categories.forEach(category => {
+                categories[category.name] = 0;
+            });
+
+            this.tickets.forEach(ticket => {
+                const categoryName = ticket.category.name;
+
+                if (categories.hasOwnProperty(categoryName)) {
+                    categories[categoryName]++;
+                }
+            });
+
+            const res = Object.entries(categories).map(([item, quantity]) => [item, quantity]);
+            return res;
+        },
+        ticketsByBranch() {
+            const branches = [
+                'Alfajayucan',
+                'Morelia',
+                'San Luis Potosí',
+                'Acapulco',
+                'Av. del Tigre',
+                'Calle C',
+                'Calle 2',
+                'Veracruz',
+                'León',
+                'Juárez',
+                'Puebla',
+                'Monterrey',
+                'Federalismo',
+            ];
+            // Inicializar un objeto para almacenar el recuento de tickets por estado
+            const byBranch = {};
+            branches.forEach(branch => {
+                byBranch[branch] = 0;
+            });
+
+            // Contar los tickets por estado
+            this.tickets.forEach(ticket => {
+                if (byBranch.hasOwnProperty(ticket.branch)) {
+                    byBranch[ticket.branch]++;
+                }
+            });
+
+            // Convertir el objeto a un arreglo de recuento
+            const result = branches.map(branch => byBranch[branch]);
 
             return result;
         },

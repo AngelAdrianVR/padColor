@@ -28,7 +28,8 @@ class TicketResource extends JsonResource
             'branch' => $this->branch,
             'solutions_count' => $this->whenCounted('ticketSolutions'),
             'media' => $this->getMedia()->all(),
-            'created_at' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'created_at_formatted' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'created_at' => $this->created_at,
             'updated_at' => $this->updated_at?->isoFormat('DD MMM YYYY'),
         ];
     }
