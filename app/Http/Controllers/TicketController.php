@@ -23,9 +23,10 @@ class TicketController extends Controller
         ->take(20)
         ->get());
 
+        $categories = Category::all();
         $total_tickets = Ticket::all()->count();
 
-        return inertia('Ticket/Index', compact('tickets', 'total_tickets'));
+        return inertia('Ticket/Index', compact('tickets', 'total_tickets', 'categories'));
     }
 
 
@@ -40,17 +41,18 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'category_id' => 'required',
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'status' => 'required|string',
+            'branch' => 'required|string',
             'priority' => 'required|string',
             'expired_date' => 'required|date|after:yesterday',
         ]);
 
-        $ticket = Ticket::create($request->all() + ['user_id' => auth()->id()]);
+        $ticket = Ticket::create($validated + ['user_id' => auth()->id()]);
 
         // Guardar media si existe
         if ($request->hasFile('media')) {
@@ -76,7 +78,7 @@ class TicketController extends Controller
 
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->find($ticket_id));
+        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path', 'category:id,name')->find($ticket_id));
 
         return inertia('Ticket/Show', compact('ticket'));
     }
@@ -99,6 +101,7 @@ class TicketController extends Controller
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'status' => 'required|string',
+            'branch' => 'required|string',
             'priority' => 'required|string',
             'expired_date' => 'required|date|after:yesterday',
         ]);
@@ -137,6 +140,7 @@ class TicketController extends Controller
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'status' => 'required|string',
+            'branch' => 'required|string',
             'priority' => 'required|string',
             'expired_date' => 'required|date|after:yesterday',
         ]);

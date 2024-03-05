@@ -2,8 +2,19 @@
     <AppLayout title="Tickets">
         <div class="flex justify-between items-center mt-4 mx-10">
             <h1 class="font-bold">Todos los tickets</h1>
-            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
-                @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
+            <div class="flex items-center space-x-2">
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
+                    @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
+                <el-popconfirm
+                    v-if="(selectAllTickets || selectedTicketsId.length) && $page.props.auth.user.permissions.includes('Eliminar tickets')"
+                    confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                    :title="'¿Desea eliminar los elementos seleccionados (' + selectedTicketsId.length + ')?'"
+                    @confirm="massiveDelete">
+                    <template #reference>
+                        <button class="bg-redpad text-white rounded-full px-3 py-2 text-xs">Eliminar</button>
+                    </template>
+                </el-popconfirm>
+            </div>
         </div>
 
         <!-- Buscador y filtros -->
@@ -32,20 +43,17 @@
                     <Checkbox v-model:checked="selectAllTickets" name="remember" />
                     <span class="ms-2 text-sm font-bold">Todos los tickets</span>
                 </label>
-                <el-popconfirm v-if="(selectAllTickets || selectedTicketsId.length) && $page.props.auth.user.permissions.includes('Eliminar tickets')" confirm-button-text="Si"
-                    cancel-button-text="No" icon-color="#D72C8A" title="¿Continuar?" @confirm="massiveDelete">
-                    <template #reference>
-                        <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
-                    </template>
-                </el-popconfirm>
-                <p class="text-gray66 text-right text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
+                <p class="text-gray66 text-right text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos
+                </p>
             </div>
             <TicketRow v-for="ticket in localTickets" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
                 @selected="selectedTicket" @unselected="unselectedTicket" />
+            <p class="text-gray66 text-left ml-8 mt-2 text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
             <p v-if="loadingItems" class="text-xs my-4 text-center">
-                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-primary"></i>
+                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-secondary"></i>
             </p>
-            <button v-else-if="total_tickets > 15 && localTickets.length < total_tickets" @click="fetchItemsByPage" class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
+            <button v-else-if="localTickets.length && !search && !filtered && (total_tickets > 15 && localTickets.length < total_tickets)" @click="fetchItemsByPage"
+                class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
             <el-empty v-if="!localTickets.length" description="No hay tickets para mostrar" />
         </div>
     </AppLayout>
@@ -180,12 +188,74 @@ export default {
                         },
                     ],
                 },
-
+                {
+                    label: "Por categoría",
+                    value: "category_id",
+                    children: []
+                },
+                {
+                    label: "Por sucursal",
+                    value: "branch",
+                    children: [
+                        {
+                            label: 'Alfajayucan',
+                            value: 'Alfajayucan',
+                        },
+                        {
+                            label: 'Morelia ',
+                            value: 'Morelia ',
+                        },
+                        {
+                            label: 'San Luis Potosí',
+                            value: 'San Luis Potosí',
+                        },
+                        {
+                            label: 'Acapulco',
+                            value: 'Acapulco',
+                        },
+                        {
+                            label: 'Av. del Tigre',
+                            value: 'Av. del Tigre',
+                        },
+                        {
+                            label: 'Calle C',
+                            value: 'Calle C',
+                        },
+                        {
+                            label: 'Calle 2',
+                            value: 'Calle 2',
+                        },
+                        {
+                            label: 'Veracruz',
+                            value: 'Veracruz',
+                        },
+                        {
+                            label: 'León',
+                            value: 'León',
+                        },
+                        {
+                            label: 'Juárez',
+                            value: 'Juárez',
+                        },
+                        {
+                            label: 'Puebla',
+                            value: 'Puebla',
+                        },
+                        {
+                            label: 'Monterrey',
+                            value: 'Monterrey',
+                        },
+                        {
+                            label: 'Federalismo',
+                            value: 'Federalismo',
+                        },
+                    ],
+                },
             ],
             // paginacion dinamica
             currentPage: 1,
             loadingItems: false,
-
+            filtered: false,
         }
     },
     components: {
@@ -198,6 +268,7 @@ export default {
     },
     props: {
         tickets: Object,
+        categories: Array,
         total_tickets: Number,
     },
     methods: {
@@ -243,10 +314,10 @@ export default {
             try {
                 this.loadingItems = true;
                 const response = await axios.get(route('tickets.get-by-page', this.currentPage));
-                
+
                 if (response.status === 200) {
                     this.localTickets = [...this.localTickets, ...response.data.items];
-                    this.currentPage ++;
+                    this.currentPage++;
                 }
             } catch (error) {
                 console.log(error)
@@ -256,6 +327,7 @@ export default {
         },
         async fetchMatches() {
             try {
+                this.filtered = false;
                 this.loading = true;
                 const response = await axios.get(route('tickets.get-matches', { query: this.search }));
 
@@ -282,6 +354,7 @@ export default {
                         this.ticketsBuffer = this.localTickets;
                     }
                     this.localTickets = response.data.items;
+                    this.filtered = true;
                 }
             } catch (error) {
                 console.log(error);
@@ -310,7 +383,13 @@ export default {
                 });
             }
         }
-    }
+    },
+    mounted() {
+        // agregar las categorias en las opciones de filtro
+        this.categories.forEach(element => {
+            const ops = { label: element.name, value: element.id }
+            this.options[4].children.push(ops);
+        });
+    },
 }
 </script>
-

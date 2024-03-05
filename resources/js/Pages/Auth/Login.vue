@@ -14,7 +14,7 @@ defineProps({
 });
 
 const form = useForm({
-    email: '',
+    name: '',
     password: '',
     remember: false,
 });
@@ -30,84 +30,53 @@ const submit = () => {
 </script>
 
 <template>
+
     <Head title="Inicio de sesión" />
 
     <AuthenticationCard>
-
-        <div class="flex justify-center mt-14">
+        <h1 class="text-gray66 font-bold text-sm ml-5 mt-2">SISTEMA DE TICKETS</h1>
+        <div class="flex justify-center mt-2">
             <AuthenticationCardLogo />
         </div>
 
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+        <!-- <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
-        </div>
+        </div> -->
 
-        <form class="w-2/3 mx-auto mt-12" @submit.prevent="submit">
+        <form class="w-2/3 mx-auto" @submit.prevent="submit">
             <div>
-                <InputLabel class="ml-5 text-white" for="email" value="Correo electrónico" />
-                <el-input v-model="form.email"
-                    id="email"
-                    class="w-2/3" 
-                    type="email"
-                    placeholder="Escribe tu correo electrónico"
-                    required
-                    autofocus
-                    autocomplete="username"
-                    >
+                <InputLabel class="ml-5 text-gray66" for="name" value="Nombre" />
+                <el-input v-model="form.name" id="name" type="text" placeholder="Escribe tu nombre" required autofocus
+                    autocomplete="username">
                     <template #prefix>
-                        <i class="fa-solid fa-envelope text-primary text-sm"></i>
+                        <i class="fa-solid fa-user text-sm text-primary"></i>
                     </template>
                 </el-input>
-                <!-- <TextInput
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
-                    autofocus
-                    autocomplete="username"
-                /> -->
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError :message="form.errors.name" />
             </div>
 
             <div class="mt-4">
-                <InputLabel class="ml-5 text-white" for="password" value="Contraseña" />
-                <el-input
-                    v-model="form.password"
-                    required
-                    class="w-2/3"
-                    type="password"
-                    placeholder="Please input password"
-                    show-password
-                >
+                <InputLabel class="ml-5 text-gray66" for="password" value="Contraseña" />
+                <el-input v-model="form.password" required class="w-2/3" type="password"
+                    placeholder="Ingresa tu contraseña " show-password>
+
                     <template #prefix>
-                        <i class="fa-solid fa-lock text-sm"></i>
+                        <i class="fa-solid fa-lock text-sm text-primary"></i>
                     </template>
                 </el-input>
-                <!-- <TextInput
-                    id="password"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="current-password"
-                /> -->
-                <InputError class="mt-2" :message="form.errors.password" />
+                <InputError :message="form.errors.password" />
             </div>
 
-            <div class="block mt-3 ml-5">
+            <div class="block mt-3 ml-2">
                 <label class="flex items-center">
                     <Checkbox v-model:checked="form.remember" name="remember" />
-                    <span class="ms-2 text-sm text-[#999999]">Mantener sesión</span>
+                    <span class="ms-2 text-xs text-gray66">Mantener sesión</span>
                 </label>
             </div>
 
             <div class="flex items-center justify-end mt-4">
-                <!-- <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-[#999999] hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Forgot your password?
-                </Link> -->
-
-                <PrimaryButton class="mx-auto px-12 mt-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing || !form.email || ! form.password">
+                <PrimaryButton class="mx-auto px-16 mt-4" :class="{ 'opacity-25': form.processing }"
+                    :disabled="form.processing || !form.name || !form.password">
                     Iniciar sesión
                 </PrimaryButton>
             </div>

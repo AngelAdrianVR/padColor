@@ -1,7 +1,7 @@
 <template>
     <div class="border border-grayD9 rounded-[10px] p-4">
         <section class="flex space-x-3">
-            <span class="flex items-center justify-center text-secondary text-xs bg-secondarylight size-7 rounded-lg">
+            <span class="flex items-center justify-center text-gray66 text-xs bg-grayED size-7 rounded-lg">
                 <i :class="icon"></i>
             </span>
             <div class="flex flex-col w-4/5">

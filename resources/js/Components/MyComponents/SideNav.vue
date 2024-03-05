@@ -5,7 +5,7 @@
             class="fa-solid fa-angle-right text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
         <i @click="small = true" v-else
             class="fa-solid fa-angle-left text-center text-xs pt-[2px] text-white rounded-full size-5 bg-primary absolute top-24 -right-3 cursor-pointer hover:scale-125 transition-transform ease-linear duration-150"></i>
-        <div class="bg-black1 h-full overflow-auto px-1">
+        <div class="bg-grayED h-full overflow-auto px-1">
             <!-- Logo -->
             <div class="flex items-center justify-center mt-7">
                 <Link v-if="small" :href="route('dashboard')">
@@ -13,7 +13,7 @@
                 </Link>
                 <Link v-else :href="route('dashboard')">
                 <figure class="">
-                    <img class="w-20" src="@/../../public/images/authLogo.png" alt="logo">
+                    <img class="w-32" src="@/../../public/images/logo_name.png" alt="logo">
                 </figure>
                 </Link>
             </div>
@@ -21,8 +21,8 @@
                 <template v-if="small">
                     <div v-for="(menu, index) in menus" :key="index">
                         <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
-                            class="w-full text-center py-2 px-3 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-gray-800 text-primary' : 'hover:text-primary hover:bg-gray-800 text-[#999999]'">
+                            class="w-full text-center py-2 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
+                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                             <span v-html="menu.icon"></span>
                         </button>
                     </div>
@@ -35,7 +35,7 @@
                                 <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
                                     :title="option.label"
                                     class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                    :class="option.active ? 'bg-gray-800 text-primary' : 'hover:text-primary hover:bg-gradient-to-r from-gray-800 to-black1 text-[#999999]'">
+                                    :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                                     <p class="w-full truncate"> {{ option.label }}</p>
                                 </button>
                             </div>
@@ -43,7 +43,7 @@
                         <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
                             :title="menu.label"
                             class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-gradient-to-r from-gray-800 to-black1 text-primary' : 'hover:text-primary hover:bg-gradient-to-r from-gray-800 to-black1 text-[#999999]'">
+                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                             <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
                             }}</p>
                         </button>

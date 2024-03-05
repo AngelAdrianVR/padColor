@@ -4,8 +4,8 @@ import { Link } from '@inertiajs/vue3';
 
 <template>
     <Link :href="'/'">
-        <figure class="">
-            <img class="w-40" src="@/../../public/images/authLogo.png" alt="logo">
+        <figure class="flex justify-center">
+            <img class="w-3/4" src="@/../../public/images/padColor_logo.png" alt="logo">
         </figure>
     </Link>
 </template>

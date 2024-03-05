@@ -3,10 +3,6 @@
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
             <div class="flex space-x-3 mt-5">
-                <!-- <div v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm rounded-full w-10">
-                    <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
-                        :alt="$page.props.auth.user.name" />
-                </div> -->
                 <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
                     class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
             </div>
@@ -30,7 +26,7 @@ export default {
             users: [],
         }
     },
-    emits: ['updateCountSolutions'],
+    emits: ['updateCountSolutions', 'decrementCountSolutions'],
     components: {
         SolutionGlove,
         RichText,
@@ -45,6 +41,7 @@ export default {
 
             if (indexToDelete !== -1) {
                 this.solutions.splice(indexToDelete, 1);
+                this.$emit('decrementCountSolutions');
             }
         },
         updateDescription(content) {
@@ -69,7 +66,7 @@ export default {
                         type: "success",
                     });
                     this.description = null;
-                    this.$emit('updateCountSolutions', this.solutions.length);
+                    this.$emit('updateCountSolutions');
                 }
             } catch (error) {
                 console.log(error);

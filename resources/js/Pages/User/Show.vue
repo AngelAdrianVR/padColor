@@ -30,7 +30,8 @@
                 </button>
             </div>
             <figure class="size-32 lg:size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-4rem)]">
-                <img :src="user.profile_photo_url" :alt="user.name" class="size-32 lg:size-40 object-cover rounded-[5px]">
+                <img :src="user.profile_photo_url" :alt="user.name"
+                    class="size-32 lg:size-40 object-cover rounded-[5px]">
             </figure>
             <section class="mt-10 lg:mt-20">
                 <h1 class="font-bold text-center">{{ user.name }}</h1>
@@ -75,8 +76,17 @@
                         </p>
                         <p>{{ user.phone }}</p>
                         <p class="flex items-start space-x-2 text-gray99">
-                            <svg v-if="user.is_active" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke-width="1.5" stroke="currentColor" class="size-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                            </svg>
+                            <span>Sucursal:</span>
+                        </p>
+                        <p>{{ user.employee_properties.branch }}</p>
+                        <p class="flex items-start space-x-2 text-gray99">
+                            <svg v-if="user.is_active" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
@@ -88,7 +98,7 @@
                             <span>Estado:</span>
                         </p>
                         <p :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' :
-                            'Inactivo' }}</p>
+                        'Inactivo' }}</p>
                     </div>
                 </article>
             </section>

@@ -11,14 +11,14 @@
 
         <!-- Opciones -->
         <div v-if="optionsDropdown"
-            class="border border-gray5 flex flex-col space-y-1 rounded-md py-2 absolute w-28 h-auto top-10 right-4 text-xs z-50 bg-white">
-            <p @click="editPublication = true" class="hover:bg-pink-100 cursor-pointer px-2">
+            class="border border-gray5 flex flex-col space-y-1 rounded-md py-2 absolute w-28 h-auto top-11 right-8 text-xs z-50 bg-white">
+            <!-- <p @click="editPublication = true" class="hover:bg-pink-100 cursor-pointer px-2">
                 Editar
-            </p>
+            </p> -->
             <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#ff4d4d" title="¿Continuar?"
                 @confirm="deleteItem">
                 <template #reference>
-                    <p @click.stop class="hover:bg-pink-100 cursor-pointer px-2">Eliminar</p>
+                    <p @click.stop class="hover:bg-primary hover:text-white cursor-pointer px-2">Eliminar</p>
                 </template>
             </el-popconfirm>
         </div>

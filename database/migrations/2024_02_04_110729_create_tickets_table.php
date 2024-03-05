@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('description');
             $table->string('status');
             $table->string('priority');
+            $table->string('ticket_type');
+            $table->string('branch');
             $table->date('expired_date');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('responsible_id')->nullable()->constrained('users')->cascadeOnDelete();

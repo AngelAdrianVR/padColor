@@ -28,6 +28,14 @@
                     <InputError :message="form.errors['employee_properties.job_position']" />
                 </div>
                 <div>
+                    <InputLabel value="Sucursal*" class="ml-3 mb-1" />
+                    <el-select class="w-full" v-model="form.employee_properties.branch" clearable placeholder="Seleccione"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="item in branches" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors['employee_properties.branch']" />
+                </div>
+                <div>
                     <InputLabel value="Correo electrónico*" class="ml-3 mb-1" />
                     <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255" type="email"
                         clearable />
@@ -94,6 +102,7 @@ export default {
             employee_properties: {
                 department: this.user.employee_properties?.department,
                 job_position: this.user.employee_properties?.job_position,
+                branch: this.user.employee_properties?.branch,
             },
             roles: this.user_roles,
             selectedImage: this.user.profile_photo_url
@@ -117,6 +126,21 @@ export default {
                 'Recursos Humanos',
                 'Sistemas',
                 'Tesorería',
+            ],
+            branches: [
+                'Alfajayucan',
+                'Morelia',
+                'San Luis Potosí',
+                'Acapulco',
+                'Av. del Tigre',
+                'Calle C',
+                'Calle 2',
+                'Veracruz',
+                'León',
+                'Juárez',
+                'Puebla',
+                'Monterrey',
+                'Federalismo',
             ],
         }
     },

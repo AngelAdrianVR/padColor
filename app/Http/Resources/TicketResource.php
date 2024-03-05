@@ -20,13 +20,16 @@ class TicketResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status,
             'priority' => $this->priority,
+            'ticket_type' => $this->ticket_type,
             'expired_date' => $this->expired_date?->isoFormat('DD MMM YYYY'),
             'user' => $this->whenLoaded('user'),
             'responsible' => $this->whenLoaded('responsible'),
             'category' => $this->whenLoaded('category'),
+            'branch' => $this->branch,
             'solutions_count' => $this->whenCounted('ticketSolutions'),
             'media' => $this->getMedia()->all(),
-            'created_at' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'created_at_formatted' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'created_at' => $this->created_at,
             'updated_at' => $this->updated_at?->isoFormat('DD MMM YYYY'),
         ];
     }
