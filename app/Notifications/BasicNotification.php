@@ -14,7 +14,7 @@ class BasicNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(public $description, public $user_name, public $user_photo, public $url)
+    public function __construct(public $subject, public $description, public $user_name, public $user_photo, public $url)
     {
         //
     }
@@ -26,7 +26,11 @@ class BasicNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        if (app()->environment() == 'production') {
+            return ['database', 'mail'];
+        } else {
+            return ['database'];
+        }
     }
 
     /**
@@ -35,9 +39,13 @@ class BasicNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject($this->subject)
+            ->markdown('emails.basic-email-template', [
+                'greeting' => '¡Hola!',
+                'intro' => $this->user_name . ' ' . $this->description,
+                'url' => $this->url,
+                'salutation' => 'Saludos',
+            ]);
     }
 
     /**

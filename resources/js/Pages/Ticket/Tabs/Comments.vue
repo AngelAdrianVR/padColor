@@ -2,7 +2,7 @@
     <div class="mt-8 mb-20">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
-            <div class="flex space-x-3 mt-5">
+            <div v-if="$page.props.auth.user.permissions.includes('Crear comentarios en ticket')" class="flex space-x-3 mt-5">
                 <RichText @submitComment="storeComment()" @content="updateComment($event)" ref="commentEditor"
                     class="flex-1" withFooter :userList="users" :disabled="loading || !comment" />
             </div>

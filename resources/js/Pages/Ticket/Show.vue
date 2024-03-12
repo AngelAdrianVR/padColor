@@ -94,21 +94,21 @@
                             <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions :ticketId="this.ticket.data.id" @updateCountSolutions="ticket.data.solutions_count++"
+                    <Solutions :ticketId="this.ticket.data.id" :ticketStatus="this.ticket.data.status"
+                        @updateCountSolutions="ticket.data.solutions_count++; ticket.data.status = 'Completado'"
                         @decrementCountSolutions="ticket.data.solutions_count--" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
-
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-regular fa-comment-dots mr-1"></i>
-                            <span>Conversaciones</span>
+                            <span>Comentarios</span>
                         </div>
                     </template>
                     <Comments :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
-                <el-tab-pane name="3">
-
+                <el-tab-pane v-if="$page.props.auth.user.permissions.includes('Ver registro de actividad en ticket')"
+                    name="3">
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-solid fa-clock-rotate-left mr-1"></i>
