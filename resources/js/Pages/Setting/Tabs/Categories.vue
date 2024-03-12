@@ -1,9 +1,20 @@
 <template>
     <div>
         <div class="flex justify-end mt-5 mx-14">
-            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear categorias')" @click="createCategory()" class="rounded-full">
+            <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear categorias')"
+                @click="createCategory()" class="rounded-full">
                 Agregar categoría
             </PrimaryButton>
+            <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar categorias')"
+                class="ml-3">
+                <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                    :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
+                    @confirm="deleteItems()">
+                    <template #reference>
+                        <button class="bg-redpad text-white rounded-full px-3 py-[9px] text-xs tracking-widest">Eliminar</button>
+                    </template>
+                </el-popconfirm>
+            </div>
         </div>
         <div class="text-sm mt-3">
             <p v-if="selectedItems.length" class="text-sm text-redpad flex items-center space-x-2 pb-5">
@@ -20,15 +31,6 @@
                         :disabled="!categories.length" />
                     <span class="ms-2 text-sm font-bold">Todas las categorías</span>
                 </label>
-                <div v-if="selectedItems.length && $page.props.auth.user.permissions.includes('Eliminar categorias')" class="lg:ml-36">
-                    <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
-                        :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
-                        @confirm="deleteItems()">
-                        <template #reference>
-                            <button class="bg-redpad text-white rounded-full px-2 py-px text-sm">Eliminar</button>
-                        </template>
-                    </el-popconfirm>
-                </div>
             </div>
             <CategoryRow :ref="'category' + category.id" v-for="(category, index) in categories" :key="category.id"
                 @open="editCategory(category, index)" @checked="handleCheckedItem" :item="category" />
@@ -57,7 +59,7 @@
                     :disabled="form.processing">
                     Cancelar</CancelButton>
                 <PrimaryButton @click="submitForm" :disabled="form.processing">{{ editFlag ? 'Actualizar' : 'Crear'
-                }}
+                    }}
                 </PrimaryButton>
             </template>
         </DialogModal>

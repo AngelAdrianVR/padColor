@@ -2,11 +2,13 @@
     <div class="mt-8">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
-            <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones')" class="flex space-x-3 mt-5">
+            <p class="text-center text-red-600 text-xs">
+                <span class="bg-red-100 px-5 py-1 rounded-md">Para poder agregar más soluciones es necesario marcar como "Re-abierto" este ticket</span>
+            </p>
+            <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones') && ticketStatus != 'Completado'" class="flex space-x-3 mt-5">
                 <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
                     class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
             </div>
-
             <SolutionGlove v-for="(solution, index) in solutions" :key="solution" :solution="solution" :index="index"
                 @solution-deleted="solutionDeleted" />
         </div>
@@ -34,6 +36,7 @@ export default {
     },
     props: {
         ticketId: String,
+        ticketStatus: String,
     },
     methods: {
         solutionDeleted(solutionId) {

@@ -208,7 +208,7 @@ class UserController extends Controller
 
     public function getAll()
     {
-        $users = User::all(['id', 'name', 'profile_photo_path']);
+        $users = User::where('is_active', true)->get(['id', 'name', 'profile_photo_path']);
 
         return response()->json(['items' => $users]);
     }

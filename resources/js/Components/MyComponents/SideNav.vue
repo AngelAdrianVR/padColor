@@ -17,38 +17,40 @@
                 </figure>
                 </Link>
             </div>
-            <nav class="px-2 pt-20 text-white">
-                <template v-if="small">
-                    <div v-for="(menu, index) in menus" :key="index">
-                        <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
-                            class="w-full text-center py-2 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                            <span v-html="menu.icon"></span>
-                        </button>
-                    </div>
-                </template>
-                <template v-else v-for="(menu, index) in menus" :key="index">
-                    <div v-if="menu.show">
-                        <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active" :title="menu.label"
-                            :id="index">
-                            <div v-for="(option, index2) in menu.options" :key="index2">
-                                <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
-                                    :title="option.label"
-                                    class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                    :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                    <p class="w-full truncate"> {{ option.label }}</p>
-                                </button>
-                            </div>
-                        </Accordion>
-                        <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
-                            :title="menu.label"
-                            class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                            :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                            <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
-                            }}</p>
-                        </button>
-                    </div>
-                </template>
+            <nav class="px-2 pt-20 flex flex-col justify-between h-[calc(100vh-5rem)]">
+                <section>
+                    <template v-if="small">
+                        <div v-for="(menu, index) in menus" :key="index">
+                            <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
+                                class="w-full text-center py-2 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
+                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
+                                <span v-html="menu.icon"></span>
+                            </button>
+                        </div>
+                    </template>
+                    <template v-else v-for="(menu, index) in menus" :key="index">
+                        <div v-if="menu.show">
+                            <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active" :title="menu.label"
+                                :id="index">
+                                <div v-for="(option, index2) in menu.options" :key="index2">
+                                    <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
+                                        :title="option.label"
+                                        class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
+                                        :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
+                                        <p class="w-full truncate"> {{ option.label }}</p>
+                                    </button>
+                                </div>
+                            </Accordion>
+                            <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
+                                :title="menu.label"
+                                class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
+                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
+                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
+                                }}</p>
+                            </button>
+                        </div>
+                    </template>
+                </section>
 
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">

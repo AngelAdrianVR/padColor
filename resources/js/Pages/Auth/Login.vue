@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, onMounted } from "vue";
+import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import Checkbox from '@/Components/Checkbox.vue';
@@ -12,6 +13,8 @@ defineProps({
     canResetPassword: Boolean,
     status: String,
 });
+
+const users = ref(null);
 
 const form = useForm({
     name: '',
@@ -27,6 +30,22 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+const fetchUsers = async () => {
+    try {
+        const response = await axios.get(route("users.get-all"));
+
+        if (response.status === 200) {
+            users.value = response.data.items;
+        }
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+onMounted(() => {
+    fetchUsers();
+});
 </script>
 
 <template>
@@ -38,32 +57,19 @@ const submit = () => {
         <div class="flex justify-center mt-2">
             <AuthenticationCardLogo />
         </div>
-
-        <!-- <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
-            {{ status }}
-        </div> -->
-
         <form class="w-2/3 mx-auto" @submit.prevent="submit">
             <div>
                 <InputLabel class="ml-5 text-gray66" for="name" value="Nombre" />
-                <el-input v-model="form.name" id="name" type="text" placeholder="Escribe tu nombre" required autofocus
-                    autocomplete="username">
-                    <template #prefix>
-                        <i class="fa-solid fa-user text-sm text-primary"></i>
-                    </template>
-                </el-input>
+                <el-select v-model="form.name" id="name" class="w-full" filterable
+                    no-data-text="No hay más usuarios registrados" no-match-text="No se encontraron coincidencias">
+                    <el-option v-for="item in users" :key="item.id" :label="item.name" :value="item.name" />
+                </el-select>
                 <InputError :message="form.errors.name" />
             </div>
 
             <div class="mt-4">
                 <InputLabel class="ml-5 text-gray66" for="password" value="Contraseña" />
-                <el-input v-model="form.password" required class="w-2/3" type="password"
-                    placeholder="Ingresa tu contraseña " show-password>
-
-                    <template #prefix>
-                        <i class="fa-solid fa-lock text-sm text-primary"></i>
-                    </template>
-                </el-input>
+                <el-input v-model="form.password" required class="w-2/3" type="password" show-password />
                 <InputError :message="form.errors.password" />
             </div>
 

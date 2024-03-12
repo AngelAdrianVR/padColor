@@ -68,8 +68,9 @@ class TicketController extends Controller
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
-        $description = "Ha creado un nuevo ticket";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        $subject = "Nuevo ticket";
+        $description = "ha creado un nuevo ticket";
+        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.index');
     }
@@ -125,8 +126,9 @@ class TicketController extends Controller
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
+        $subject = "Ticket editado";
         $description = "ha editado el ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.show', $ticket->id);
     }
@@ -168,8 +170,9 @@ class TicketController extends Controller
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
+        $subject = "Ticket editado";
         $description = "ha editado el ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.show', $ticket->id);
     }
@@ -207,8 +210,9 @@ class TicketController extends Controller
         // notificar a los demas usuarios
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
+        $subject = "Cambio de status de ticket";
         $description = "ha cambiado el estatus del ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
@@ -226,8 +230,9 @@ class TicketController extends Controller
         foreach ($mentions as $mention) {
             $user = User::find($mention['id']);
             $owner = auth()->user();
+            $subject = "Mención en comentario";
             $description = "te ha mencionado en un comentario del ticket #$ticket->id";
-            $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
         }
 
         //Crear registro de actividad

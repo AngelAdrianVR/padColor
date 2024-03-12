@@ -17,10 +17,6 @@
                 no-data-text="No hay más usuarios registrados" no-match-text="No se encontraron coincidencias">
                 <el-option v-for="item in users" :key="item.id" :label="item.name" :value="item.id" />
             </el-select>
-            <!-- <div class="lg:w-1/4 relative mt-5">
-                <input class="input w-full pl-9" placeholder="Buscar usuario" type="text">
-                <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
-            </div> -->
         </header>
         <main class="relative mt-5">
             <div class="bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% h-32 pt-px">
@@ -132,7 +128,7 @@ export default {
 
         return {
             form,
-            selectedItem: null,
+            selectedItem: this.user.id,
             departments: [
                 'Administración',
                 'Almacén',

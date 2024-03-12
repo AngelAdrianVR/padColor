@@ -75,7 +75,7 @@ Route::get('users-get-matches/{query}', [UserController::class, 'getMatches'])->
 Route::get('users-get-notifications', [UserController::class, 'getNotifications'])->middleware('auth')->name('users.get-notifications');
 Route::post('users-read-notifications', [UserController::class, 'readNotifications'])->middleware('auth')->name('users.read-user-notifications');
 Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-user-notifications');
-Route::get('users-get-all', [UserController::class, 'getAll'])->middleware('auth')->name('users.get-all');
+Route::get('users-get-all', [UserController::class, 'getAll'])->name('users.get-all');
 Route::get('users-get-by-page/{currentPage}', [UserController::class, 'getItemsByPage'])->name('users.get-by-page')->middleware('auth');
 
 

@@ -32,6 +32,8 @@ class TicketSolutionController extends Controller
             'user_id' => auth()->id(),
         ]);
 
+        // marcar como completado el ticket
+        $ticket_solution->ticket->update(['status' => 'Completado']);
 
         // Guardar media
         $ticket_solution->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
@@ -47,7 +49,8 @@ class TicketSolutionController extends Controller
         $users = User::where('id', '!=', auth()->id())->get();
         $owner = auth()->user();
         $description = "agregó una solución al ticket #{$ticket_solution->ticket->id}";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket_solution->ticket->id))));
+        $subject = "Ticket cerrado";
+        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket_solution->ticket->id))));
 
         return response()->json(['item' => $ticket_solution]);
     }
