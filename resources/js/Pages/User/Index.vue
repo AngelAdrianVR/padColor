@@ -11,7 +11,7 @@
                         :title="'¿Desea eliminar los elementos seleccionados (' + selectedItems.length + ')?'"
                         @confirm="deleteItems()">
                         <template #reference>
-                            <button class="bg-redpad text-white rounded-full px-3 py-2 text-xs">Eliminar</button>
+                            <button class="bg-redpad text-white rounded-full px-3 py-2 text-xs tracking-widest">Eliminar</button>
                         </template>
                     </el-popconfirm>
                 </div>

@@ -13,7 +13,7 @@
                 <span>•</span>
                 <span>{{ user.employee_properties?.job_position }}</span>
             </div>
-            <h2 class="font-bold">{{ user.name }}</h2>
+            <h2 class="font-bold text-sm">{{ user.name }}</h2>
             <div class="flex items-center space-x-1 lg:space-x-3 text-xs text-gray66">
                 <span>#{{ user.id }}</span>
                 <span>•</span>

@@ -19,9 +19,9 @@ class TicketController extends Controller
     public function index()
     {
         $tickets = TicketResource::collection(Ticket::latest('id')
-        ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-        ->take(20)
-        ->get());
+            ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+            ->take(20)
+            ->get());
 
         $categories = Category::all();
         $total_tickets = Ticket::all()->count();
@@ -45,6 +45,7 @@ class TicketController extends Controller
             'category_id' => 'required',
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
+            'ticket_type' => 'required|string|max:255',
             'description' => 'required|string',
             'status' => 'required|string',
             'branch' => 'required|string',
@@ -54,10 +55,8 @@ class TicketController extends Controller
 
         $ticket = Ticket::create($validated + ['user_id' => auth()->id()]);
 
-        // Guardar media si existe
-        if ($request->hasFile('media')) {
-            $ticket->addMediaFromRequest('media')->toMediaCollection();
-        }
+        // Guardar media
+        $ticket->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
 
         //Crear registro de actividad
         TicketHistory::create([
@@ -99,6 +98,7 @@ class TicketController extends Controller
             'category_id' => 'required',
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
+            'ticket_type' => 'required|string|max:255',
             'description' => 'required|string',
             'status' => 'required|string',
             'branch' => 'required|string',
@@ -128,7 +128,7 @@ class TicketController extends Controller
         $description = "ha editado el ticket #$ticket->id";
         $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
-        return to_route('tickets.index');
+        return to_route('tickets.show', $ticket->id);
     }
 
 
@@ -138,6 +138,7 @@ class TicketController extends Controller
             'category_id' => 'required',
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
+            'ticket_type' => 'required|string|max:255',
             'description' => 'required|string',
             'status' => 'required|string',
             'branch' => 'required|string',
@@ -151,7 +152,7 @@ class TicketController extends Controller
         $ticket->update($request->all());
 
         // Guardar media
-        $ticket->addMediaFromRequest('media')->toMediaCollection();
+        $ticket->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
 
         //Crear registro de actividad si se cambio al responsable
         if ($current_responsible_id != $request->responsible_id) {
@@ -170,7 +171,7 @@ class TicketController extends Controller
         $description = "ha editado el ticket #$ticket->id";
         $users->each(fn ($user) => $user->notify(new BasicNotification($description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
-        return to_route('tickets.index');
+        return to_route('tickets.show', $ticket->id);
     }
 
 

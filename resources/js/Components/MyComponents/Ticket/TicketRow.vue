@@ -6,7 +6,9 @@
             </label>
             <div @click="$inertia.get(route('tickets.show', ticket.id))" class="flex flex-col cursor-pointer w-full">
                 <div class="flex items-center space-x-4">
-                    <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>
+                    <el-tooltip content="Categoría" placement="top">
+                        <p class="text-xs text-gray66 font-bold ml-6">{{ ticket.category?.name }}</p>
+                    </el-tooltip>
                     <el-tooltip :content="'Prioridad: ' + ticket.priority" placement="top">
                         <i :class="getPriorityColor(ticket)" class="fa-solid fa-circle text-[7px]"></i>
                     </el-tooltip>
