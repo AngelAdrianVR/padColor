@@ -40,6 +40,14 @@
                     </el-select>
                     <InputError :message="form.errors.branch" />
                 </div>
+                <div class="mt-3">
+                    <InputLabel value="Tipo de ticket *" class="ml-3 mb-1" />
+                    <el-select class="w-full" v-model="form.ticket_type" clearable placeholder="Seleccione"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="item in ['Solicitud o servicio', 'Soporte o incidencia']" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors.branch" />
+                </div>
                 <div class="mt-3 col-span-2">
                     <InputLabel value="Título del ticket*" class="ml-3 mb-1" />
                     <el-input v-model="form.title" placeholder="Escribe el nombre del ticket" :maxlength="100"
@@ -143,6 +151,7 @@ export default {
             category_id: null,
             responsible_id: null,
             title: null,
+            ticket_type: null,
             description: null,
             status: 'Abierto',
             priority: null,

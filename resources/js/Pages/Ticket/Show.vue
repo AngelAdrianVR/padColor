@@ -196,7 +196,6 @@ export default {
         tiempoTranscurrido(fecha) {
             const fechaInicio = new Date(fecha);
             const fechaActual = new Date();
-            console.log(fecha)
 
             const minutos = differenceInMinutes(fechaActual, fechaInicio);
             const horas = differenceInHours(fechaActual, fechaInicio);
