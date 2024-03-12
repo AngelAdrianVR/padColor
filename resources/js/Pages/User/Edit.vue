@@ -28,21 +28,31 @@
                     <InputError :message="form.errors['employee_properties.job_position']" />
                 </div>
                 <div>
+                    <InputLabel value="Empresa*" class="ml-3 mb-1" />
+                    <el-select class="w-full" v-model="form.employee_properties.company" @change="handleChangeCompany"
+                        clearable placeholder="Seleccione" no-data-text="No hay opciones registradas"
+                        no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="item in companies" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors['employee_properties.company']" />
+                </div>
+                <div>
                     <InputLabel value="Sucursal*" class="ml-3 mb-1" />
-                    <el-select class="w-full" v-model="form.employee_properties.branch" clearable placeholder="Seleccione"
-                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                    <el-select class="w-full" v-model="form.employee_properties.branch" clearable
+                        placeholder="Seleccione" no-data-text="No hay opciones registradas"
+                        no-match-text="No se encontraron coincidencias">
                         <el-option v-for="item in branches" :key="item" :label="item" :value="item" />
                     </el-select>
                     <InputError :message="form.errors['employee_properties.branch']" />
                 </div>
                 <div>
-                    <InputLabel value="Correo electrónico*" class="ml-3 mb-1" />
-                    <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255" type="email"
-                        clearable />
+                    <InputLabel value="Correo electrónico" class="ml-3 mb-1" />
+                    <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255"
+                        type="email" clearable />
                     <InputError :message="form.errors.email" />
                 </div>
                 <div>
-                    <InputLabel value="Número de télefono" class="ml-3 mb-1" />
+                    <InputLabel value="Número de télefono*" class="ml-3 mb-1" />
                     <el-input v-model="form.phone" placeholder="Escribe aqui tu número"
                         :formatter="(value) => `${value}`.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3')"
                         :parser="(value) => value.replace(/\D/g, '')" maxlength="10" clearable />
@@ -102,6 +112,7 @@ export default {
             employee_properties: {
                 department: this.user.employee_properties?.department,
                 job_position: this.user.employee_properties?.job_position,
+                company: this.user.employee_properties?.company,
                 branch: this.user.employee_properties?.branch,
             },
             roles: this.user_roles,
@@ -127,21 +138,11 @@ export default {
                 'Sistemas',
                 'Tesorería',
             ],
-            branches: [
-                'Alfajayucan',
-                'Morelia',
-                'San Luis Potosí',
-                'Acapulco',
-                'Av. del Tigre',
-                'Calle C',
-                'Calle 2',
-                'Veracruz',
-                'León',
-                'Juárez',
-                'Puebla',
-                'Monterrey',
-                'Federalismo',
+            companies: [
+                'Papel, diseño y color',
+                'Padcolor insumos gráficos',
             ],
+            branches: [],
         }
     },
     components: {
@@ -159,6 +160,28 @@ export default {
         user_roles: Array,
     },
     methods: {
+        handleChangeCompany() {
+            if (this.form.employee_properties.company == 'Papel, diseño y color')
+                this.branches = [
+                    'Alfajayucan',
+                    'Morelia',
+                    'San Luis Potosí',
+                    'Acapulco',
+                    'Av. del Tigre',
+                    'Calle C',
+                    'Calle 2'
+                ];
+            else {
+                this.branches = [
+                    'Veracruz',
+                    'León',
+                    'Juárez',
+                    'Puebla',
+                    'Monterrey',
+                    'Federalismo'
+                ];
+            }
+        },
         update() {
             if (this.form.image) {
                 this.form.post(route("users.update-with-media", this.user.id), {

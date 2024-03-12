@@ -50,7 +50,7 @@ class TicketController extends Controller
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
-            'expired_date' => 'required|date|after:yesterday',
+            'expired_date' => 'required|date',
         ]);
 
         $ticket = Ticket::create($validated + ['user_id' => auth()->id()]);
@@ -103,7 +103,7 @@ class TicketController extends Controller
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
-            'expired_date' => 'required|date|after:yesterday',
+            'expired_date' => 'required|date',
         ]);
 
         //guarda al responsable antes de edición
@@ -143,7 +143,7 @@ class TicketController extends Controller
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
-            'expired_date' => 'required|date|after:yesterday',
+            'expired_date' => 'required|date',
         ]);
 
         //guarda al responsable antes de edición

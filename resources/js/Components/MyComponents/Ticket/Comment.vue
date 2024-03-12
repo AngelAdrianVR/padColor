@@ -16,7 +16,7 @@
                 <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#ff4d4d"
                     title="¿Continuar?" @confirm="deleteItem">
                     <template #reference>
-                        <i class="fa-regular fa-trash-can text-xs text-primary rounded-md bg-pink-200 py-1 px-[6px] cursor-pointer"></i>
+                        <i class="fa-regular fa-trash-can text-xs text-primary rounded-md bg-primarylight py-1 px-[6px] cursor-pointer"></i>
                     </template>
                 </el-popconfirm>
             </div>

@@ -34,7 +34,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users',
+            'email' => 'nullable|string|max:255',
             'phone' => 'required|string|max:15',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
@@ -80,7 +80,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users,email,' . $user->id,
+            'email' => 'nullable|string|max:255',
             'phone' => 'required|string|max:15',
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
@@ -104,7 +104,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users,email,' . $user->id,
+            'email' => 'nullable|string|max:255',
             'phone' => 'required|string|max:15',
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
