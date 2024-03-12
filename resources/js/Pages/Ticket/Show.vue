@@ -102,13 +102,12 @@
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-regular fa-comment-dots mr-1"></i>
-                            <span>Conversaciones</span>
+                            <span>Comentarios</span>
                         </div>
                     </template>
                     <Comments :ticketId="this.ticket.data.id" />
                 </el-tab-pane>
-                <el-tab-pane name="3">
-
+                <el-tab-pane v-if="$page.props.auth.user.permissions.includes('Ver registro de actividad en ticket')" name="3">
                     <template #label>
                         <div class="flex items-center">
                             <i class="fa-solid fa-clock-rotate-left mr-1"></i>

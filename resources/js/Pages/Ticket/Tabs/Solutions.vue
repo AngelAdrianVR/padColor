@@ -2,7 +2,7 @@
     <div class="mt-8">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
-            <div class="flex space-x-3 mt-5">
+            <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones')" class="flex space-x-3 mt-5">
                 <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
                     class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
             </div>
