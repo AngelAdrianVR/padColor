@@ -113,11 +113,13 @@ class TicketController extends Controller
         $ticket->update($request->all());
 
         //Crear registro de actividad si se cambio al responsable
-        if ($current_responsible_id == $request->responsible_id) {
-        } else {
+        if ($current_responsible_id != $request->responsible_id) {
             $new_responsible = User::find($request->responsible_id);
+            $description = $request->responsible_id 
+            ? "asignó a *$new_responsible->name* como responsable del ticket." 
+            : "removió al responsable del ticket.";
             TicketHistory::create([
-                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'description' =>  $description,
                 'user_id' =>  auth()->id(),
                 'ticket_id' =>  $ticket->id,
             ]);
