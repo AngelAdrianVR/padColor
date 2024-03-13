@@ -26,7 +26,6 @@
                 :class="{ 'rounded-none': withFooter || hasMedia }">
             </div>
         </div>
-
         <!-- Make mentions -->
         <footer v-if="withFooter"
             class="border border-t-0 border-grayD9 bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
@@ -36,15 +35,17 @@
             </PrimaryButton>
             <transition name="fade">
                 <ul v-if="showUsersList"
-                    class="z-20 border border-[#a9a9a9] absolute -bottom-20 left-0 rounded-[3px] bg-white w-60 h-20 overflow-y-auto">
-                    <template v-for="item in userList" :key="item.id">
+                    class="z-20 border border-[#a9a9a9] absolute -bottom-20 left-28 rounded-[3px] bg-white w-60 h-36 overflow-y-auto">
+                    <template v-for="item in usersSorted" :key="item.id">
                         <li v-if="item.id !== $page.props.auth.user.id" type="button" @click="mentionUser(item)"
                             class="flex items-center px-2 py-1 space-x-2 text-xs mb-1 hover:bg-primarylight cursor-pointer">
-                            <img class="size-8 rounded-full object-cover" :src="item.profile_photo_url" :alt="item.name" />
+                            <img class="size-8 rounded-full object-cover" :src="item.profile_photo_url"
+                                :alt="item.name" />
                             <p>{{ item.name }}</p>
                         </li>
                     </template>
-                    <p v-if="!userList.length" class="text-gray-500 text-xs text-center my-8">No hay usuarios para mencionar
+                    <p v-if="!userList.length" class="text-gray-500 text-xs text-center my-8">No hay usuarios para
+                        mencionar
                     </p>
                 </ul>
             </transition>
@@ -54,7 +55,8 @@
         <footer v-if="hasMedia"
             class="border border-t-0 border-grayD9 bg-transparent rounded-br-lg rounded-bl-lg p-2 flex justify-between">
             <FileUploader @files-selected="filesChanged" />
-            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment')" :disabled="disabled">Publicar
+            <PrimaryButton class="self-start" type="button" @click="$emit('submitComment')" :disabled="disabled">
+                Publicar
             </PrimaryButton>
         </footer>
 
@@ -202,6 +204,19 @@ export default {
             sel.removeAllRanges();
             sel.addRange(range);
         },
+    },
+    computed: {
+        usersSorted() {
+            return this.userList.sort((a, b) => {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
     },
     mounted() {
         // Establecer el contenido inicial del editor con el valor por defecto y aplicar estilos si es necesario

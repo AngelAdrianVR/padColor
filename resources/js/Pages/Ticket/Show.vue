@@ -18,8 +18,8 @@
                 <div class="lg:flex flex-wrap items-center space-x-3 ml-2 text-gray66 mt-3">
                     <p>Folio: <span class="text-black ml-1">#{{ getFolio(ticket.data) }}</span></p>
                     <span class="hidden lg:block">•</span>
-                    <p>Creado por: <span class="text-black ml-1">{{
-        ticket.data.responsible?.name }}</span></p>
+                    <p>Creado por: <span class="text-black ml-1">
+                        {{ ticket.data.user?.name }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at_formatted
                             }}</span></p>
@@ -99,7 +99,7 @@
                         </div>
                     </template>
                     <Solutions :ticketId="this.ticket.data.id" :ticketStatus="this.ticket.data.status"
-                        @updateCountSolutions="ticket.data.solutions_count++; ticket.data.status = 'Completado'"
+                        @updateCountSolutions="ticket.data.solutions_count++; ticket.data.status = 'Completado'; status = 'Completado'"
                         @decrementCountSolutions="ticket.data.solutions_count--" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
