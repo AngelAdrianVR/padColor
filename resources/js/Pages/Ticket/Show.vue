@@ -63,7 +63,7 @@
                         <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
                             }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
                         <span class="text-gray66 hidden lg:block">•</span>
-                        <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-3" v-if="ticket.data.responsible">
                             <p class="text-gray66 ">Responsable: </p>
                             <div class="flex rounded-full w-10">
                                 <img class="size-9 rounded-full object-cover"
@@ -72,6 +72,10 @@
                             </div>
                             <p>{{ ticket.data.responsible.name }}</p>
                         </div>
+                        <div v-else>
+                            <p class="text-gray66 ">Sin responsable</p>
+                        </div>
+                        <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66">
                             Tiempo de solución:
                             <span class="text-black ml-1">{{ tiempoTranscurrido(ticket.data.created_at) }}</span>
@@ -197,14 +201,16 @@ export default {
             const fechaInicio = new Date(fecha);
             const fechaActual = new Date();
 
-            const minutos = differenceInMinutes(fechaActual, fechaInicio);
-            const horas = differenceInHours(fechaActual, fechaInicio);
+            let minutos = String(differenceInMinutes(fechaActual, fechaInicio) % 60).padStart(2, '0');
+            let horas = differenceInHours(fechaActual, fechaInicio);
             const dias = differenceInDays(fechaActual, fechaInicio);
 
             if (dias > 0) {
-                return `${dias} día${dias > 1 ? 's' : ''} ${horas % 24}:${minutos % 60}`;
+                horas = String(horas % 24).padStart(2, '0');
+                return `${dias} día${dias > 1 ? 's' : ''} ${horas % 24}:${minutos}`;
             } else {
-                return `${horas}:${minutos % 60}`;
+                horas = String(horas).padStart(2, '0');
+                return `${horas}:${minutos}`;
             }
         },
         getFolio(ticket) {
