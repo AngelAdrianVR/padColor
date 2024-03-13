@@ -2,7 +2,7 @@
     <div class="mt-8">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
-            <p class="text-center text-red-600 text-xs">
+            <p v-if="ticketStatus == 'Completado'" class="text-center text-red-600 text-xs">
                 <span class="bg-red-100 px-5 py-1 rounded-md">Para poder agregar más soluciones es necesario marcar como "Re-abierto" este ticket</span>
             </p>
             <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones') && ticketStatus != 'Completado'" class="flex space-x-3 mt-5">
