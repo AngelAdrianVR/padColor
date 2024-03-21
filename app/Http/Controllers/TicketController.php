@@ -88,8 +88,9 @@ class TicketController extends Controller
     {
         $categories = Category::all();
         $users = User::all(['id', 'name', 'profile_photo_path']);
+        $media = $ticket->getMedia()->all();
 
-        return inertia('Ticket/Edit', compact('ticket', 'categories', 'users'));
+        return inertia('Ticket/Edit', compact('ticket', 'categories', 'users', 'media'));
     }
 
 

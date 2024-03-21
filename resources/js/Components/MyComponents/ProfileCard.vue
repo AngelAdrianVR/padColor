@@ -49,6 +49,11 @@ export default {
     emits: ['close'],
     components: {
         Link,
+    },
+    methods: {
+        logout() {
+            this.$inertia.post(route('logout'));
+        },
     }
 }
 </script>
