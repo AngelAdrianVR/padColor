@@ -44,7 +44,8 @@
                     <InputLabel value="Tipo de ticket *" class="ml-3 mb-1" />
                     <el-select class="w-full" v-model="form.ticket_type" clearable placeholder="Seleccione"
                         no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                        <el-option v-for="item in ['Solicitud o servicio', 'Soporte o incidencia']" :key="item" :label="item" :value="item" />
+                        <el-option v-for="item in ['Solicitud o servicio', 'Soporte o incidencia']" :key="item"
+                            :label="item" :value="item" />
                     </el-select>
                     <InputError :message="form.errors.branch" />
                 </div>
@@ -103,6 +104,14 @@
                 </div>
                 <div class="ml-2 mt-3 col-span-full">
                     <FileUploader @files-selected="this.form.media = $event" />
+                </div>
+                <div class="col-span-full">
+                    <li v-for="file in media" :key="file" class="flex items-center justify-between">
+                        <a :href="file.original_url" target="_blank" class="flex items-center">
+                            <i :class="getFileTypeIcon(file.file_name)"></i>
+                            <span class="ml-2">{{ file.file_name }}</span>
+                        </a>
+                    </li>
                 </div>
                 <div class="col-span-2 text-right">
                     <PrimaryButton :disabled="form.processing">Guardar cambios</PrimaryButton>
@@ -249,8 +258,29 @@ export default {
         ticket: Object,
         categories: Array,
         users: Array,
+        media: Array,
     },
     methods: {
+        getFileTypeIcon(fileName) {
+            // Asocia extensiones de archivo a iconos
+            const fileExtension = fileName?.split('.').pop().toLowerCase();
+            switch (fileExtension) {
+                case 'pdf':
+                    return 'fa-regular fa-file-pdf text-red-700';
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                case 'gif':
+                    return 'fa-regular fa-image text-blue-300';
+                case 'mp4':
+                case 'avi':
+                case 'mkv':
+                case 'mov':
+                    return 'fa-regular fa-file-video text-sky-400';
+                default:
+                    return 'fa-regular fa-file-lines';
+            }
+        },
         update() {
             if (this.form.media) {
                 this.form.post(route("tickets.update-with-media", this.ticket.id), {
