@@ -37,7 +37,7 @@ class TicketController extends Controller
         $permissionName = 'Responsable de ticket';
 
         $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
-            return $user->hasPermissionTo($permissionName);
+            return $user->hasPermissionTo($permissionName) && $user->id !== 1;
         })->values();
 
         return inertia('Ticket/Create', compact('categories', 'users'));
@@ -95,7 +95,7 @@ class TicketController extends Controller
         $permissionName = 'Responsable de ticket';
 
         $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
-            return $user->hasPermissionTo($permissionName);
+            return $user->hasPermissionTo($permissionName) && $user->id !== 1;
         })->values();
         
         $media = $ticket->getMedia()->all();
