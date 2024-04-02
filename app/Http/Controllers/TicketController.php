@@ -12,6 +12,7 @@ use App\Models\TicketHistory;
 use App\Models\User;
 use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 
 class TicketController extends Controller
 {
@@ -33,7 +34,11 @@ class TicketController extends Controller
     public function create()
     {
         $categories = Category::all();
-        $users = User::all(['id', 'name', 'profile_photo_path']);
+        $permissionName = 'Responsable de ticket';
+
+        $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
+            return $user->hasPermissionTo($permissionName);
+        })->values();
 
         return inertia('Ticket/Create', compact('categories', 'users'));
     }
@@ -87,7 +92,12 @@ class TicketController extends Controller
     public function edit(Ticket $ticket)
     {
         $categories = Category::all();
-        $users = User::all(['id', 'name', 'profile_photo_path']);
+        $permissionName = 'Responsable de ticket';
+
+        $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
+            return $user->hasPermissionTo($permissionName);
+        })->values();
+        
         $media = $ticket->getMedia()->all();
 
         return inertia('Ticket/Edit', compact('ticket', 'categories', 'users', 'media'));
@@ -116,9 +126,9 @@ class TicketController extends Controller
         //Crear registro de actividad si se cambio al responsable
         if ($current_responsible_id != $request->responsible_id) {
             $new_responsible = User::find($request->responsible_id);
-            $description = $request->responsible_id 
-            ? "asignó a *$new_responsible->name* como responsable del ticket." 
-            : "removió al responsable del ticket.";
+            $description = $request->responsible_id
+                ? "asignó a *$new_responsible->name* como responsable del ticket."
+                : "removió al responsable del ticket.";
             TicketHistory::create([
                 'description' =>  $description,
                 'user_id' =>  auth()->id(),

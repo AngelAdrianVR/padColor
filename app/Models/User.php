@@ -34,6 +34,7 @@ class User extends Authenticatable
         'is_active',
         'phone',
         'password',
+        'password_changed',
         'profile_photo_path',
     ];
 

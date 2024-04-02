@@ -28,5 +28,8 @@ class UpdateUserPassword implements UpdatesUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        // incrementar el contador de contrasena cambiada
+        $user->increment('password_changed');
     }
 }

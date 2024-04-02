@@ -33,7 +33,7 @@ class TicketSolutionController extends Controller
         ]);
 
         // marcar como completado el ticket
-        $ticket_solution->ticket->update(['status' => 'Completado']);
+        // $ticket_solution->ticket->update(['status' => 'Completado']); //quisieron quitar esta funcion el 02/Abr/2024 por Rmses
 
         // Guardar media
         $ticket_solution->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
