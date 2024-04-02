@@ -85,6 +85,23 @@ onBeforeUnmount(() => {
                                     </Link>
                                 </div>
                             </div>
+                            
+                            <!-- mensaje para cambiar contrasena -->
+                            <div v-if="!$page.props.auth.user.password_changed" class="z-20 flex items-center w-1/2 md:w-3/4">
+                                <article class="flex items-center space-x-3 bg-red-200 text-red-600 rounded-md px-3 py-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden md:inline size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                                    </svg>
+                                    <p class="text-[7px] md:text-xs">
+                                        Para garantizar la seguridad de tu cuenta, te recomendamos
+                                        cambiar tu contraseña por defecto. Esto ayudará a proteger tu información
+                                        personal y garantizará que solo tú tengas acceso. 
+                                        <Link :href="route('profile.show')" class="text-blue-600 underline">
+                                            Click aqui
+                                        </Link>
+                                    </p>
+                                </article>
+                            </div>
 
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
                                 <!-- notifications -->
@@ -95,7 +112,7 @@ onBeforeUnmount(() => {
                 </nav>
 
 
-                <div class="overflow-y-auto h-[calc(100vh-9.1rem)] lg:h-[calc(100vh-4.1rem)] bg-white">
+                <div class="overflow-y-auto h-[calc(100vh-8.1rem)] lg:h-[calc(100vh-4.1rem)] bg-white">
                     <slot />
                 </div>
 
