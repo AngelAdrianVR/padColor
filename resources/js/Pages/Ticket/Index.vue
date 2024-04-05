@@ -1,7 +1,9 @@
 <template>
     <AppLayout title="Tickets">
         <div class="flex justify-between items-center mt-4 mx-10">
-            <h1 class="font-bold">Todos los tickets</h1>
+            <h1 class="font-bold">
+                {{ $page.props.auth.user.permissions.includes('Ver todos los tickets') ? 'Todos los tickets' : 'Todos mis tickets' }}
+            </h1>
             <div class="flex items-center space-x-2">
                 <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
                     @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
@@ -27,7 +29,7 @@
             <el-tag v-if="search" size="large" closable @close="handleTagClose">
                 Estas buscando: <b>{{ search }}</b>
             </el-tag>
-            <div class="flex items-center space-x-3 lg:w-1/5">
+            <div v-if="$page.props.auth.user.permissions.includes('Ver todos los tickets')" class="flex items-center space-x-3 lg:w-1/5">
                 <el-cascader class="w-full" v-model="filter" :options="options" @change="handleChangeFilter" clearable
                     placeholder="Filtrar" />
             </div>

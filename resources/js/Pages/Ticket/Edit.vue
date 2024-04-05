@@ -228,6 +228,7 @@ export default {
                 },
             ],
             branches: [
+                'General',
                 'Alfajayucan',
                 'Morelia',
                 'San Luis Potosí',
