@@ -19,13 +19,23 @@ class TicketController extends Controller
 
     public function index()
     {
-        $tickets = TicketResource::collection(Ticket::latest('id')
-            ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-            ->take(20)
-            ->get());
+        $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+        if ($userCanSeeAllTickets) {
+            $tickets = TicketResource::collection(Ticket::latest('id')
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->take(20)
+                ->get());
+            $total_tickets = Ticket::all()->count();
+        } else {
+            $tickets = TicketResource::collection(Ticket::latest('id')
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->where('user_id', auth()->id())
+                ->take(20)
+                ->get());
+            $total_tickets = Ticket::where('user_id', auth()->id())->get()->count();
+        }
 
         $categories = Category::all();
-        $total_tickets = Ticket::all()->count();
 
         return inertia('Ticket/Index', compact('tickets', 'total_tickets', 'categories'));
     }
@@ -97,7 +107,7 @@ class TicketController extends Controller
         $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
             return $user->hasPermissionTo($permissionName) && $user->id !== 1;
         })->values();
-        
+
         $media = $ticket->getMedia()->all();
 
         return inertia('Ticket/Edit', compact('ticket', 'categories', 'users', 'media'));
@@ -276,11 +286,22 @@ class TicketController extends Controller
 
     public function getMatches($query)
     {
-        $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-            ->where('id', 'LIKE', "%$query%")
-            ->orWhere('title', 'LIKE', "%$query%")
-            ->orWhere('description', 'LIKE', "%$query%")
-            ->get());
+        $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+
+        if ($userCanSeeAllTickets) {
+            $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->where('id', 'LIKE', "%$query%")
+                ->orWhere('title', 'LIKE', "%$query%")
+                ->orWhere('description', 'LIKE', "%$query%")
+                ->get());
+        } else {
+            $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->where('user_id', auth()->id())
+                ->where('id', 'LIKE', "%$query%")
+                ->orWhere('title', 'LIKE', "%$query%")
+                ->orWhere('description', 'LIKE', "%$query%")
+                ->get());
+        }
 
         return response()->json(['items' => $tickets]);
     }
@@ -301,11 +322,22 @@ class TicketController extends Controller
     public function getItemsByPage($currentPage)
     {
         $offset = $currentPage * 20;
-        $tickets = TicketResource::collection(Ticket::latest('id')
-            ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-            ->skip($offset)
-            ->take(20)
-            ->get());
+        $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+
+        if ($userCanSeeAllTickets) {
+            $tickets = TicketResource::collection(Ticket::latest('id')
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->skip($offset)
+                ->take(20)
+                ->get());
+        } else {
+            $tickets = TicketResource::collection(Ticket::latest('id')
+                ->where('user_id', auth()->id())
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->skip($offset)
+                ->take(20)
+                ->get());
+        }
 
         return response()->json(['items' => $tickets]);
     }

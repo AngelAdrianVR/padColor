@@ -3,9 +3,10 @@
         <div class="lg:p-9 p-1 text-sm">
             <div class="flex items-center justify-between">
                 <Back />
-                <ThirthButton v-if="$page.props.auth.user.permissions.includes('Editar tickets')" class="!rounded-[3px]"
+                <PrimaryButton
+                    v-if="$page.props.auth.user.permissions.includes('Editar cualquier ticket') || $page.props.auth.user.id == ticket.data.user.id"
                     @click="$inertia.get(route('tickets.edit', ticket.data.id))">Editar
-                </ThirthButton>
+                </PrimaryButton>
             </div>
             <h1 class="text-gray66 lg:mx-[72px] mt-2">Información sobre el ticket</h1>
             <div class="lg:mx-16 mt-2">
@@ -19,7 +20,7 @@
                     <p>Folio: <span class="text-black ml-1">#{{ getFolio(ticket.data) }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Creado por: <span class="text-black ml-1">
-                        {{ ticket.data.user?.name }}</span></p>
+                            {{ ticket.data.user?.name }}</span></p>
                     <span class="hidden lg:block">•</span>
                     <p>Creado el: <span class="text-black ml-1">{{ ticket.data.created_at_formatted
                             }}</span></p>
@@ -128,7 +129,7 @@
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ThirthButton from "@/Components/MyComponents/ThirthButton.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SolutionGlove from "@/Components/MyComponents/TicketSolution/SolutionGlove.vue";
 import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
 import RichText from "@/Components/MyComponents/RichText.vue";
@@ -182,7 +183,7 @@ export default {
     },
     components: {
         AppLayout,
-        ThirthButton,
+        PrimaryButton,
         SolutionGlove,
         FileView,
         RichText,

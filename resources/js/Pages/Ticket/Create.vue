@@ -173,7 +173,6 @@ export default {
                     label: 'Abierto',
                     color: 'text-[#0355B5]',
                     icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
-
                 },
                 {
                     label: 'En espera',
@@ -217,6 +216,7 @@ export default {
                 },
             ],
             branches: [
+                'General',
                 'Alfajayucan',
                 'Morelia',
                 'San Luis Potosí',

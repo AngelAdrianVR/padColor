@@ -24,7 +24,7 @@ class RolePermissionSeeder extends Seeder
 
         Permission::create(['name' => 'Ver tickets', 'category' => 'Tickets']);
         Permission::create(['name' => 'Crear tickets', 'category' => 'Tickets']);
-        Permission::create(['name' => 'Editar tickets', 'category' => 'Tickets']);
+        Permission::create(['name' => 'Editar cualquier ticket', 'category' => 'Tickets']);
         Permission::create(['name' => 'Eliminar tickets', 'category' => 'Tickets']);
 
         Permission::create(['name' => 'Ver usuarios', 'category' => 'Usuarios']);

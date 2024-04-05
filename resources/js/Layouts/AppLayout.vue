@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
                             <img class="size-9 p-1 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                                 :alt="$page.props.auth.user.name">
                         </button>
-                        <ProfileCard @close="showProfileCard = false" v-if="showProfileCard" />
+                        <ProfileCard @close="showProfileCard = false" v-if="showProfileCard" class="bottom-20 right-5" />
                     </div>
                 </nav>
             </main>

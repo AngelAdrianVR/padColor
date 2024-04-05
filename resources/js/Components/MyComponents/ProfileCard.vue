@@ -1,5 +1,5 @@
 <template>
-    <div class="z-50 h-64 w-56 bg-white shadow-md border border-grayD9 absolute bottom-20 right-5 rounded-[10px]">
+    <div class="z-50 h-72 w-56 bg-white shadow-md border border-grayD9 absolute rounded-[10px]">
         <div class="h-[40%] bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% rounded-t-[10px]">
             <button @click="$emit('close')" class="absolute top-1 right-2 text-xs text-black">
                 <i class="fa-solid fa-xmark"></i>
@@ -35,7 +35,7 @@
                 <span class="text-[10px]">{{ $page.props.auth.user.phone }}</span>
             </p>
         </div>
-        <form method="POST" @submit.prevent="logout" class="flex mr-3 mt-2 justify-end text-redpad text-xs text-right">
+        <form method="POST" @submit.prevent="logout" class="absolute bottom-2 right-1 flex mr-3 mt-2 justify-end text-redpad text-xs text-right hover:text-red-500">
             <button>
                 Cerrar sesión
             </button>
