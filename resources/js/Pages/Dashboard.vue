@@ -1,6 +1,11 @@
 <template>
     <AppLayout title="Inicio">
-        <h1 class="font-bold mx-4 lg:mx-32 mt-4">Inicio</h1>
+        <header class="mx-2 lg:mx-14 mt-4">
+            <h1 class="mx-2 lg:mx-16 font-bold">Inicio</h1>
+            <section class="flex items-center justify-end">
+                <ThirthButton @click="showReportModal = true">Generar reporte</ThirthButton>
+            </section>
+        </header>
         <section class="mx-2 lg:mx-14 mt-6 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3 gap-1 lg:gap-5">
             <SimpleKPI v-for="(item, index) in simpleKpis" :key="index" :title="item.title" :icon="item.icon"
                 :value="item.value" />
@@ -15,18 +20,51 @@
             <PolarAreaChart :options="prioritiesChartOptions" title="Estado de Prioridades"
                 icon='<i class="fa-solid fa-stopwatch ml-2"></i>' />
         </section>
+
+        <DialogModal :show="showReportModal" @close="showReportModal = false">
+            <template #title>
+                <h1 class="font-bold text-sm">Reporte de tickets</h1>
+            </template>
+            <template #content>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <InputLabel value="Rango de fechas *" class="ml-3 mb-1" />
+                        <el-date-picker v-model="dateRange" class="!w-full" type="daterange" range-separator="A"
+                            start-placeholder="Fecha de inicio" end-placeholder="Fecha de fin" format="DD/MMM/YYYY"
+                            value-format="YYYY-MM-DD" />
+                    </div>
+                    <div>
+                        <InputLabel value="Categoría *" class="ml-3 mb-1" />
+                        <el-select class="w-full" v-model="category" placeholder="Seleccione la categoría"
+                            no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                            <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
+                        </el-select>
+                    </div>
+                </div>
+            </template>
+            <template #footer>
+                <PrimaryButton @click="generateReport" :disabled="!dateRange">Continuar</PrimaryButton>
+            </template>
+        </DialogModal>
     </AppLayout>
 </template>
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import InputLabel from "@/Components/InputLabel.vue";
 import PolarAreaChart from '@/Components/MyComponents/Charts/PolarAreaChart.vue';
+import DialogModal from '@/Components/DialogModal.vue';
 import SimpleKPI from '@/Components/MyComponents/Dashboard/SimpleKPI.vue';
+import ThirthButton from '@/Components/MyComponents/ThirthButton.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import PieChart from '@/Components/MyComponents/Charts/PieChart.vue';
 
 export default {
     data() {
         return {
+            showReportModal: false,
+            dateRange: null,
+            category: 'Todas',
             branches: [
                 'Alfajayucan',
                 'Morelia',
@@ -111,8 +149,21 @@ export default {
         PolarAreaChart,
         PieChart,
         SimpleKPI,
+        ThirthButton,
+        PrimaryButton,
+        DialogModal,
+        InputLabel,
     },
     methods: {
+        generateReport() {
+            const url = route('dashboard.tickets-report', {
+                startDate: this.dateRange[0],
+                endDate: this.dateRange[1],
+                category: this.category,
+            });
+
+            window.open(url, '_blank');
+        },
         ticketsByStatus() {
             // Inicializar un objeto para almacenar el recuento de tickets por estado
             const statuses = ["Abierto", "En espera", "En espera de 3ro", "Completado", "Re-abierto", "En proceso"];
