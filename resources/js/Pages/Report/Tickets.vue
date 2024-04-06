@@ -1,10 +1,10 @@
 <template>
     <div>
 
-        <Head title="Reporte de tickets" />
-        <header class="mx-8 mt-5">
-            <figure class="h-20">
-                <img class="h-20" src="@/../../public/images/logo_name.png" alt="logo">
+        <Head :title="'Reporte de tickets ' + formatDate(startDate) + ' al ' + formatDate(endDate)" />
+        <header>
+            <figure class="h-12">
+                <img class="h-12" src="@/../../public/images/logo_name.png" alt="logo">
             </figure>
         </header>
         <main class="text-xs">
@@ -12,78 +12,54 @@
                 <h1 class="font-bold">Reporte</h1>
                 <p class="mt-5"><b>Fecha: </b> Del {{ formatDate(startDate) }} al {{ formatDate(endDate) }}</p>
             </section>
-            <section class="mx-20 mt-8 flex justify-between">
+            <section class="mx-12 mt-5 flex justify-between">
                 <article class="w-[42%]">
-                    <h2 class="text-primary font-bold text-xs mb-1">Sucursales con más tickets</h2>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2 space-y-0">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
+                    <h2 class="text-primary font-bold text-xs mb-2">Sucursales con más tickets</h2>
+                    <div v-for="item in getTop3Branches" :key="item.branch" class="mb-1">
+                        <p class="font-bold">{{ item.branch }}</p>
+                        <div class="flex items-center space-x-1 space-y-0">
+                            <div class="h-px w-[72%] bg-gray99 relative">
+                                <div class="h-[3px] bg-primary absolute left-0 bottom-0"
+                                    :style="{ width: item.percentage + '%' }"></div>
+                            </div>
+                            <span class="text-[8px] text-[#747474] leading-none">{{ item.percentage }}% ({{ item.tickets
+                                }}/{{ tickets.length }})</span>
                         </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
-                        </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
-                        </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
+                        <p class="text-[9px] text-[#747474] leading-none">{{ companies[item.branch] }}</p>
                     </div>
                 </article>
                 <article class="w-[42%]">
                     <h2 class="text-primary font-bold text-xs mb-1">Categoría con más recurrencia</h2>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
+                    <div v-for="item in getTop3Categories" :key="item.category" class="mb-2">
+                        <p class="font-bold">{{ item.category }}</p>
+                        <div class="flex items-center space-x-1">
+                            <div class="h-px w-[72%] bg-gray99 relative">
+                                <div class="h-[3px] bg-primary absolute left-0 bottom-0"
+                                    :style="{ width: item.percentage + '%' }"></div>
+                            </div>
+                            <span class="text-[8px] text-[#747474] leading-none">{{ item.percentage }}% ({{ item.tickets
+                                }}/{{ tickets.length }})</span>
                         </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
-                        </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ 'Alfayucan' }}</p>
-                        <div class="flex items-center space-x-2">
-                            <div class="h-px w-5/6 bg-gray99"></div>
-                            <span class="text-[9px] text-[#747474] leading-none">{{ '50' }}%</span>
-                        </div>
-                        <p class="text-[9px] text-[#747474] leading-none">{{ 'Papel, Diseño y Color' }}</p>
                     </div>
                 </article>
             </section>
-            <section class="mx-20 mt-14 grid grid-cols-6 gap-x-2">
+            <section class="mx-12 mt-5 grid grid-cols-6 gap-x-2">
                 <h2 class="text-primary font-bold text-sm text-center mb-3 col-span-full">Estado de los tickets</h2>
                 <article v-for="item in statuses" :key="item.label" class="rounded-[5px] px-2 py-[5px] text-[10px]"
                     :style="{ color: item.color, backgroundColor: item.bg }">
                     <header class="flex items-center justify-between">
                         <p class="flex items-center space-x-1">
-                            <span>{{ '19' }}</span>
+                            <span>{{ getTicketsCountByStatus(item.label) }}</span>
                             <i :class="item.icon"></i>
                         </p>
-                        <span>{{ '15' }}%</span>
+                        <span>{{ getTicketsPercentageByStatus(item.label) }}%</span>
                     </header>
                     <p class="mt-1 text-[9px]">{{ item.label }}</p>
                 </article>
             </section>
-            <section class="mx-20 mt-5 grid grid-cols-4 gap-x-3">
-                <article v-for="(item, index) in simpleKpis" :key="index" class="border border-grayD9 rounded-[10px] px-2 py-1 text-[10px]">
+            <section class="mx-12 mt-5 grid grid-cols-4 gap-x-3">
+                <article v-for="(item, index) in simpleKpis" :key="index"
+                    class="border border-grayD9 rounded-[10px] px-2 py-1 text-[10px]">
                     <section class="flex space-x-1">
                         <span class="flex items-center justify-center text-gray66 bg-grayED size-6 rounded-lg">
                             <i :class="item.icon"></i>
@@ -95,10 +71,11 @@
                     </section>
                 </article>
             </section>
-            <section class="mx-5 mt-6">
+            <section class="mx-5 mt-5">
                 <table class="w-full">
                     <thead>
-                        <tr class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-4 *:text-[10px]">
+                        <tr
+                            class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-1 *:text-[10px]">
                             <th>ID</th>
                             <th>Tipo de servicio</th>
                             <th>Nombre</th>
@@ -111,16 +88,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="item in tickets" :key="item.id" class="*:border *:border-grayD9 *:text-start *:px-4 *:text-[10px]">
+                        <tr v-for="item in tickets" :key="item.id"
+                            class="*:border *:border-grayD9 *:text-start *:px-1 *:text-[10px]">
                             <td>{{ getFolio(item) }}</td>
                             <td>{{ item.ticket_type }}</td>
                             <td>{{ item.title }}</td>
-                            <td>{{ item.category.name }}</td>
+                            <td class="w-[12%]">{{ item.category.name }}</td>
                             <td>{{ formatDateTime(item.created_at) }}</td>
                             <td>{{ item.status }}</td>
                             <td>{{ item.priority }}</td>
                             <td>{{ item.responsible?.name ?? '-' }}</td>
-                            <td>{{ item.ticket_solutions.length }}</td>
+                            <td class="w-[1%]">{{ item.ticket_solutions.length }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -175,6 +153,21 @@ export default {
                     icon: 'fa-solid fa-arrow-right-to-bracket',
                 },
             ],
+            companies: {
+                'Alfajayucan': 'Papel, diseño y color',
+                'Morelia': 'Papel, diseño y color',
+                'San Luis Potosí': 'Papel, diseño y color',
+                'Acapulco': 'Papel, diseño y color',
+                'Av. del Tigre': 'Papel, diseño y color',
+                'Calle C': 'Papel, diseño y color',
+                'Calle 2': 'Papel, diseño y color',
+                'Veracruz': 'Padcolor insumos gráficos',
+                'León': 'Padcolor insumos gráficos',
+                'Juárez': 'Padcolor insumos gráficos',
+                'Puebla': 'Padcolor insumos gráficos',
+                'Monterrey': 'Padcolor insumos gráficos',
+                'Federalismo': 'Padcolor insumos gráficos',
+            },
             // kpis simples
             simpleKpis: [
                 {
@@ -209,7 +202,79 @@ export default {
         startDate: String,
         endDate: String,
     },
+    computed: {
+        getTop3Categories() {
+            const categoriesTicketsMap = {};
+
+            // Contar el número de tickets por categoría
+            this.tickets.forEach(ticket => {
+                const category = ticket.category.name;
+
+                if (!categoriesTicketsMap[category]) {
+                    categoriesTicketsMap[category] = 0;
+                }
+                categoriesTicketsMap[category]++;
+            });
+
+            // Convertir el mapa en un array de objetos { category, tickets }
+            const categoriesWithTickets = Object.keys(categoriesTicketsMap).map(category => ({
+                category,
+                tickets: categoriesTicketsMap[category]
+            }));
+
+            // Ordenar el array por número de tickets de mayor a menor
+            categoriesWithTickets.sort((a, b) => b.tickets - a.tickets);
+
+            // Calcular el total de tickets
+            const totalTickets = this.tickets.length;
+
+            // Obtener las tres categorías con más tickets y calcular el porcentaje
+            const top3categories = categoriesWithTickets.slice(0, 3).map(category => ({
+                ...category,
+                percentage: Math.round((category.tickets / totalTickets) * 100)
+            }));
+
+            return top3categories;
+        },
+        getTop3Branches() {
+            const branchTicketsMap = {};
+
+            // Contar el número de tickets por sucursal
+            this.tickets.forEach(ticket => {
+                if (!branchTicketsMap[ticket.branch]) {
+                    branchTicketsMap[ticket.branch] = 0;
+                }
+                branchTicketsMap[ticket.branch]++;
+            });
+
+            // Convertir el mapa en un array de objetos { branch, tickets }
+            const branchesWithTickets = Object.keys(branchTicketsMap).map(branch => ({
+                branch,
+                tickets: branchTicketsMap[branch]
+            }));
+
+            // Ordenar el array por número de tickets de mayor a menor
+            branchesWithTickets.sort((a, b) => b.tickets - a.tickets);
+
+            // Calcular el total de tickets
+            const totalTickets = this.tickets.length;
+
+            // Obtener las tres sucursales con más tickets y calcular el porcentaje
+            const top3Branches = branchesWithTickets.slice(0, 3).map(branch => ({
+                ...branch,
+                percentage: Math.round((branch.tickets / totalTickets) * 100)
+            }));
+
+            return top3Branches;
+        },
+    },
     methods: {
+        getTicketsCountByStatus(status) {
+            return this.tickets.filter(item => item.status == status).length;
+        },
+        getTicketsPercentageByStatus(status) {
+            return Math.round((this.getTicketsCountByStatus(status) / this.tickets.length) * 100);
+        },
         getFolio(ticket) {
             if (ticket.ticket_type == 'Soporte o incidencia') {
                 return 'GPCI' + String(ticket.id).padStart(6, '0');
@@ -221,7 +286,7 @@ export default {
             return format(parseISO(dateString), 'dd MMMM yyyy', { locale: es });
         },
         formatDateTime(dateTime) {
-            return format(parseISO(dateTime), 'dd MMMM yyyy, hh:mm a', { locale: es });
+            return format(parseISO(dateTime), 'dd MMM yy, hh:mm a', { locale: es });
         },
         calculateAverageResponseTimeByPriority(priority) {
             const responseTimes = this.tickets
@@ -275,6 +340,9 @@ export default {
             else
                 return 'Sin información';
         },
+    },
+    mounted() {
+        window.print();
     }
 }
 </script>

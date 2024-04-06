@@ -100,7 +100,7 @@
                         </div>
                     </template>
                     <Solutions :ticketId="this.ticket.data.id" :ticketStatus="this.ticket.data.status"
-                        @updateCountSolutions="ticket.data.solutions_count++; ticket.data.status = 'Completado'; status = 'Completado'"
+                        @updateCountSolutions="ticket.data.solutions_count++"
                         @decrementCountSolutions="ticket.data.solutions_count--" />
                 </el-tab-pane>
                 <el-tab-pane name="2">
