@@ -37,7 +37,7 @@
                         <InputLabel value="Categoría *" class="ml-3 mb-1" />
                         <el-select class="w-full" v-model="category" placeholder="Seleccione la categoría"
                             no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                            <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
+                            <el-option v-for="item in reportCategories" :key="item" :label="item" :value="item" />
                         </el-select>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
         </DialogModal>
     </AppLayout>
 </template>
-
+<!-- Arreglar estilo de date range y hacer shift de 'Todas' a categorias en generar reporte -->
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InputLabel from "@/Components/InputLabel.vue";
@@ -65,6 +65,7 @@ export default {
             showReportModal: false,
             dateRange: null,
             category: 'Todas',
+            reportCategories: ['Todas'],
             branches: [
                 'Alfajayucan',
                 'Morelia',
@@ -114,7 +115,6 @@ export default {
                 labels: this.ticketsByCategory().map(item => item[0]),
                 series: this.ticketsByCategory().map(item => item[1]),
             },
-
             // kpis simples
             simpleKpis: [
                 {
@@ -143,6 +143,7 @@ export default {
     props: {
         tickets: Array,
         categories: Array,
+        filter_categories: Array,
     },
     components: {
         AppLayout,
@@ -217,6 +218,7 @@ export default {
                 'Puebla',
                 'Monterrey',
                 'Federalismo',
+                'General',
             ];
             // Inicializar un objeto para almacenar el recuento de tickets por estado
             const byBranch = {};
@@ -308,6 +310,10 @@ export default {
             else
                 return 'Sin información';
         },
+    },
+    mounted() {
+        const allCategories = this.categories.map(item => item.name);
+        this.reportCategories.push(...allCategories); 
     }
 }
 </script>
