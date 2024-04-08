@@ -107,6 +107,7 @@ export default {
                     'Puebla',
                     'Monterrey',
                     'Federalismo',
+                    'General',
                 ],
                 series: this.ticketsByBranch(),
             },
