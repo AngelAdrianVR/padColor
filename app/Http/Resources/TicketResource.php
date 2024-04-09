@@ -29,6 +29,10 @@ class TicketResource extends JsonResource
             'solutions_count' => $this->whenCounted('ticketSolutions'),
             'media' => $this->getMedia()->all(),
             'created_at_formatted' => $this->created_at?->isoFormat('DD MMM YYYY'),
+            'solution_minutes' => $this->solution_minutes,
+            'opened_at' => $this->opened_at,
+            'closed_at' => $this->closed_at,
+            'paused_at' => $this->paused_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at?->isoFormat('DD MMM YYYY'),
         ];

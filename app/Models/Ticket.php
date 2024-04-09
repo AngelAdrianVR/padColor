@@ -25,24 +25,31 @@ class Ticket extends Model implements HasMedia
         'responsible_id',
         'category_id',
         'branch',
+        'solution_minutes',
+        'opened_at',
+        'closed_at',
+        'paused_at',
     ];
 
     protected $casts = [
-        'expired_date' => 'date'
+        'expired_date' => 'date',
+        'opened_at' => 'datetime',
+        'closeed_at' => 'datetime',
+        'paused_at' => 'datetime',
     ];
 
     //relationships
-    public function category() :BelongsTo
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function user() :BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function responsible() :BelongsTo
+    public function responsible(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -52,13 +59,24 @@ class Ticket extends Model implements HasMedia
         return $this->morphMany(Comment::class, 'commentable');
     }
 
-    public function ticketSolutions() :HasMany
+    public function ticketSolutions(): HasMany
     {
         return $this->hasMany(TicketSolution::class);
     }
 
-    public function ticketHistories() :HasMany
+    public function ticketHistories(): HasMany
     {
         return $this->hasMany(TicketHistory::class);
+    }
+
+    public function getSolutionMinutes()
+    {
+        // Calcular el tiempo transcurrido en minutos desde opened_at hasta ahora
+        $elapsedMinutes = now()->diffInMinutes($this->opened_at);
+
+        // Sumar los minutos transcurridos y los adicionales
+        $totalMinutes = $elapsedMinutes + $this->solution_minutes;
+
+        return $totalMinutes;
     }
 }

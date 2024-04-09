@@ -41,6 +41,7 @@ Route::middleware([
     })->name('notifications');
 });
 
+
 //Tickets routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('tickets', TicketController::class)->middleware('auth');
