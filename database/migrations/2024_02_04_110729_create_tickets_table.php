@@ -23,6 +23,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('responsible_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->unsignedMediumInteger('solution_minutes')->nullable();
+            $table->timestamp('opened_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
+            $table->timestamp('paused_at')->nullable();
             $table->timestamps();
         });
     }

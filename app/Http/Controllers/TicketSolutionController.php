@@ -76,6 +76,13 @@ class TicketSolutionController extends Controller
 
     public function destroy(TicketSolution $ticket_solution)
     {
+        //Crear registro de actividad
+        TicketHistory::create([
+            'description' =>  "eliminó la solución registrada el {$ticket_solution->created_at->toDateTimeString()} de este ticket",
+            'user_id' =>  auth()->id(),
+            'ticket_id' =>  $ticket_solution->ticket->id,
+        ]);
+
         $ticket_solution->delete();
     }
 

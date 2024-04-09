@@ -68,7 +68,7 @@ class TicketController extends Controller
             'expired_date' => 'required|date',
         ]);
 
-        $ticket = Ticket::create($validated + ['user_id' => auth()->id()]);
+        $ticket = Ticket::create($validated + ['user_id' => auth()->id(), 'opened_at' => now()->toDateTimeString()]);
 
         // Guardar media
         $ticket->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
@@ -218,10 +218,27 @@ class TicketController extends Controller
 
     public function updateStatus(Ticket $ticket)
     {
+        $additional = [];
+        if (request('status') == 'Completado') {
+            $additional = [
+                'solution_minutes' => $ticket->getSolutionMinutes(),
+                'completed_at' => now()->toDateTimeString(),
+                'paused_at' => null,
+            ];
+        } elseif (request('status') == 'Abierto' || request('status') == 'Re-abierto') {
+            $additional = [
+                'completed_at' => null,
+            ];
+        } elseif (request('status') == 'En espera de 3ro') {
+            $additional = [
+                'paused_at' => now()->toDateTimeString(),
+            ];
+        }
+
         $ticket->update([
             'status' => request('status'),
             'updated_at' => now(),
-        ]);
+        ] + $additional);
 
         //Crear registro de actividad
         TicketHistory::create([

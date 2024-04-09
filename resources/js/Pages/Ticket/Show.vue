@@ -79,7 +79,10 @@
                         <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66">
                             Tiempo de solución:
-                            <span class="text-black ml-1">{{ tiempoTranscurrido(ticket.data.created_at) }}</span>
+                            <span v-if="ticket.data.status == 'Completado' || ticket.data.status == 'En espera de 3ro'"
+                                class="text-black ml-1">
+                                {{ convertMinutesToHours(ticket.data.solution_minutes ?? 0) }}</span>
+                            <span v-else class="text-black ml-1">{{ tiempoTranscurrido(ticket.data.opened_at) }}</span>
                         </p>
                     </div>
                 </div>
@@ -198,19 +201,39 @@ export default {
         solutions_count: Number,
     },
     methods: {
+        convertMinutesToHours(minutes) {
+            // Calcular días, horas y minutos
+            const days = Math.floor(minutes / (60 * 24));
+            const horas = Math.floor((minutes % (60 * 24)) / 60);
+            const remainingMinutes = minutes % 60;
+
+            // Construir la cadena de resultado
+            let result = '';
+            if (days > 0) {
+                result += `${days} día${days > 1 ? 's' : ''} `;
+            }
+            result += `${horas.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+
+            return result;
+        },
         tiempoTranscurrido(fecha) {
             const fechaInicio = new Date(fecha);
             const fechaActual = new Date();
 
-            let minutos = String(differenceInMinutes(fechaActual, fechaInicio) % 60).padStart(2, '0');
-            let horas = differenceInHours(fechaActual, fechaInicio);
-            const dias = differenceInDays(fechaActual, fechaInicio);
+            let minutosTranscurridos = differenceInMinutes(fechaActual, fechaInicio);
+            minutosTranscurridos += this.ticket.data.solution_minutes; // Sumar los minutos adicionales
+
+            let dias = Math.floor(minutosTranscurridos / (60 * 24)); // Calcular días completos
+            let horas = Math.floor((minutosTranscurridos % (60 * 24)) / 60);
+            let minutos = minutosTranscurridos % 60;
 
             if (dias > 0) {
-                horas = String(horas % 24).padStart(2, '0');
-                return `${dias} día${dias > 1 ? 's' : ''} ${horas % 24}:${minutos}`;
+                horas = String(horas).padStart(2, '0');
+                minutos = String(minutos).padStart(2, '0');
+                return `${dias} día${dias > 1 ? 's' : ''} ${horas}:${minutos}`;
             } else {
                 horas = String(horas).padStart(2, '0');
+                minutos = String(minutos).padStart(2, '0');
                 return `${horas}:${minutos}`;
             }
         },
