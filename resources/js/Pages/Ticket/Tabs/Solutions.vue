@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-8">
+    <div class="mt-8 min-h-28">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
             <p v-if="ticketStatus == 'Completado'" class="text-center text-red-600 text-xs">

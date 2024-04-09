@@ -264,29 +264,42 @@ export default {
                 .filter(ticket => ticket.priority === priority)
                 .map(ticket => {
                     // Check if there are solutions for the ticket
-                    if (ticket.ticket_solutions && ticket.ticket_solutions.length > 0) {
-                        // Calculate response time in milliseconds
-                        const responseTimeMillis = new Date(ticket.ticket_solutions[0].created_at) - new Date(ticket.created_at);
+                    if (ticket.solution_minutes) {
+                        const responseTimeMinutes = ticket.solution_minutes;
 
-                        // Convert to hours
-                        const responseTimeHours = responseTimeMillis / (1000 * 60 * 60);
+                        // Convertir a horas
+                        const responseTimeHours = responseTimeMinutes / 60;
 
                         return responseTimeHours;
                     } else {
-                        // If there is no solution, return null or a value indicating no response time
+                        // Si no hay solución, devolver null o un valor que indique que no hay tiempo de respuesta
                         return null;
                     }
                 });
 
-            // Filter out non-null response times
+            // Filtrar los tiempos de respuesta que no son nulos
             const validResponseTimes = responseTimes.filter(time => time !== null);
 
-            // Calculate the average response time
+            // Calcular el tiempo promedio de respuesta
             if (validResponseTimes.length > 0) {
+                // Calcular el total de horas
                 const averageResponseTime = validResponseTimes.reduce((total, time) => total + time, 0) / validResponseTimes.length;
-                return averageResponseTime.toFixed(2) + ' horas';
+
+                // Calcular días y horas
+                const days = Math.floor(averageResponseTime / 24);
+                const hours = Math.floor(averageResponseTime % 24);
+                const minutes = Math.floor((averageResponseTime % 1) * 60);
+
+                // Formatear el resultado
+                let result = '';
+                if (days > 0) {
+                    result += `${days} día${days > 1 ? 's' : ''} `;
+                }
+                result += `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+                return result;
             } else {
-                return 'Sin información'; // Another way to handle the case when there are no valid response times
+                return 'Sin información';
             }
         },
         calculatePercentageResolvedBeforeExpiration() {
@@ -314,7 +327,7 @@ export default {
     },
     mounted() {
         const allCategories = this.categories.map(item => item.name);
-        this.reportCategories.push(...allCategories); 
+        this.reportCategories.push(...allCategories);
     }
 }
 </script>

@@ -47,7 +47,7 @@
                     <div class="lg:flex items-center space-x-3 w-full">
                         <p class="text-gray66">Estatus:</p>
                         <div class="lg:w-[14%]">
-                            <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
+                            <el-select @change="updateStatus" v-model="status" placeholder="Seleccione" size="small"
                                 :disabled="!$page.props.auth.user.permissions.includes('Editar status de tickets')"
                                 no-data-text="No hay opciones registradas"
                                 no-match-text="No se encontraron coincidencias">
@@ -290,6 +290,10 @@ export default {
 
                     this.ticket.data.status = response.data.item.status;
                     this.ticket.data.updated_at = response.data.item.updated_at;
+                    this.ticket.data.closed_at = response.data.item.closed_at;
+                    this.ticket.data.puased_at = response.data.item.paused_at;
+                    this.ticket.data.opened_at = response.data.item.opened_at;
+                    this.ticket.data.solution_minutes = response.data.item.solution_minutes;
 
                     this.$notify({
                         title: "Correcto",

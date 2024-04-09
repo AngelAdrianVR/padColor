@@ -75,13 +75,15 @@
                 <table class="w-full">
                     <thead>
                         <tr
-                            class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-1 *:text-[10px]">
+                            class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-1 *:text-[9px]">
                             <th>ID</th>
                             <th>Tipo de servicio</th>
                             <th>Nombre</th>
                             <th>Categoría</th>
                             <th>Fecha de creación</th>
+                            <th>Fecha de cierre</th>
                             <th>Estado</th>
+                            <th>T. de solución</th>
                             <th>Prioridad</th>
                             <th>Responsable</th>
                             <th>Resoluciones</th>
@@ -89,13 +91,15 @@
                     </thead>
                     <tbody>
                         <tr v-for="item in tickets" :key="item.id"
-                            class="*:border *:border-grayD9 *:text-start *:px-1 *:text-[10px]">
+                            class="*:border *:border-grayD9 *:text-start *:px-1 *:text-[9px]">
                             <td>{{ getFolio(item) }}</td>
                             <td>{{ item.ticket_type }}</td>
                             <td>{{ item.title }}</td>
                             <td class="w-[12%]">{{ item.category.name }}</td>
-                            <td>{{ formatDateTime(item.created_at) }}</td>
+                            <td class="w-[12%]">{{ formatDateTime(item.created_at) }}</td>
+                            <td class="w-[12%]">{{ item.closed_at ? formatDateTime(item.closed_at) : '-' }}</td>
                             <td>{{ item.status }}</td>
+                            <td class="w-[12%]">{{ item.solution_minutes ? convertMinutesToHours(item.solution_minutes) :  '-' }}</td>
                             <td>{{ item.priority }}</td>
                             <td>{{ item.responsible?.name ?? '-' }}</td>
                             <td class="w-[1%]">{{ item.ticket_solutions.length }}</td>
@@ -293,29 +297,42 @@ export default {
                 .filter(ticket => ticket.priority === priority)
                 .map(ticket => {
                     // Check if there are solutions for the ticket
-                    if (ticket.ticket_solutions && ticket.ticket_solutions.length > 0) {
-                        // Calculate response time in milliseconds
-                        const responseTimeMillis = new Date(ticket.ticket_solutions[0].created_at) - new Date(ticket.created_at);
+                    if (ticket.solution_minutes) {
+                        const responseTimeMinutes = ticket.solution_minutes;
 
-                        // Convert to hours
-                        const responseTimeHours = responseTimeMillis / (1000 * 60 * 60);
+                        // Convertir a horas
+                        const responseTimeHours = responseTimeMinutes / 60;
 
                         return responseTimeHours;
                     } else {
-                        // If there is no solution, return null or a value indicating no response time
+                        // Si no hay solución, devolver null o un valor que indique que no hay tiempo de respuesta
                         return null;
                     }
                 });
 
-            // Filter out non-null response times
+            // Filtrar los tiempos de respuesta que no son nulos
             const validResponseTimes = responseTimes.filter(time => time !== null);
 
-            // Calculate the average response time
+            // Calcular el tiempo promedio de respuesta
             if (validResponseTimes.length > 0) {
+                // Calcular el total de horas
                 const averageResponseTime = validResponseTimes.reduce((total, time) => total + time, 0) / validResponseTimes.length;
-                return averageResponseTime.toFixed(2) + ' horas';
+
+                // Calcular días y horas
+                const days = Math.floor(averageResponseTime / 24);
+                const hours = Math.floor(averageResponseTime % 24);
+                const minutes = Math.floor((averageResponseTime % 1) * 60);
+
+                // Formatear el resultado
+                let result = '';
+                if (days > 0) {
+                    result += `${days} día${days > 1 ? 's' : ''} `;
+                }
+                result += `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+                return result;
             } else {
-                return 'Sin información'; // Another way to handle the case when there are no valid response times
+                return 'Sin información';
             }
         },
         calculatePercentageResolvedBeforeExpiration() {
@@ -339,6 +356,21 @@ export default {
                 return percentage + '%'; // Return the percentage or 0 if there are no tickets
             else
                 return 'Sin información';
+        },
+        convertMinutesToHours(minutes) {
+            // Calcular días, horas y minutos
+            const days = Math.floor(minutes / (60 * 24));
+            const horas = Math.floor((minutes % (60 * 24)) / 60);
+            const remainingMinutes = minutes % 60;
+
+            // Construir la cadena de resultado
+            let result = '';
+            if (days > 0) {
+                result += `${days} día${days > 1 ? 's' : ''} `;
+            }
+            result += `${horas.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+
+            return result;
         },
     },
     mounted() {

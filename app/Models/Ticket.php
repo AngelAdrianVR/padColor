@@ -71,9 +71,12 @@ class Ticket extends Model implements HasMedia
 
     public function getSolutionMinutes()
     {
-        $current_minutes = $this->solution_minutes;
-        $additional_minutes = 5;
+        // Calcular el tiempo transcurrido en minutos desde opened_at hasta ahora
+        $elapsedMinutes = now()->diffInMinutes($this->opened_at);
 
-        return $current_minutes + $additional_minutes;
+        // Sumar los minutos transcurridos y los adicionales
+        $totalMinutes = $elapsedMinutes + $this->solution_minutes;
+
+        return $totalMinutes;
     }
 }
