@@ -7,12 +7,14 @@
                 <div class="flex items-center space-x-2">
                     <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar usuarios')"
                         @click="$inertia.get(route('users.edit', user.id))" :disabled="loading">Editar</PrimaryButton>
-                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]" :disabled="loading"><i
-                            class="fa-solid fa-plus"></i></SecondaryButton>
-                    <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]"
+                        :disabled="loading"><i class="fa-solid fa-plus"></i></SecondaryButton>
+                    <el-popconfirm v-if="$page.props.auth.user.permissions.includes('Resetear contraseñas')"
+                        confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
                         :title="'¿Desea continuar?'" @confirm="resetPassword()">
                         <template #reference>
-                            <SecondaryButton class="!rounded-[10px] !bg-redpad !text-white" :disabled="loading">Resetear contraseña
+                            <SecondaryButton class="!rounded-[10px] !bg-redpad !text-white" :disabled="loading">Resetear
+                                contraseña
                             </SecondaryButton>
                         </template>
                     </el-popconfirm>
