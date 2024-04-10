@@ -46,7 +46,10 @@ class TicketSolutionController extends Controller
         ]);
 
         // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($user) => $user->can('Responsable de ticket') || $user->id === $ticket_solution->ticket->user_id);
         $owner = auth()->user();
         $description = "agregó una solución al ticket #{$ticket_solution->ticket->id}";
         $subject = "Ticket cerrado";

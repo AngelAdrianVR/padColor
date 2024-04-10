@@ -6,9 +6,16 @@
                 <h1 class="font-bold text-base">Detalles de usuario</h1>
                 <div class="flex items-center space-x-2">
                     <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar usuarios')"
-                        @click="$inertia.get(route('users.edit', user.id))">Editar</PrimaryButton>
-                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]"><i
+                        @click="$inertia.get(route('users.edit', user.id))" :disabled="loading">Editar</PrimaryButton>
+                    <SecondaryButton @click="$inertia.get(route('users.create'))" class="!rounded-[10px]" :disabled="loading"><i
                             class="fa-solid fa-plus"></i></SecondaryButton>
+                    <el-popconfirm confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                        :title="'¿Desea continuar?'" @confirm="resetPassword()">
+                        <template #reference>
+                            <SecondaryButton class="!rounded-[10px] !bg-redpad !text-white" :disabled="loading">Resetear contraseña
+                            </SecondaryButton>
+                        </template>
+                    </el-popconfirm>
                 </div>
             </section>
             <!-- buscador -->
@@ -25,7 +32,7 @@
                     <i class="fa-solid fa-angle-left"></i>
                 </button>
             </div>
-            <figure class="size-32 lg:size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-4rem)]">
+            <figure class="size-32 lg:size-40 rounded-[5px] bg-gray-500 absolute top-8 left-[calc(50%-5rem)]">
                 <img :src="user.profile_photo_url" :alt="user.name"
                     class="size-32 lg:size-40 object-cover rounded-[5px]">
             </figure>
@@ -94,7 +101,7 @@
                             <span>Estado:</span>
                         </p>
                         <p :class="user.is_active ? 'text-greenpad' : 'text-redpad'">{{ user.is_active ? 'Activo' :
-                        'Inactivo' }}</p>
+                            'Inactivo' }}</p>
                     </div>
                 </article>
             </section>
@@ -112,6 +119,7 @@ import Back from "@/Components/MyComponents/Back.vue";
 import InputFilePreview from "@/Components/MyComponents/InputFilePreview.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import { useForm } from "@inertiajs/vue3";
+import axios from "axios";
 
 export default {
     data() {
@@ -128,6 +136,7 @@ export default {
 
         return {
             form,
+            loading: false,
             selectedItem: this.user.id,
             departments: [
                 'Administración',
@@ -163,6 +172,24 @@ export default {
         users: Array,
     },
     methods: {
+        async resetPassword() {
+            try {
+                this.loading = true;
+                const response = await axios.put(route('users.reset-password', this.user.id));
+
+                if (response.status === 200) {
+                    this.$notify({
+                        title: "Correcto",
+                        message: "Se ha reseteado la contraseña a 12345",
+                        type: "success",
+                    });
+                }
+            } catch (error) {
+                console.log(error)
+            } finally {
+                this.loading = false;
+            }
+        },
         store() {
             this.form.post(route("users.store"), {
                 onSuccess: () => {
