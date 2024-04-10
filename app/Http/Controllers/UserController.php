@@ -220,4 +220,11 @@ class UserController extends Controller
 
         return response()->json(['items' => $users]);
     }
+
+    public function resetPassword(User $user)
+    {
+        $user->update(['password' => bcrypt('12345')]);
+
+        return response()->json([]);
+    }
 }

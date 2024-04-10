@@ -80,6 +80,7 @@ Route::post('users-read-notifications', [UserController::class, 'readNotificatio
 Route::post('users-delete-notifications', [UserController::class, 'deleteNotifications'])->middleware('auth')->name('users.delete-user-notifications');
 Route::get('users-get-all', [UserController::class, 'getAll'])->name('users.get-all');
 Route::get('users-get-by-page/{currentPage}', [UserController::class, 'getItemsByPage'])->name('users.get-by-page')->middleware('auth');
+Route::put('users-reset-password/{user}', [UserController::class, 'resetPassword'])->name('users.reset-password')->middleware('auth');
 
 
 //settings routes---------------------------------------------------------------------------
