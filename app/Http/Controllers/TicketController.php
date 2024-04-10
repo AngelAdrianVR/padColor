@@ -12,11 +12,9 @@ use App\Models\TicketHistory;
 use App\Models\User;
 use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
 
 class TicketController extends Controller
 {
-
     public function index()
     {
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
@@ -81,7 +79,10 @@ class TicketController extends Controller
         ]);
 
         // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($user) => $user->can('Responsable de ticket'));
         $owner = auth()->user();
         $subject = "Nuevo ticket";
         $description = "ha creado un nuevo ticket";
@@ -147,7 +148,10 @@ class TicketController extends Controller
         }
 
         // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($user) => $user->can('Responsable de ticket'));
         $owner = auth()->user();
         $subject = "Ticket editado";
         $description = "ha editado el ticket #$ticket->id";
@@ -191,7 +195,10 @@ class TicketController extends Controller
         }
 
         // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($user) => $user->can('Responsable de ticket'));
         $owner = auth()->user();
         $subject = "Ticket editado";
         $description = "ha editado el ticket #$ticket->id";
@@ -250,7 +257,10 @@ class TicketController extends Controller
         ]);
 
         // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($user) => $user->can('Responsable de ticket') || $user->id === $ticket->user_id);
         $owner = auth()->user();
         $subject = "Cambio de status de ticket";
         $description = "ha cambiado el estatus del ticket #$ticket->id";
