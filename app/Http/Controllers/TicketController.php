@@ -78,15 +78,14 @@ class TicketController extends Controller
             'ticket_id' =>  $ticket->id,
         ]);
 
-        // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn ($user) => $user->can('Responsable de ticket'));
-        $owner = auth()->user();
-        $subject = "Nuevo ticket";
-        $description = "ha creado un nuevo ticket";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        // notificar a responsable si lo hay y si no es el creador del ticket
+        if ($request->responsible_id && $request->responsible_id != auth()->id()) {
+            $user = User::find($request->responsible_id);
+            $owner = auth()->user();
+            $subject = "Nuevo ticket";
+            $description = "ha creado un nuevo ticket";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+        }
 
         return to_route('tickets.index');
     }
@@ -145,17 +144,28 @@ class TicketController extends Controller
                 'user_id' =>  auth()->id(),
                 'ticket_id' =>  $ticket->id,
             ]);
+            // notificar a nuevo responsable
+            $user = User::find($request->responsible_id);
+            $owner = auth()->user();
+            $subject = "Ticket asignado";
+            $description = "te ha asignado como responsable del ticket #$ticket->id";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            if ($current_responsible_id) {
+                // notificar a antiguo responsable si lo habia
+                $user = User::find($current_responsible_id);
+                $owner = auth()->user();
+                $subject = "Ticket removido";
+                $description = "te ha removido como responsable del ticket #$ticket->id";
+                $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            }
+        } else if ($current_responsible_id) {
+            // notificar a responsable si lo hay de que se editó
+            $user = User::find($current_responsible_id);
+            $owner = auth()->user();
+            $subject = "Ticket editado";
+            $description = "ha editado el ticket #$ticket->id";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
         }
-
-        // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn ($user) => $user->can('Responsable de ticket'));
-        $owner = auth()->user();
-        $subject = "Ticket editado";
-        $description = "ha editado el ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.show', $ticket->id);
     }
@@ -186,23 +196,36 @@ class TicketController extends Controller
         //Crear registro de actividad si se cambio al responsable
         if ($current_responsible_id != $request->responsible_id) {
             $new_responsible = User::find($request->responsible_id);
-
+            $description = $request->responsible_id
+                ? "asignó a *$new_responsible->name* como responsable del ticket."
+                : "removió al responsable del ticket.";
             TicketHistory::create([
-                'description' =>  'asignó a "' . $new_responsible->name . '" como responsable del ticket.',
+                'description' =>  $description,
                 'user_id' =>  auth()->id(),
                 'ticket_id' =>  $ticket->id,
             ]);
+            // notificar a nuevo responsable
+            $user = User::find($request->responsible_id);
+            $owner = auth()->user();
+            $subject = "Ticket asignado";
+            $description = "te ha asignado como responsable del ticket #$ticket->id";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            if ($current_responsible_id) {
+                // notificar a antiguo responsable si lo habia
+                $user = User::find($current_responsible_id);
+                $owner = auth()->user();
+                $subject = "Ticket removido";
+                $description = "te ha removido de responsable del ticket #$ticket->id";
+                $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            }
+        } else if ($current_responsible_id) {
+            // notificar a responsable si lo hay de que se editó
+            $user = User::find($current_responsible_id);
+            $owner = auth()->user();
+            $subject = "Ticket editado";
+            $description = "ha editado el ticket #$ticket->id";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
         }
-
-        // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn ($user) => $user->can('Responsable de ticket'));
-        $owner = auth()->user();
-        $subject = "Ticket editado";
-        $description = "ha editado el ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
 
         return to_route('tickets.show', $ticket->id);
     }
@@ -256,15 +279,15 @@ class TicketController extends Controller
             'ticket_id' =>  $ticket->id,
         ]);
 
-        // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn ($user) => $user->can('Responsable de ticket') || $user->id === $ticket->user_id);
-        $owner = auth()->user();
-        $subject = "Cambio de status de ticket";
-        $description = "ha cambiado el estatus del ticket #$ticket->id";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id))));
+        // notificar solo cuando se completa el ticket
+        if ($ticket->status == 'Completado') {
+            // notificar a creador de ticket
+            $user = User::find($ticket->user_id);
+            $owner = auth()->user();
+            $subject = "Ticket completado";
+            $description = "ha cambiado el estatus del ticket #$ticket->id a completado. Puedes ir a revisarlo";
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+        }
 
         return response()->json(['item' => TicketResource::make($ticket->refresh())]);
     }
