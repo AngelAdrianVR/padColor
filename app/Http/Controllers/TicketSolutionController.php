@@ -45,15 +45,12 @@ class TicketSolutionController extends Controller
             'ticket_id' =>  $request->ticketId,
         ]);
 
-        // notificar a los demas usuarios
-        $users = User::where('id', '!=', auth()->id())
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn ($user) => $user->can('Responsable de ticket') || $user->id === $ticket_solution->ticket->user_id);
-        $owner = auth()->user();
-        $description = "agregó una solución al ticket #{$ticket_solution->ticket->id}";
-        $subject = "Ticket cerrado";
-        $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket_solution->ticket->id))));
+        // notificar a creador de ticket
+        // $users = User::find($ticket_solution->ticket->user_id);
+        // $owner = auth()->user();
+        // $description = "agregó una solución al ticket #{$ticket_solution->ticket->id}";
+        // $subject = "Ticket cerrado";
+        // $users->each(fn ($user) => $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket_solution->ticket->id))));
 
         return response()->json(['item' => $ticket_solution]);
     }
