@@ -168,5 +168,6 @@ return [
         'employee_properties.job_position' => 'puesto',
         'category_id' => 'categoría',
         'branch' => 'sucursal',
+        'employee_properties.branch' => 'sucursal',
     ],
 ];
