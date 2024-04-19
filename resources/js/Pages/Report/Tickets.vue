@@ -12,13 +12,13 @@
                 <h1 class="font-bold">Reporte</h1>
                 <p class="mt-5"><b>Fecha: </b> Del {{ formatDate(startDate) }} al {{ formatDate(endDate) }}</p>
             </section>
-            <section class="mx-12 mt-5 flex justify-between">
-                <article class="w-[42%]">
+            <section class="mx-2 mt-5 flex justify-between">
+                <article class="w-[30%]">
                     <h2 class="text-primary font-bold text-xs mb-2">Sucursales con más tickets</h2>
                     <div v-for="item in getTop3Branches" :key="item.branch" class="mb-1">
                         <p class="font-bold">{{ item.branch }}</p>
                         <div class="flex items-center space-x-1 space-y-0">
-                            <div class="h-px w-[72%] bg-gray99 relative">
+                            <div class="h-px w-[85%] bg-gray99 relative">
                                 <div class="h-[3px] bg-primary absolute left-0 bottom-0"
                                     :style="{ width: item.percentage + '%' }"></div>
                             </div>
@@ -28,12 +28,20 @@
                         <p class="text-[9px] text-[#747474] leading-none">{{ companies[item.branch] }}</p>
                     </div>
                 </article>
-                <article class="w-[42%]">
+                <article>
+                    <div id="chart">
+                        <h1 class="text-primary font-bold text-xs text-center">PDC</h1>
+                        <apexchart type="pie" width="220" :options="chartOptions" :series="ticketCountsArray['Padcolor']"></apexchart>
+                        <h1 class="text-primary font-bold text-xs text-center">PIG</h1>
+                        <apexchart type="pie" width="220" :options="chartOptions" :series="ticketCountsArray['Papel']"></apexchart>
+                    </div>
+                </article>
+                <article class="w-[30%]">
                     <h2 class="text-primary font-bold text-xs mb-1">Categoría con más recurrencia</h2>
                     <div v-for="item in getTop3Categories" :key="item.category" class="mb-2">
                         <p class="font-bold">{{ item.category }}</p>
                         <div class="flex items-center space-x-1">
-                            <div class="h-px w-[72%] bg-gray99 relative">
+                            <div class="h-px w-[85%] bg-gray99 relative">
                                 <div class="h-[3px] bg-primary absolute left-0 bottom-0"
                                     :style="{ width: item.percentage + '%' }"></div>
                             </div>
@@ -74,8 +82,7 @@
             <section class="mx-5 mt-5">
                 <table class="w-full">
                     <thead>
-                        <tr
-                            class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-1 *:text-[9px]">
+                        <tr class="*:bg-primary *:text-white *:border *:border-grayD9 *:text-start *:px-1 *:text-[9px]">
                             <th>ID</th>
                             <th>Tipo de servicio</th>
                             <th>Nombre</th>
@@ -99,7 +106,8 @@
                             <td class="w-[12%]">{{ formatDateTime(item.created_at) }}</td>
                             <td class="w-[12%]">{{ item.closed_at ? formatDateTime(item.closed_at) : '-' }}</td>
                             <td>{{ item.status }}</td>
-                            <td class="w-[12%]">{{ item.solution_minutes ? convertMinutesToHours(item.solution_minutes) :  '-' }}</td>
+                            <td class="w-[12%]">{{ item.solution_minutes ? convertMinutesToHours(item.solution_minutes)
+                                : '-' }}</td>
                             <td>{{ item.priority }}</td>
                             <td>{{ item.responsible?.name ?? '-' }}</td>
                             <td class="w-[1%]">{{ item.ticket_solutions.length }}</td>
@@ -119,6 +127,25 @@ import es from 'date-fns/locale/es';
 export default {
     data() {
         return {
+            chartOptions: {
+                chart: {
+                    width: 220,
+                    type: 'pie',
+                },
+                colors: ['#25346D', '#9a9a9a'],
+                labels: ['Solicitudes', 'Incidencias'],
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            width: 320
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }]
+            },
             statuses: [
                 {
                     label: 'Abierto',
@@ -207,6 +234,21 @@ export default {
         endDate: String,
     },
     computed: {
+        ticketsByCompany() {
+            const ticketsPadcolor = this.tickets.filter(ticket => this.companies[ticket.branch] === 'Padcolor insumos gráficos');
+            const ticketsPapel = this.tickets.filter(ticket => this.companies[ticket.branch] === 'Papel, diseño y color');
+
+            const countByTypePadcolor = this.countTicketsByType(ticketsPadcolor);
+            const countByTypePapel = this.countTicketsByType(ticketsPapel);
+
+            return { Padcolor: countByTypePadcolor, Papel: countByTypePapel };
+        },
+        ticketCountsArray() {
+            return {
+                Padcolor: Object.values(this.ticketsByCompany.Padcolor),
+                Papel: Object.values(this.ticketsByCompany.Papel)
+            };
+        },
         getTop3Categories() {
             const categoriesTicketsMap = {};
 
@@ -273,6 +315,12 @@ export default {
         },
     },
     methods: {
+        countTicketsByType(tickets) {
+            return tickets.reduce((acc, ticket) => {
+                acc[ticket.ticket_type] = (acc[ticket.ticket_type] || 0) + 1;
+                return acc;
+            }, {});
+        },
         getTicketsCountByStatus(status) {
             return this.tickets.filter(item => item.status == status).length;
         },
@@ -373,8 +421,5 @@ export default {
             return result;
         },
     },
-    mounted() {
-        window.print();
-    }
 }
 </script>

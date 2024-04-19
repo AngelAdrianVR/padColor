@@ -51,8 +51,10 @@ Route::post('tickets-massive-delete', [TicketController::class, 'massiveDelete']
 Route::post('tickets/{ticket}/comment', [TicketController::class, 'comment'])->name('tickets.comment')->middleware('auth');
 Route::get('tickets-fetch-all-comments/{ticket}', [TicketController::class, 'fetchConversation'])->name('tickets.fetch-conversation')->middleware('auth');
 Route::get('tickets-fetch-history/{ticket}', [TicketController::class, 'fetchHistory'])->name('tickets.fetch-history')->middleware('auth');
+Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
 Route::get('tickets-get-by-page/{currentPage}', [TicketController::class, 'getItemsByPage'])->name('tickets.get-by-page')->middleware('auth');
-
+Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
+Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
 
 
 //Tickets-solutions routes---------------------------------------------------------------------------
@@ -65,9 +67,6 @@ Route::get('ticket-solutions-fetch-all-solutions/{ticket}', [TicketSolutionContr
 //Tickets-histories routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('ticket-histories', TicketHistoryController::class)->middleware('auth');
-Route::post('ticket-massive-delete', [TicketController::class, 'massiveDelete'])->name('tickets.massive-delete')->middleware('auth');
-Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
-Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
 
 //users routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
