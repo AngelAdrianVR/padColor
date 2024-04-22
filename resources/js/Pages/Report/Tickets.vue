@@ -12,8 +12,8 @@
                 <h1 class="font-bold">Reporte</h1>
                 <p class="mt-5"><b>Fecha: </b> Del {{ formatDate(startDate) }} al {{ formatDate(endDate) }}</p>
             </section>
-            <section class="mx-2 mt-5 flex justify-between">
-                <article class="w-[30%]">
+            <section class="mx-12 mt-5 flex justify-between">
+                <article class="w-[45%]">
                     <h2 class="text-primary font-bold text-xs mb-2">Sucursales con más tickets</h2>
                     <div v-for="item in getTop3Branches" :key="item.branch" class="mb-1">
                         <p class="font-bold">{{ item.branch }}</p>
@@ -28,15 +28,7 @@
                         <p class="text-[9px] text-[#747474] leading-none">{{ companies[item.branch] }}</p>
                     </div>
                 </article>
-                <article>
-                    <div id="chart">
-                        <h1 class="text-primary font-bold text-xs text-center">PDC</h1>
-                        <apexchart type="pie" width="220" :options="chartOptions" :series="ticketCountsArray['Padcolor']"></apexchart>
-                        <h1 class="text-primary font-bold text-xs text-center">PIG</h1>
-                        <apexchart type="pie" width="220" :options="chartOptions" :series="ticketCountsArray['Papel']"></apexchart>
-                    </div>
-                </article>
-                <article class="w-[30%]">
+                <article class="w-[45%]">
                     <h2 class="text-primary font-bold text-xs mb-1">Categoría con más recurrencia</h2>
                     <div v-for="item in getTop3Categories" :key="item.category" class="mb-2">
                         <p class="font-bold">{{ item.category }}</p>
@@ -51,7 +43,21 @@
                     </div>
                 </article>
             </section>
-            <section class="mx-12 mt-5 grid grid-cols-6 gap-x-2">
+            <section class="mx-12">
+                <div id="chart" class="flex items-center justify-around">
+                    <article>
+                        <h1 class="text-primary font-bold text-xs text-center">PDC</h1>
+                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['Padcolor']">
+                        </apexchart>
+                    </article>
+                    <article>
+                        <h1 class="text-primary font-bold text-xs text-center">PIG</h1>
+                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['Papel']">
+                        </apexchart>
+                    </article>
+                </div>
+            </section>
+            <section class="mx-12 grid grid-cols-6 gap-x-2">
                 <h2 class="text-primary font-bold text-sm text-center mb-3 col-span-full">Estado de los tickets</h2>
                 <article v-for="item in statuses" :key="item.label" class="rounded-[5px] px-2 py-[5px] text-[10px]"
                     :style="{ color: item.color, backgroundColor: item.bg }">
@@ -129,11 +135,11 @@ export default {
         return {
             chartOptions: {
                 chart: {
-                    width: 220,
+                    width: 350,
                     type: 'pie',
                 },
                 colors: ['#25346D', '#9a9a9a'],
-                labels: ['Solicitudes', 'Incidencias'],
+                labels: ['Incidencias', 'Solicitudes'],
                 responsive: [{
                     breakpoint: 480,
                     options: {
