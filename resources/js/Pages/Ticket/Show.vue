@@ -305,8 +305,8 @@ export default {
             } catch (error) {
                 console.log(error);
                 this.$notify({
-                    title: "Error de servidor",
-                    message: "No se pudo completar tu petición. Inténtalo más tarde",
+                    title: "Servidor",
+                    message: "No se pudo enviar notificación debido a problemas temporales con proveeor de correos",
                     type: "error",
                 });
             }
