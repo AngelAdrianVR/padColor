@@ -47,12 +47,18 @@
                 <div id="chart" class="flex items-center justify-around">
                     <article>
                         <h1 class="text-primary font-bold text-xs text-center">PDC</h1>
-                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['Padcolor']">
+                        <apexchart type="pie" width="350" :options="chartOptions"
+                            :series="ticketCountsArray['Padcolor']">
                         </apexchart>
                     </article>
                     <article>
                         <h1 class="text-primary font-bold text-xs text-center">PIG</h1>
                         <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['Papel']">
+                        </apexchart>
+                    </article>
+                    <article>
+                        <h1 class="text-primary font-bold text-xs text-center">General</h1>
+                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['General']">
                         </apexchart>
                     </article>
                 </div>
@@ -204,6 +210,7 @@ export default {
                 'Puebla': 'Padcolor insumos gráficos',
                 'Monterrey': 'Padcolor insumos gráficos',
                 'Federalismo': 'Padcolor insumos gráficos',
+                'General': 'General',
             },
             // kpis simples
             simpleKpis: [
@@ -243,16 +250,19 @@ export default {
         ticketsByCompany() {
             const ticketsPadcolor = this.tickets.filter(ticket => this.companies[ticket.branch] === 'Padcolor insumos gráficos');
             const ticketsPapel = this.tickets.filter(ticket => this.companies[ticket.branch] === 'Papel, diseño y color');
+            const ticketsGeneral = this.tickets.filter(ticket => this.companies[ticket.branch] === 'General');
 
             const countByTypePadcolor = this.countTicketsByType(ticketsPadcolor);
             const countByTypePapel = this.countTicketsByType(ticketsPapel);
+            const countByTypeGeneral = this.countTicketsByType(ticketsGeneral);
 
-            return { Padcolor: countByTypePadcolor, Papel: countByTypePapel };
+            return { Padcolor: countByTypePadcolor, Papel: countByTypePapel, General: countByTypeGeneral };
         },
         ticketCountsArray() {
             return {
                 Padcolor: Object.values(this.ticketsByCompany.Padcolor),
-                Papel: Object.values(this.ticketsByCompany.Papel)
+                Papel: Object.values(this.ticketsByCompany.Papel),
+                General: Object.values(this.ticketsByCompany.General)
             };
         },
         getTop3Categories() {
@@ -322,10 +332,17 @@ export default {
     },
     methods: {
         countTicketsByType(tickets) {
-            return tickets.reduce((acc, ticket) => {
+            const ticketCounts = tickets.reduce((acc, ticket) => {
                 acc[ticket.ticket_type] = (acc[ticket.ticket_type] || 0) + 1;
                 return acc;
             }, {});
+
+            // Mover el tipo "Soporte o incidencia" al principio del objeto
+            const sortedTicketCounts = {};
+            sortedTicketCounts['Soporte o incidencia'] = ticketCounts['Soporte o incidencia'] || 0;
+            sortedTicketCounts['Solicitud o servicio'] = ticketCounts['Solicitud o servicio'] || 0;
+
+            return sortedTicketCounts;
         },
         getTicketsCountByStatus(status) {
             return this.tickets.filter(item => item.status == status).length;

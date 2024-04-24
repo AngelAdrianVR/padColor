@@ -259,11 +259,17 @@ class TicketController extends Controller
             $additional = [
                 'opened_at' => now()->toDateTimeString(),
                 'closed_at' => null,
+                'paused_at' => null,
             ];
-        } elseif (request('status') == 'En espera de 3ro') {
+        } elseif (request('status') == 'En espera de 3ro' || request('status') == 'En espera') {
             $additional = [
                 'solution_minutes' => $ticket->getSolutionMinutes(),
                 'paused_at' => now()->toDateTimeString(),
+            ];
+        } elseif (request('status') == 'En proceso' && $ticket->paused_at) {
+            $additional = [
+                'opened_at' => now()->toDateTimeString(),
+                'paused_at' => null,
             ];
         }
 

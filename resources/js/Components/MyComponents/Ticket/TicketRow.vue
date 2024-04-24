@@ -37,7 +37,7 @@
                 <el-select @change="updateStatus" v-model="status" placeholder="Seleccione"
                     no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias"
                     size="small" class="!w-full">
-                    <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
+                    <el-option v-for="item in statuses.filter(status => status.show)" :key="item" :label="item.label" :value="item.label">
                         <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2"
                             style="float: left">
                             <span v-html="item.icon"></span>
@@ -82,32 +82,37 @@ export default {
                     label: 'Abierto',
                     color: 'text-[#0355B5]',
                     icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
-
-                },
-                {
-                    label: 'En espera',
-                    color: 'text-[#FD8827]',
-                    icon: '<i class="fa-regular fa-clock text-[#FD8827]"></i>',
-                },
-                {
-                    label: 'En espera de 3ro',
-                    color: 'text-[#B927FD]',
-                    icon: '<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
-                },
-                {
-                    label: 'Completado',
-                    color: 'text-[#3F9C30]',
-                    icon: '<i class="fa-solid fa-check text-[#3F9C30]"></i>',
-                },
-                {
-                    label: 'Re-abierto',
-                    color: 'text-[#FD4646]',
-                    icon: '<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
+                    show: ['Abierto'].includes(this.ticket.status)
                 },
                 {
                     label: 'En proceso',
                     color: 'text-[#3D3D3D]',
                     icon: '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D]"></i>',
+                    show: ['En proceso', 'En espera', 'En espera de 3ro', 'Abierto', 'Re-abierto'].includes(this.ticket.status)
+                },
+                {
+                    label: 'En espera',
+                    color: 'text-[#FD8827]',
+                    icon: '<i class="fa-regular fa-clock text-[#FD8827]"></i>',
+                    show: ['En espera', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.status)
+                },
+                {
+                    label: 'En espera de 3ro',
+                    color: 'text-[#B927FD]',
+                    icon: '<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
+                    show: ['En espera de 3ro', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.status)
+                },
+                {
+                    label: 'Completado',
+                    color: 'text-[#3F9C30]',
+                    icon: '<i class="fa-solid fa-check text-[#3F9C30]"></i>',
+                    show: ['Completado', 'En espera', 'En espera de 3ro', 'En proceso'].includes(this.ticket.status)
+                },
+                {
+                    label: 'Re-abierto',
+                    color: 'text-[#FD4646]',
+                    icon: '<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
+                    show: ['Re-abierto', 'Completado'].includes(this.ticket.status)
                 },
             ],
         }
@@ -121,6 +126,14 @@ export default {
     },
     emits: ['selected', 'unselected'],
     methods: {
+        setShowPropStatuses() {
+            this.statuses[0].show = ['Abierto'].includes(this.ticket.status);
+            this.statuses[1].show = ['En proceso', 'En espera', 'En espera de 3ro', 'Abierto', 'Re-abierto'].includes(this.ticket.status);
+            this.statuses[2].show = ['En espera', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.status);
+            this.statuses[3].show = ['En espera de 3ro', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.status);
+            this.statuses[4].show = ['Completado', 'En espera', 'En espera de 3ro', 'En proceso'].includes(this.ticket.status);
+            this.statuses[5].show = ['Re-abierto', 'Completado'].includes(this.ticket.status);
+        },
         getFolio(ticket) {
             if (ticket.ticket_type == 'Soporte o incidencia') {
                 return 'GPCI' + String(ticket.id).padStart(6, '0');
@@ -160,6 +173,7 @@ export default {
 
                     this.ticket.status = response.data.item.status;
                     this.ticket.updated_at = response.data.item.updated_at;
+                    this.setShowPropStatuses();
 
                     this.$notify({
                         title: "Correcto",

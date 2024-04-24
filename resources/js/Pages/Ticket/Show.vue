@@ -51,7 +51,7 @@
                                 :disabled="!$page.props.auth.user.permissions.includes('Editar status de tickets')"
                                 no-data-text="No hay opciones registradas"
                                 no-match-text="No se encontraron coincidencias">
-                                <el-option v-for="item in statuses" :key="item" :label="item.label" :value="item.label">
+                                <el-option v-for="item in statuses.filter(status => status.show)" :key="item" :label="item.label" :value="item.label">
                                     <p class="flex items-center justify-center size-5 bg-white rounded-full text-xs mt-2"
                                         style="float: left">
                                         <span v-html="item.icon"></span>
@@ -79,19 +79,18 @@
                         <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66">
                             Tiempo de solución:
-                            <span v-if="ticket.data.status == 'Completado' || ticket.data.status == 'En espera de 3ro'"
+                            <span v-if="ticket.data.status == 'Completado' || ticket.data.status == 'En espera de 3ro' || ticket.data.status == 'En espera'"
                                 class="text-black ml-1">
                                 {{ convertMinutesToHours(ticket.data.solution_minutes ?? 0) }}</span>
                             <span v-else class="text-black ml-1">{{ tiempoTranscurrido(ticket.data.opened_at) }}</span>
                         </p>
                     </div>
                 </div>
-
-                <p class="text-gray66  py-2">Archivos adjuntos</p>
+                <p class="text-gray66 px-2 py-2">Archivos adjuntos</p>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2" v-if="ticket.data.media?.length > 0">
                     <FileView v-for="file in ticket.data.media" :key="file" :file="file" />
                 </div>
-                <p v-else class=" text-gray-400 mx-4 text-xs">No hay archivos adjuntos</p>
+                <p v-else class=" text-gray-400 mx-6 text-xs">No hay archivos adjuntos</p>
             </div>
 
             <el-tabs v-model="activeTab" class="lg:mx-20 mt-10">
@@ -142,7 +141,7 @@ import Solutions from "./Tabs/Solutions.vue";
 import Comments from "./Tabs/Comments.vue";
 import Historical from "./Tabs/Historical.vue";
 import axios from 'axios';
-import { differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import { differenceInMinutes } from 'date-fns';
 
 export default {
     data() {
@@ -154,32 +153,37 @@ export default {
                     label: 'Abierto',
                     color: 'text-[#0355B5]',
                     icon: '<i class="fa-solid fa-arrow-up text-[#0355B5]"></i>',
-
-                },
-                {
-                    label: 'En espera',
-                    color: 'text-[#FD8827]',
-                    icon: '<i class="fa-regular fa-clock text-[#FD8827]"></i>',
-                },
-                {
-                    label: 'En espera de 3ro',
-                    color: 'text-[#B927FD]',
-                    icon: '<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
-                },
-                {
-                    label: 'Completado',
-                    color: 'text-[#3F9C30]',
-                    icon: '<i class="fa-solid fa-check text-[#3F9C30]"></i>',
-                },
-                {
-                    label: 'Re-abierto',
-                    color: 'text-[#FD4646]',
-                    icon: '<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
+                    show: ['Abierto'].includes(this.ticket.data.status)
                 },
                 {
                     label: 'En proceso',
                     color: 'text-[#3D3D3D]',
                     icon: '<i class="fa-solid fa-arrow-right-to-bracket text-[#3D3D3D]"></i>',
+                    show: ['En proceso', 'En espera', 'En espera de 3ro', 'Abierto', 'Re-abierto'].includes(this.ticket.data.status)
+                },
+                {
+                    label: 'En espera',
+                    color: 'text-[#FD8827]',
+                    icon: '<i class="fa-regular fa-clock text-[#FD8827]"></i>',
+                    show: ['En espera', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.data.status)
+                },
+                {
+                    label: 'En espera de 3ro',
+                    color: 'text-[#B927FD]',
+                    icon: '<i class="fa-regular fa-hourglass-half text-[#B927FD]"></i>',
+                    show: ['En espera de 3ro', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.data.status)
+                },
+                {
+                    label: 'Completado',
+                    color: 'text-[#3F9C30]',
+                    icon: '<i class="fa-solid fa-check text-[#3F9C30]"></i>',
+                    show: ['Completado', 'En espera', 'En espera de 3ro', 'En proceso'].includes(this.ticket.data.status)
+                },
+                {
+                    label: 'Re-abierto',
+                    color: 'text-[#FD4646]',
+                    icon: '<i class="fa-solid fa-rotate-right text-[#FD4646]"></i>',
+                    show: ['Re-abierto', 'Completado'].includes(this.ticket.data.status)
                 },
             ],
         }
@@ -201,6 +205,14 @@ export default {
         solutions_count: Number,
     },
     methods: {
+        setShowPropStatuses() {
+            this.statuses[0].show = ['Abierto'].includes(this.ticket.data.status);
+            this.statuses[1].show = ['En proceso', 'En espera', 'En espera de 3ro', 'Abierto', 'Re-abierto'].includes(this.ticket.data.status);
+            this.statuses[2].show = ['En espera', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.data.status);
+            this.statuses[3].show = ['En espera de 3ro', 'Abierto', 'Re-abierto', 'En proceso'].includes(this.ticket.data.status);
+            this.statuses[4].show = ['Completado', 'En espera', 'En espera de 3ro', 'En proceso'].includes(this.ticket.data.status);
+            this.statuses[5].show = ['Re-abierto', 'Completado'].includes(this.ticket.data.status);
+        },
         convertMinutesToHours(minutes) {
             // Calcular días, horas y minutos
             const days = Math.floor(minutes / (60 * 24));
@@ -287,13 +299,13 @@ export default {
                 const response = await axios.put(route('tickets.update-status', this.ticket.data.id), { status: this.status });
 
                 if (response.status === 200) {
-
                     this.ticket.data.status = response.data.item.status;
                     this.ticket.data.updated_at = response.data.item.updated_at;
                     this.ticket.data.closed_at = response.data.item.closed_at;
                     this.ticket.data.puased_at = response.data.item.paused_at;
                     this.ticket.data.opened_at = response.data.item.opened_at;
                     this.ticket.data.solution_minutes = response.data.item.solution_minutes;
+                    this.setShowPropStatuses();
 
                     this.$notify({
                         title: "Correcto",
