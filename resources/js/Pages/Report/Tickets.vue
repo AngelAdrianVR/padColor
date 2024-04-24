@@ -43,22 +43,22 @@
                     </div>
                 </article>
             </section>
-            <section class="mx-12">
+            <section class="mx-2">
                 <div id="chart" class="flex items-center justify-around">
                     <article>
                         <h1 class="text-primary font-bold text-xs text-center">PDC</h1>
-                        <apexchart type="pie" width="350" :options="chartOptions"
+                        <apexchart type="pie" width="340" :options="chartOptions"
                             :series="ticketCountsArray['Padcolor']">
                         </apexchart>
                     </article>
                     <article>
                         <h1 class="text-primary font-bold text-xs text-center">PIG</h1>
-                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['Papel']">
+                        <apexchart type="pie" width="340" :options="chartOptions" :series="ticketCountsArray['Papel']">
                         </apexchart>
                     </article>
                     <article>
                         <h1 class="text-primary font-bold text-xs text-center">General</h1>
-                        <apexchart type="pie" width="350" :options="chartOptions" :series="ticketCountsArray['General']">
+                        <apexchart type="pie" width="340" :options="chartOptions" :series="ticketCountsArray['General']">
                         </apexchart>
                     </article>
                 </div>
@@ -141,7 +141,7 @@ export default {
         return {
             chartOptions: {
                 chart: {
-                    width: 350,
+                    width: 340,
                     type: 'pie',
                 },
                 colors: ['#25346D', '#9a9a9a'],
