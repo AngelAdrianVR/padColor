@@ -83,7 +83,7 @@ class TicketController extends Controller
             $user = User::find($request->responsible_id);
             $owner = auth()->user();
             $subject = "Nuevo ticket";
-            $description = "ha creado un nuevo ticket";
+            $description = "ha creado un nuevo ticket (#$ticket->id)";
             $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
         }
 
