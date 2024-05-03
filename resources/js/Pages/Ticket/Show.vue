@@ -312,14 +312,15 @@ export default {
                         message: "Se ha actualizado el estatus",
                         type: "success",
                     });
+                    this.ticketId = this.ticket.data.id;
                     this.fetchHistorical();
                 }
             } catch (error) {
-                console.log(error);
+                console.log('error', error);
                 this.$notify({
-                    title: "Servidor",
-                    message: "No se pudo enviar notificación debido a problemas temporales con proveeor de correos",
-                    type: "error",
+                   title: "Servidor",
+                   message: "No se pudo enviar notificación al correo " + this.ticket.data.user?.email + ", perteneciente a " + this.ticket.data.user?.name + ". Revisar si es correo válido",
+                   type: "error",
                 });
             }
         },

@@ -93,7 +93,7 @@ class TicketController extends Controller
 
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path', 'category:id,name')->find($ticket_id));
+        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,email,profile_photo_path', 'category:id,name')->find($ticket_id));
 
         return inertia('Ticket/Show', compact('ticket'));
     }
