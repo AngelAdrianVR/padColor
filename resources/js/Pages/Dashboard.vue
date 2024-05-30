@@ -320,7 +320,7 @@ export default {
             const percentage = (resolvedBeforeExpiration.length / this.tickets.filter(item => item.ticket_solutions.length).length) * 100;
 
             if (percentage)
-                return percentage + '%'; // Return the percentage or 0 if there are no tickets
+                return Math.round(percentage, 2) + '%'; // Return the percentage or 0 if there are no tickets
             else
                 return 'Sin información';
         },

@@ -320,7 +320,7 @@ export default {
         },
     },
     mounted() {
-        this.form.expired_date = this.calculateBusinessDays(3);
+        this.form.expired_date = this.calculateBusinessDays(5);
     }
 }
 </script>
