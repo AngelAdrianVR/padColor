@@ -10,8 +10,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $tickets = Ticket::with(['category', 'ticketSolutions'])->get();
-        $categories = Category::all();
+        $tickets = Ticket::with(['category:id,name', 'ticketSolutions:id,created_at'])
+            ->get(['id', 'status', 'priority', 'category_id', 'created_at', 'solution_minutes', 'expired_date', 'branch']);
+        $categories = Category::all(['id', 'name']);
 
         return inertia('Dashboard', compact('tickets', 'categories'));
     }

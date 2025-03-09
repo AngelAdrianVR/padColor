@@ -1,7 +1,6 @@
 <template>
     <AppLayout title="Detalles usuario">
         <header class="lg:px-9 px-1 mt-3">
-
             <section class="flex items-center justify-between mt-2">
                 <h1 class="font-bold text-base">Detalles de usuario</h1>
                 <div class="flex items-center space-x-2">
@@ -120,22 +119,10 @@ import FileUploader from "@/Components/MyComponents/FileUploader.vue";
 import Back from "@/Components/MyComponents/Back.vue";
 import InputFilePreview from "@/Components/MyComponents/InputFilePreview.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
-import { useForm } from "@inertiajs/vue3";
 import axios from "axios";
 
 export default {
     data() {
-        const form = useForm({
-            name: null,
-            email: null,
-            phone: null,
-            image: null,
-            employee_properties: {
-                department: null,
-                job_position: null,
-            },
-        });
-
         return {
             form,
             loading: false,
@@ -191,23 +178,6 @@ export default {
             } finally {
                 this.loading = false;
             }
-        },
-        store() {
-            this.form.post(route("users.store"), {
-                onSuccess: () => {
-                    this.$notify({
-                        title: "Correcto",
-                        message: "Se ha agregado el usuario",
-                        type: "success",
-                    });
-                },
-            });
-        },
-        saveImage(image) {
-            this.form.image = image;
-        },
-        clearImage() {
-            this.form.image = null;
         },
     }
 }
