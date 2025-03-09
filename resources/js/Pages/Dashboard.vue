@@ -144,7 +144,6 @@ export default {
     props: {
         tickets: Array,
         categories: Array,
-        filter_categories: Array,
     },
     components: {
         AppLayout,
