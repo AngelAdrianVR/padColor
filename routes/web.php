@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketHistoryController;
@@ -103,6 +104,10 @@ Route::post('categories/store', [SettingController::class, 'storeCategory'])->mi
 //------------------------------------------------------------------------------------------
 Route::resource('categories', CategoryController::class)->middleware('auth');
 
+
+//production routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('productions', ProductionController::class)->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------
