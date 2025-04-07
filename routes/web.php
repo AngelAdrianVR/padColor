@@ -3,6 +3,8 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MachineController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
@@ -108,6 +110,19 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //production routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
+Route::get('productions-get-all', [ProductionController::class, 'getAll'])->name('productions.get-all')->middleware('auth');
+
+
+//products routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('products', ProductController::class)->middleware('auth');
+Route::get('products-get-all', [ProductController::class, 'getAll'])->name('products.get-all')->middleware('auth');
+
+
+//machines routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('machines', MachineController::class)->middleware('auth');
+Route::get('machines-get-all', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------

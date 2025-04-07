@@ -19,9 +19,28 @@ class Production extends Model
         'notes',
         'product_id',
         'machine_id',
+        'user_id',
+        'estimated_date',
     ];
 
     protected $casts = [
         'materials' => 'array',
+        'estimated_date' => 'date',
     ];
+
+    //realciones
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+    
+    public function machine()
+    {
+        return $this->belongsTo(Machine::class);
+    }
 }

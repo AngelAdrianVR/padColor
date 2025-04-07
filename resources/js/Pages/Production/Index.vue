@@ -6,7 +6,6 @@
                     <el-tab-pane name="1">
                         <template #label>
                             <div class="flex items-center">
-                                <i class="fa-solid fa-user-tag mr-1"></i>
                                 <span>Home</span>
                             </div>
                         </template>
@@ -15,7 +14,6 @@
                     <el-tab-pane name="2">
                         <template #label>
                             <div class="flex items-center">
-                                <i class="fa-solid fa-user-tag mr-1"></i>
                                 <span>Gestión de producción</span>
                             </div>
                         </template>
@@ -24,7 +22,6 @@
                     <el-tab-pane name="3">
                         <template #label>
                             <div class="flex items-center">
-                                <i class="fa-solid fa-user-gear mr-1"></i>
                                 <span>Nueva producción</span>
                             </div>
                         </template>

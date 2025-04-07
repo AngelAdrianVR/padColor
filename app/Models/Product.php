@@ -12,8 +12,8 @@ class Product extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
-        'folio',
         'name',
+        'code',
         'description',
         'season',
         'stock',
