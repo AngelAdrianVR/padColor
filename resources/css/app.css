@@ -36,7 +36,7 @@ body {
 
 @layer components {
     .input {
-        @apply h-9 w-full bg-transparent rounded-full border placeholder:text-gray99 border-[#D9D9D9] text-gray-600 text-sm focus:ring-0 focus:border-primary block p-2.5 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:placeholder:text-gray-600;
+        @apply h-8 w-full bg-transparent rounded-full border placeholder:text-gray99 border-[#D9D9D9] text-gray-600 text-sm focus:ring-0 focus:border-primary block p-2.5 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:placeholder:text-gray-600;
     }
 
     .textarea {

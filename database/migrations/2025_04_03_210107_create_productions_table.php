@@ -19,6 +19,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('machine_id')->constrained('machines')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->date('estimated_date')->nullable();
             $table->timestamps();
         });
     }
