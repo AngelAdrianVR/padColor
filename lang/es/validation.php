@@ -169,5 +169,10 @@ return [
         'category_id' => 'categoría',
         'branch' => 'sucursal',
         'employee_properties.branch' => 'sucursal',
+        'product_id' => 'producto',
+        'machine_id' => 'máquina',
+        'season' => 'temporada',
+        'station' => 'estación',
+        'quantity' => 'cantidad',
     ],
 ];

@@ -122,7 +122,15 @@ export default {
                     dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver configuraciones'),
                 },
-
+                {
+                    label: 'SwAssistant',
+                    icon: '<i class="fa-solid fa-gears text-lg"></i>',
+                    route: route('productions.index'),
+                    active: route().current('productions.*'),
+                    options: [],
+                    dropdown: false,
+                    show: this.$page.props.auth.user.permissions.includes('Ver producción'),
+                },
                 //     label: 'Comunidad',
                 //     icon: '<i class="fa-solid fa-people-roof text-sm mr-2"></i>',
                 //     // route: route('posts.index'),
