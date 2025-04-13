@@ -62,10 +62,18 @@ class ProductionController extends Controller
         //
     }
 
-    public function getAll()
+    public function getByPage()
     {
-        $items = Production::with(['user', 'product', 'machine'])->latest('id')->get();
+        $page = request('page', 1);
+        $perPage = 30;
+        $offset = ($page - 1) * $perPage;
+        $items = Production::with(['user', 'product', 'machine'])
+            ->latest('id')
+            ->offset($offset)
+            ->limit($perPage)
+            ->get();
+        $total = Production::count();
 
-        return response()->json(compact('items'));
+        return response()->json(compact('items', 'total'));
     }
 }

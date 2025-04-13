@@ -110,7 +110,7 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //production routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
-Route::get('productions-get-all', [ProductionController::class, 'getAll'])->name('productions.get-all')->middleware('auth');
+Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
 
 
 //products routes---------------------------------------------------------------------------
