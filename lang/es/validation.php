@@ -174,5 +174,10 @@ return [
         'season' => 'temporada',
         'station' => 'estación',
         'quantity' => 'cantidad',
+        'code' => 'código',
+        'measure_unit' => 'unidad de medida',
+        'height' => 'alto',
+        'width' => 'ancho',
+        'large' => 'largo',
     ],
 ];
