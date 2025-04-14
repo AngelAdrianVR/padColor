@@ -1,8 +1,8 @@
 <template>
     <div class="mb-4">
-        <form @submit.prevent="store"
+        <form @submit.prevent="update"
             class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
-            <h1 class="font-semibold ml-2 col-span-full">Crear orden de producción</h1>
+            <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
             <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
             <div>
                 <InputLabel value="N° de orden*" />
@@ -137,7 +137,7 @@
             <div>
                 <InputLabel value="Caras" />
                 <el-select v-model="form.faces" placeholder="Selecciona el número de caras" class="!w-full">
-                    <el-option v-for="face in [0,1,2]" :key="face" :label="face" :value="face" />
+                    <el-option v-for="face in [0, 1, 2]" :key="face" :label="face" :value="face" />
                 </el-select>
                 <InputError :message="form.errors.faces" />
             </div>
@@ -179,12 +179,13 @@
                 <el-input v-model="tps" placeholder="Total de tamaños de impresión" disabled />
             </div>
             <div class="col-span-2 text-right mt-4 space-x-2">
-                <PrimaryButton type="button" @click="form.reset()" :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
-                    Limpiar formulario
+                <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', {currentTab: 2}))"
+                    :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
+                    Cancelar
                 </PrimaryButton>
                 <PrimaryButton :disabled="form.processing">
                     <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                    <span>Crear</span>
+                    <span>Guardar cambios</span>
                 </PrimaryButton>
             </div>
         </form>
@@ -197,31 +198,30 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import { format } from "date-fns";
 
 export default {
-    name: 'CreateProduction',
+    name: 'EditeProduction',
     data() {
         const form = useForm({
-            folio: null,
-            type: 'N',
-            client: 'PadColor',
-            changes: null,
-            season: null,
-            station: null,
-            quantity: null,
-            materials: null,
-            notes: null,
-            product_id: null,
-            machine_id: null,
-            material: null,
-            width: null,
-            gauge: null,
-            large: null,
-            look: null,
-            faces: null,
-            dfi: null,
-            start_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
+            folio: this.production.folio,
+            type: this.production.type,
+            client: this.production.client,
+            changes: this.production.changes,
+            season: this.production.season,
+            station: this.production.station,
+            quantity: this.production.quantity,
+            materials: this.production.materials,
+            notes: this.production.notes,
+            product_id: this.production.product_id,
+            machine_id: this.production.machine_id,
+            material: this.production.material,
+            width: this.production.width,
+            gauge: this.production.gauge,
+            large: this.production.large,
+            look: this.production.look,
+            faces: this.production.faces,
+            dfi: this.production.dfi,
+            start_date: this.production.start_date,
             estimated_date: null,
         });
 
@@ -380,14 +380,15 @@ export default {
         PrimaryButton,
     },
     props: {
+        production: Object,
     },
     methods: {
-        store() {
-            this.form.post(route('productions.store'), {
+        update() {
+            this.form.put(route('productions.update'), {
                 onSuccess: () => {
                     this.form.reset();
                     this.$notify({
-                        title: 'Orden de producción creada',
+                        title: 'Orden de producción actualizada',
                         message: '',
                         type: 'success',
                     });

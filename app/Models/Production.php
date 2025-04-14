@@ -20,12 +20,14 @@ class Production extends Model
         'product_id',
         'machine_id',
         'user_id',
+        'start_date',
         'estimated_date',
     ];
 
     protected $casts = [
         'materials' => 'array',
         'estimated_date' => 'date',
+        'start_date' => 'date',
     ];
 
     //realciones

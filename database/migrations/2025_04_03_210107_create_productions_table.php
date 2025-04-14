@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('machine_id')->constrained('machines')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->date('estimated_date')->nullable();
+            $table->date('start_date')->nullable();
             $table->timestamps();
         });
     }
