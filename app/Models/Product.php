@@ -16,9 +16,16 @@ class Product extends Model implements HasMedia
         'code',
         'description',
         'season',
+        'branch',
+        'measure_unit',
+        'width',
+        'large',
+        'height',
+        'material',
         'stock',
         'min_stock',
         'max_stock',
         'price',
+        'created_at'
     ];
 }

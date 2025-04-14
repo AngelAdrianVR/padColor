@@ -117,6 +117,8 @@ Route::get('productions-get-by-page', [ProductionController::class, 'getByPage']
 //------------------------------------------------------------------------------------------
 Route::resource('products', ProductController::class)->middleware('auth');
 Route::get('products-get-all', [ProductController::class, 'getAll'])->name('products.get-all')->middleware('auth');
+Route::get('products-clone/{product}', [ProductController::class, 'clone'])->name('products.clone')->middleware('auth');
+Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
 
 
 //machines routes---------------------------------------------------------------------------
