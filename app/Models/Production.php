@@ -16,12 +16,18 @@ class Production extends Model
         'station',
         'quantity',
         'materials',
+        'material',
+        'width',
+        'large',
+        'dfi',
+        'faces',
         'notes',
         'product_id',
         'machine_id',
         'user_id',
         'start_date',
         'estimated_date',
+        'current_quantity',
     ];
 
     protected $casts = [

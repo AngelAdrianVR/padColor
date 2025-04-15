@@ -14,8 +14,14 @@ return new class extends Migration
             $table->string('client');
             $table->string('season')->nullable();
             $table->string('station');
+            $table->string('dfi')->nullable();
+            $table->unsignedSmallInteger('faces')->nullable();
             $table->unsignedFloat('quantity', 11, 2);
+            $table->unsignedFloat('current_quantity', 11, 2);
+            $table->unsignedFloat('width', 8, 2)->nullable();
+            $table->unsignedFloat('large', 8, 2)->nullable();
             $table->json('materials')->nullable();
+            $table->string('material')->nullable();
             $table->text('notes')->nullable();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('machine_id')->constrained('machines')->cascadeOnDelete();

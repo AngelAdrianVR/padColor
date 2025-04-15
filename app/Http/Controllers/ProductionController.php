@@ -36,7 +36,7 @@ class ProductionController extends Controller
 
         // cambiar un poco el folio
         $lastProductionId = Production::latest('id')->first()?->id ?? 0;
-        $validated['folio'] = $request->type . $lastProductionId+1 . '-' . today()->format('dmY');
+        $validated['folio'] = $request->type . $lastProductionId + 1 . '-' . today()->format('dmY');
         $validated['user_id'] = auth()->id();
 
         $production = Production::create($validated);
@@ -57,6 +57,18 @@ class ProductionController extends Controller
         //
     }
 
+    public function updateStation(Request $request, Production $production)
+    {
+        $production->station = $request->station;
+        $production->save();
+    }
+
+    public function updateMachine(Request $request, Production $production)
+    {
+        $production->machine_id = $request->machine_id;
+        $production->save();
+    }
+
     public function destroy(Production $production)
     {
         //
@@ -65,14 +77,30 @@ class ProductionController extends Controller
     public function getByPage()
     {
         $page = request('page', 1);
+        $search = request('search', null);
+
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
-        $items = Production::with(['user', 'product', 'machine'])
-            ->latest('id')
-            ->offset($offset)
+
+        $query = Production::with(['user', 'product', 'machine'])
+            ->latest('id');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('folio', 'like', "%{$search}%")
+                    ->orWhere('client', 'like', "%{$search}%")
+                    ->orWhereHas('product', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('season', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $items = $query->offset($offset)
             ->limit($perPage)
             ->get();
-        $total = Production::count();
+
+        $total = $search ? $query->count() : Production::count();
 
         return response()->json(compact('items', 'total'));
     }

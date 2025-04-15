@@ -232,6 +232,7 @@ export default {
             fetchingProducts: false,
             fetchingMachines: false,
             // calculos
+            dfh: null,
             dhf: null,
             pps: null,
             sheets: null,
