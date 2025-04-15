@@ -1,7 +1,6 @@
 <template>
     <div class="min-h-[80vh]">
-        <Loading v-if="fetching" />
-        <div v-else>
+        <div>
             <h1 class="font-bold">Ordenes de producción</h1>
             <!-- Buscador -->
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-4">
@@ -28,17 +27,32 @@
                 <el-pagination layout="total, prev, pager, next" size="small" v-model:page-size="pageSize"
                     v-model:current-page="currentPage" :total="total" @current-change="handleCurrentChange"
                     class="ml-2" />
-                <el-table :data="productions" @row-click="handleRowClick" max-height="670" style="width: 100%"
+                <Loading v-if="fetching" />
+                <el-table v-else :data="productions" @row-click="handleRowClick" max-height="670" style="width: 100%"
                     class="mt-1" :row-class-name="tableRowClassName">
                     <!-- <el-table-column type="selection" width="45" /> -->
                     <el-table-column prop="folio" label="N° Orden" />
                     <el-table-column prop="product.name" label="Producto" />
                     <el-table-column prop="product.season" label="Temporada" />
-                    <el-table-column prop="quantity" label="Cantidad solicitada" />
-                    <el-table-column prop="client" label="Cliente" />
-                    <el-table-column prop="station" label="Progreso">
+                    <el-table-column prop="quantity" label="Cantidad solicitada">
                         <template #default="scope">
-                            <b>{{ scope.row.station }}</b>
+                            {{ scope.row.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="client" label="Cliente" />
+                    <el-table-column prop="station" label="Progreso" width="160">
+                        <template #default="scope">
+                            <div class="flex items-center space-x-2">
+                                <div class="rounded-full size-6 flex items-center justify-center"
+                                    :style="{ backgroundColor: stations.find(s => s.name === scope.row.station)?.light, color: stations.find(s => s.name === scope.row.station)?.dark }"
+                                    v-html="stations.find(s => s.name === scope.row.station)?.icon"></div>
+                                <p>{{ scope.row.station }}</p>
+                            </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="current_quantity" label="Cantidad actual">
+                        <template #default="scope">
+                            {{ scope.row.current_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
                         </template>
                     </el-table-column>
                     <el-table-column prop="notes" label="Notas" width="160">
@@ -138,16 +152,47 @@
                     <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
                         :style="{ backgroundColor: stations.find(s => s.name === selectedProduction.station)?.light, color: stations.find(s => s.name === selectedProduction.station)?.dark }"
                         v-html="stations.find(s => s.name === selectedProduction.station)?.icon"></div>
-                    <el-select v-model="selectedProduction.station" placeholder="Selecciona el progreso actual"
-                        class="!w-2/3">
+                    <el-select @change="updateStation" v-model="selectedProduction.station" class="!w-2/3">
                         <el-option v-for="station in stations" :key="station" :label="station.name"
                             :value="station.name" />
                     </el-select>
                 </div>
                 <p class="text-[#464646]">Máquina:</p>
-                <p class="col-span-2">{{ selectedProduction.machine.name }}</p>
+                <el-select @change="updateMachine" v-model="selectedProduction.machine.id" class="col-span-2 !w-2/3">
+                    <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                        :value="machine.id" />
+                </el-select>
+                <p class="text-[#464646]">Cantidad actual:</p>
+                <p class="col-span-2">{{ selectedProduction.current_quantity }}</p>
                 <p class="text-[#464646]">Notas:</p>
                 <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes }}</p>
+            </div>
+            <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
+            <div class="text-sm grid grid-cols-3 gap-2 mt-3">
+                <p class="text-[#464646]">Material:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Dimensiones de la hoja:</p>
+                <p class="col-span-2">{{ selectedProduction.width ?? '-' }} x {{ selectedProduction.large ?? '-' }}</p>
+                <p class="text-[#464646]">Dimensiones de impresión:</p>
+                <p class="col-span-2">{{ selectedProduction.dfi }}</p>
+                <p class="text-[#464646]">Caras:</p>
+                <p class="col-span-2">{{ selectedProduction.faces }}</p>
+                <p class="text-[#464646]">Pz/H:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Hojas:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Ajuste:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">H/A:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">P/F:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Total de hojas:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Ta/Im:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="text-[#464646]">Total Ta/Im:</p>
+                <p class="col-span-2">{{ selectedProduction.material }}</p>
             </div>
         </template>
     </DialogModal>
@@ -276,6 +321,7 @@ export default {
                 },
 
             ],
+            machines: [],
         }
     },
     components: {
@@ -289,17 +335,19 @@ export default {
             this.fetchProductions();
         },
         handleSearch() {
-            this.search = this.searchTemp;
-            this.searchTemp = null;
-            // if (this.search) {
-            //     this.fetchMatches();
-            // } else {
-            //     this.showAllUsers();
-            // }
+            if (this.searchTemp) {
+                this.search = this.searchTemp;
+                this.searchTemp = null;
+                if (this.search) {
+                    this.currentPage = 1;
+                    this.fetchProductions();
+                }
+            }
         },
         handleTagClose() {
             this.search = null;
-            // this.showAllUsers();
+            this.currentPage = 1;
+            this.fetchProductions();
         },
         handleRowClick(row) {
             this.showDetails = true;
@@ -318,10 +366,41 @@ export default {
                 this.$inertia.get(route('productions.' + commandName, rowId));
             }
         },
+        async updateStation() {
+            try {
+                const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
+                    { station: this.selectedProduction.station });
+                if (response.status === 200) {
+                    this.$notify({
+                        title: "Progreso actualizado",
+                        type: "success",
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating station:', error);
+            }
+        },
+        async updateMachine() {
+            try {
+                const response = await axios.put(route('productions.update-machine', this.selectedProduction.id),
+                    { machine_id: this.selectedProduction.machine.id });
+
+                if (response.status === 200) {
+                    const machineName = this.machines.find(m => m.id == this.selectedProduction.machine.id)?.name;
+                    this.selectedProduction.machine.name = machineName;
+                    this.$notify({
+                        title: "Máquina cambiada",
+                        type: "success",
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating machine:', error);
+            }
+        },
         async fetchProductions() {
             this.fetching = true;
             try {
-                const response = await axios.get(route('productions.get-by-page', { page: this.currentPage }));
+                const response = await axios.get(route('productions.get-by-page', { page: this.currentPage, search: this.search }));
 
                 if (response.status === 200) {
                     this.productions = response.data.items;
@@ -333,9 +412,21 @@ export default {
                 this.fetching = false;
             }
         },
+        async fetchMachines() {
+            try {
+                const response = await axios.get(route('machines.get-all'));
+
+                if (response.status === 200) {
+                    this.machines = response.data.items;
+                }
+            } catch (error) {
+                console.error('Error fetching machines:', error);
+            }
+        },
     },
     mounted() {
         this.fetchProductions();
+        this.fetchMachines();
     }
 }
 </script>
