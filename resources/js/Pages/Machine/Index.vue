@@ -1,8 +1,8 @@
 <template>
-  <AppLayout title="Productos">
+  <AppLayout title="Máquinas">
     <main class="px-2 lg:px-14">
         <div>
-            <h1 class="font-bold">Productos</h1>
+            <h1 class="font-bold">Máquinas</h1>
             <!-- Buscador -->
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-4">
                 <div class="lg:w-1/4 relative lg:mr-12">
@@ -10,7 +10,7 @@
                         placeholder="Buscar producto" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <PrimaryButton v-if="this.$page.props.auth.user.permissions.includes('Crear productos')" @click="$inertia.get(route('products.create'))">Agregar producto</PrimaryButton>
+                <PrimaryButton v-if="this.$page.props.auth.user.permissions.includes('Crear máquinas')" @click="showCreateModal = true">Agregar máquina</PrimaryButton>
             </div>
             <div class="mt-2 text-center">
                 <el-tag v-if="search" size="large" closable @close="handleTagClose">
@@ -20,23 +20,23 @@
 
             <!-- pagination -->
             <div class="overflow-auto mb-2 mt-8">
-                <PaginationWithNoMeta :pagination="products" class="py-2" />
+                <PaginationWithNoMeta :pagination="machines" class="py-2" />
             </div>
 
             <Loading v-if="loading" />
 
-            <el-table v-else :data="filteredProducts.data" @row-click="handleRowClick" max-height="670" style="width: 100%" class="mt-4"
+            <el-table v-else :data="filteredMachines.data" @row-click="handleRowClick" max-height="670" style="width: 100%" class="mt-4"
                 :row-class-name="tableRowClassName">
                 <!-- <el-table-column type="selection" width="45" /> -->
-                <el-table-column prop="code" label="Código" />
-                <el-table-column prop="name" label="Nombre del producto" />
-                <el-table-column prop="season" label="Temporada" />
-                <el-table-column prop="description" label="Descripción" />
-                <el-table-column prop="material" label="Lista de material">
+                <el-table-column prop="id" label="ID" />
+                <el-table-column prop="name" label="Nombre de la máquina" />
+                <el-table-column prop="created_at" label="Creado el">
                     <template #default="scope">
-                        <p class="truncate">{{ scope.row.material ?? 'Ninguna' }}</p>
+                        <span>{{ formatDate(scope.row.created_at) }}</span>
                     </template>
                 </el-table-column>
+                <el-table-column prop="created_by" label="Creado por" />
+                <el-table-column prop="description" label="Descripción" />
                 <el-table-column align="right">
                     <template #default="scope">
                         <el-dropdown trigger="click" @command="handleCommand">
@@ -82,6 +82,40 @@
             </el-table>
         </div>
     </main>
+
+    <DialogModal :show="showCreateModal" @close="showCreateModal = false">
+        <template #title>
+            <h1 class="font-bold text-sm">Crear máquina</h1>
+        </template>
+        <template #content>
+            <div>
+                <div class="mb-2">
+                    <InputLabel value="Nombre de la máquina*" />
+                    <el-input v-model="form.name" placeholder="Ej. Suajadora" type="text" />                    
+                    <InputError :message="form.errors.name" />
+                </div>
+
+                <div class="mb-2">
+                    <InputLabel value="Descripción" />
+                    <el-input v-model="form.description" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
+                        :maxlength="500" placeholder="Agrega una descripción a la máquina"
+                        show-word-limit clearable />
+                    <InputError :message="form.errors.description" />
+                </div>
+
+                <div class="mb-2">
+                    <InputLabel value="Imagen de la máquina" class="ml-3 mb-1" />
+                    <InputFilePreview @imagen="saveImage" @cleared="clearImage" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <PrimaryButton @click="store()" :disabled="form.processing">
+                <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                Continuar
+            </PrimaryButton>
+        </template>
+    </DialogModal>
   </AppLayout>
 </template>
 
@@ -89,39 +123,83 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import PaginationWithNoMeta from "@/Components/MyComponents/PaginationWithNoMeta.vue";
+import InputFilePreview from "@/Components/MyComponents/InputFilePreview.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
+import DialogModal from "@/Components/DialogModal.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import InputError from "@/Components/InputError.vue";
+import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
 export default {
 data() {
+
+    const form = useForm({
+        name: null,
+        description: null,
+        image: null,
+    });
+
     return {
+        form,
         loading: false,
         search: null,
         searchTemp: null,
-        filteredProducts: this.products,
+        filteredMachines: this.machines,
+        showCreateModal: false
     }
 },
 components: {
     Loading,
     AppLayout,
+    InputLabel,
+    InputError,
+    DialogModal,
     PrimaryButton,
+    InputFilePreview,
     PaginationWithNoMeta,
 },
 props: {
-    products: Object,
+    machines: Object,
 },
 methods: {
+    store() {
+        this.form.post(route('machines.store'), {
+            onSuccess: () => {
+                this.form.reset();
+                this.$notify({
+                    title: 'Máquina agregada correctamente',
+                    message: '',
+                    type: 'success',
+                });
+                this.showCreateModal = false;
+                window.location.reload();
+            },
+            onError: () => {
+                console.log(this.form.errors);
+            },
+        });
+    },
+    formatDate(date) {
+        const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = months[d.getMonth()];
+        const year = d.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    },
     async handleSearch() {
         this.loading = true;
         this.search = this.searchTemp;
         this.searchTemp = null;
         try {
             if (!this.search) {
-                this.filteredProducts = this.products;
+                this.filteredMachines = this.machines;
             } else {
-                const response = await axios.post(route('products.get-matches', { query: this.search }));
+                const response = await axios.post(route('machines.get-matches', { query: this.search }));
                 if (response.status === 200) {
-                    this.filteredProducts = response.data.items;
+                    this.filteredMachines = response.data.items;
                 }
             }
         } catch (error) {
@@ -137,7 +215,7 @@ methods: {
     },
     handleTagClose() {
         this.search = null;
-        this.filteredProducts = this.products;
+        this.filteredMachines = this.machines;
     },
     handleRowClick(row) {
         this.showDetails = true;
@@ -153,19 +231,19 @@ methods: {
         if (commandName == 'clone') {
             this.clone(rowId);
         } else if (commandName == 'edit') {
-            this.$inertia.get(route('products.edit', rowId));
+            this.$inertia.get(route('machines.edit', rowId));
         } else if (commandName == 'delete') {
             this.delete(rowId);
         }
     },
     delete(id) {
-        this.$confirm('¿Estás seguro de que deseas eliminar este producto?', 'Eliminar producto', {
+        this.$confirm('¿Estás seguro de que deseas eliminar esta máquina?', 'Eliminar máquina', {
             type: 'warning',
             showCancelButton: true,
             cancelButtonText: 'Cancelar',
             confirmButtonText: 'Eliminar',
         }).then(() => {
-            axios.delete(route('products.destroy', id))
+            axios.delete(route('machines.destroy', id))
                 .then(response => {
                     this.$message({
                         type: 'success',
@@ -179,15 +257,21 @@ methods: {
         }).catch(() => {});
     },
     clone(id) {
-        this.$confirm('¿Estás seguro de que deseas clonar este producto?', 'Clonar producto', {
+        this.$confirm('¿Estás seguro de que deseas clonar esta máquina?', 'Clonar máquina', {
             type: 'warning',
             showCancelButton: true,
             cancelButtonText: 'Cancelar',
             confirmButtonText: 'Clonar',
         }).then(() => {
-            this.$inertia.get(route('products.clone', id));
+            this.$inertia.get(route('machines.clone', id));
             
         }).catch(() => {});
+    },
+    saveImage(image) {
+        this.form.image = image;
+    },
+    clearImage() {
+        this.form.image = null;
     },
 }
 }

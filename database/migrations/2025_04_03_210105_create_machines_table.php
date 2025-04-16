@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('machines', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('created_by')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
         });
