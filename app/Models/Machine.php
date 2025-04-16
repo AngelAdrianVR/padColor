@@ -14,5 +14,7 @@ class Machine extends Model implements HasMedia
     protected $fillable = [
         'name',
         'description',
+        'created_by',
+        'created_at',
     ];
 }
