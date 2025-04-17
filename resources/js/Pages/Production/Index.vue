@@ -25,7 +25,7 @@
                                 <span>Nueva producción</span>
                             </div>
                         </template>
-                        <Create />
+                        <Create :nextProduction="next_production" />
                     </el-tab-pane>
                 </el-tabs>
             </main>
@@ -53,6 +53,7 @@ export default {
     },
     props: {
         productions: Array,
+        next_production: Number,
     },
     methods: {
         handleClick(tab) {

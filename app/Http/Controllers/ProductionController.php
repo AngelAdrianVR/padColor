@@ -10,8 +10,10 @@ class ProductionController extends Controller
     public function index()
     {
         $productions = Production::with(['user', 'product', 'machine'])->latest()->get();
+        $next_production = Production::latest()->first();
+        $next_production = $next_production ? $next_production->id + 1 : 1;
 
-        return inertia('Production/Index', compact('productions'));
+        return inertia('Production/Index', compact('productions', 'next_production'));
     }
 
     public function create()
@@ -22,21 +24,23 @@ class ProductionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'folio' => 'required|string|max:255',
+            'folio' => 'required|string|max:255|unique:productions,folio',
+            'start_date' => 'required|date',
+            'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
-            'season' => 'required|string|max:255',
+            'changes' => 'required|numeric|min:0',
             'station' => 'required|string|max:255',
             'quantity' => 'required|numeric|min:1',
             'materials' => 'nullable|array',
-            'description' => 'nullable|string|max:300',
+            'notes' => 'nullable|string|max:300',
             'product_id' => 'required|min:1|integer|exists:products,id',
             'machine_id' => 'required|min:1|integer|exists:machines,id',
-            'estimated_date' => 'required|date',
         ]);
 
         // cambiar un poco el folio
-        $lastProductionId = Production::latest('id')->first()?->id ?? 0;
-        $validated['folio'] = $request->type . $lastProductionId + 1 . '-' . today()->format('dmY');
+        // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
+        // $validated['folio'] = $request->type . $lastProductionId + 1;
+        $validated['folio'] = $request->type . $validated['folio'];
         $validated['user_id'] = auth()->id();
 
         $production = Production::create($validated);

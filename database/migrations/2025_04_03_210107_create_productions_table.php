@@ -16,10 +16,13 @@ return new class extends Migration
             $table->string('station');
             $table->string('dfi')->nullable();
             $table->unsignedSmallInteger('faces')->nullable();
+            $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
             $table->unsignedFloat('current_quantity', 11, 2);
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
+            $table->unsignedFloat('gauge', 8, 2)->nullable();
+            $table->string('look')->nullable();
             $table->json('materials')->nullable();
             $table->string('material')->nullable();
             $table->text('notes')->nullable();

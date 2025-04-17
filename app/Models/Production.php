@@ -18,6 +18,7 @@ class Production extends Model
         'materials',
         'material',
         'width',
+        'gauge',
         'large',
         'dfi',
         'faces',
@@ -28,6 +29,8 @@ class Production extends Model
         'start_date',
         'estimated_date',
         'current_quantity',
+        'look',
+        'changes',
     ];
 
     protected $casts = [

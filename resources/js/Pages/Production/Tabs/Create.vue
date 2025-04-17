@@ -57,7 +57,7 @@
             </div>
             <div>
                 <InputLabel value="Cantidad solicitada*" />
-                <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="1" class="!w-60" />
+                <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :min="1" class="!w-full" />
                 <InputError :message="form.errors.quantity" />
             </div>
             <div>
@@ -110,7 +110,7 @@
             </div>
             <div>
                 <InputLabel value="Ancho" />
-                <el-input v-model="form.width" placeholder="Ej. 25" />
+                <el-input v-model="form.width" @change="handleDfh" placeholder="Ej. 25" />
                 <InputError :message="form.errors.width" />
             </div>
             <div>
@@ -120,7 +120,7 @@
             </div>
             <div>
                 <InputLabel value="Largo" />
-                <el-input v-model="form.large" placeholder="Ej. 30" />
+                <el-input v-model="form.large" @change="handleDfh" placeholder="Ej. 30" />
                 <InputError :message="form.errors.large" />
             </div>
             <div>
@@ -148,7 +148,7 @@
             </div>
             <div>
                 <InputLabel value="Pz/H" />
-                <el-input v-model="pps" placeholder="Piezas por hoja" disabled />
+                <el-input-number v-model="pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
             </div>
             <div>
                 <InputLabel value="Hojas" />
@@ -156,7 +156,7 @@
             </div>
             <div>
                 <InputLabel value="Ajuste" />
-                <el-input v-model="adjust" placeholder="Ajuste" disabled />
+                <el-input-number v-model="adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
             </div>
             <div>
                 <InputLabel value="H/A" />
@@ -164,7 +164,7 @@
             </div>
             <div>
                 <InputLabel value="P/F" />
-                <el-input v-model="pf" placeholder="P/F" disabled />
+                <el-input v-model="pps" placeholder="P/F" disabled />
             </div>
             <div>
                 <InputLabel value="Total de hojas" />
@@ -179,7 +179,7 @@
                 <el-input v-model="tps" placeholder="Total de tamaños de impresión" disabled />
             </div>
             <div class="col-span-2 text-right mt-4 space-x-2">
-                <PrimaryButton type="button" @click="form.reset()" :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
+                <PrimaryButton type="button" @click="cleanForm" :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
                     Limpiar formulario
                 </PrimaryButton>
                 <PrimaryButton :disabled="form.processing">
@@ -203,7 +203,7 @@ export default {
     name: 'CreateProduction',
     data() {
         const form = useForm({
-            folio: null,
+            folio: this.nextProduction,
             type: 'N',
             client: 'PadColor',
             changes: null,
@@ -236,7 +236,7 @@ export default {
             dhf: null,
             pps: null,
             sheets: null,
-            adjust: null,
+            adjust: 0,
             ha: null,
             pf: null,
             ts: null,
@@ -381,6 +381,10 @@ export default {
         PrimaryButton,
     },
     props: {
+        nextProduction: {
+            type: Number,
+            required: true,
+        },
     },
     methods: {
         store() {
@@ -397,6 +401,68 @@ export default {
                     console.log(this.form.errors);
                 },
             });
+        },
+        cleanForm() {
+            this.form.reset();
+            this.pps = null;
+            this.sheets = null;
+            this.adjust = 0;
+            this.ha = null;
+            this.pf = null;
+            this.ts = null;
+            this.ps = null;
+            this.tps = null;
+        },
+        handleDfh() {
+            if (this.form.width && this.form.large) {
+                this.dfh = this.form.width + ' x ' + this.form.large;
+            } else {
+                this.dfh = null;
+            }
+        },
+        handleSheet(){
+            if (this.form.quantity && this.pps > 0) {
+                this.sheets = Math.ceil(this.form.quantity / this.pps);
+            } else {
+                this.sheets = null;
+            }
+            if (this.pps) {
+                this.ha = Math.ceil(this.pps * this.adjust);
+            } else {
+                this.ha = null;
+            }
+            if (this.sheets && this.ha) {
+                this.ts = Math.ceil(this.sheets + this.ha);
+            } else {
+                this.ts = null;
+            }
+            if (this.sheets && this.pps) {
+                this.ps = Math.ceil(this.sheets / this.pps);
+            } else {
+                this.ps = null;
+            }
+            if (this.ts && this.pps) {
+                this.tps = Math.ceil(this.ts / this.pps);
+            } else {
+                this.tps = null;
+            }
+        },
+        handleHa(){
+            if (this.pps) {
+                this.ha = Math.ceil(this.pps * this.adjust);
+            } else {
+                this.ha = null;
+            }
+            if (this.sheets && this.ha) {
+                this.ts = Math.ceil(this.sheets + this.ha);
+            } else {
+                this.ts = null;
+            }
+            if (this.ts && this.pps) {
+                this.ps = Math.ceil(this.ts / this.pps);
+            } else {
+                this.ps = null;
+            }
         },
         async fetchProducts() {
             this.fetchingProducts = true;
