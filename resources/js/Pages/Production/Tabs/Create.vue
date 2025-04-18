@@ -57,7 +57,8 @@
             </div>
             <div>
                 <InputLabel value="Cantidad solicitada*" />
-                <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :min="1" class="!w-full" />
+                <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad"
+                    :min="1" class="!w-full" />
                 <InputError :message="form.errors.quantity" />
             </div>
             <div>
@@ -131,13 +132,24 @@
                 <InputError :message="form.errors.look" />
             </div>
             <div>
-                <InputLabel value="Dim. F/H" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>Dim. F/H</span>
+                        <el-tooltip content="Ancho x Largo" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="dfh" placeholder="Dimensión del formato de hoja" disabled />
             </div>
             <div>
                 <InputLabel value="Caras" />
                 <el-select v-model="form.faces" placeholder="Selecciona el número de caras" class="!w-full">
-                    <el-option v-for="face in [0,1,2]" :key="face" :label="face" :value="face" />
+                    <el-option v-for="face in [0, 1, 2]" :key="face" :label="face" :value="face" />
                 </el-select>
                 <InputError :message="form.errors.faces" />
             </div>
@@ -148,20 +160,44 @@
             </div>
             <div>
                 <InputLabel value="Pz/H" />
-                <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
+                <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja"
+                    class="!w-full" />
                 <InputError :message="form.errors.pps" />
             </div>
             <div>
-                <InputLabel value="Hojas" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>Hojas</span>
+                        <el-tooltip content="Cantidad solicitada / Piezas por hoja" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="form.sheets" placeholder="Hojas" disabled />
             </div>
             <div>
                 <InputLabel value="Ajuste" />
-                <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
+                <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0"
+                    class="!w-full" />
                 <InputError :message="form.errors.adjust" />
             </div>
             <div>
-                <InputLabel value="H/A" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>H/A</span>
+                        <el-tooltip content="Piezas por hoja x Ajuste" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="form.ha" placeholder="H/A" disabled />
             </div>
             <div>
@@ -169,19 +205,53 @@
                 <el-input v-model="form.pf" placeholder="P/F" disabled />
             </div>
             <div>
-                <InputLabel value="Total de hojas" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>Total de hojas</span>
+                        <el-tooltip content="Hojas + H/A" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="form.ts" placeholder="Hojas" disabled />
             </div>
             <div>
-                <InputLabel value="Ta/Im" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>Ta/Im</span>
+                        <el-tooltip content="Hojas / Piezas por hoja" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="form.ps" placeholder="Tamaño de impresión" disabled />
             </div>
             <div>
-                <InputLabel value="Total Ta/Im" />
+                <InputLabel>
+                    <div class="flex items-center space-x-3">
+                        <span>Total Ta/Im</span>
+                        <el-tooltip content="Total de Hojas / Piezas por hoja" placement="top">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </el-tooltip>
+                    </div>
+                </InputLabel>
                 <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
             </div>
             <div class="col-span-2 text-right mt-4 space-x-2">
-                <PrimaryButton type="button" @click="cleanForm" :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
+                <PrimaryButton type="button" @click="cleanForm" :disabled="form.processing"
+                    class="!bg-[#CFCFCF] !text-[#6E6E6E]">
                     Limpiar formulario
                 </PrimaryButton>
                 <PrimaryButton :disabled="form.processing">
@@ -394,7 +464,7 @@ export default {
                 onSuccess: () => {
                     this.cleanForm();
                     // sumar unidad a folio para poder crear otra producción
-                    this.form.folio ++;
+                    this.form.folio++;
 
                     this.$notify({
                         title: 'Orden de producción creada',
@@ -419,7 +489,7 @@ export default {
                 this.dfh = null;
             }
         },
-        handleSheet(){
+        handleSheet() {
             this.form.pf = this.form.pps;
             if (this.form.quantity && this.form.pps > 0) {
                 this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
@@ -447,7 +517,7 @@ export default {
                 this.form.tps = null;
             }
         },
-        handleHa(){
+        handleHa() {
             this.form.pf = this.form.pps;
             if (this.form.pps) {
                 this.form.ha = Math.ceil(this.form.pps * this.form.adjust);

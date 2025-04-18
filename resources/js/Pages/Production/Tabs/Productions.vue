@@ -202,21 +202,51 @@
             </div>
         </template>
     </DialogModal>
+    <ConfirmationModal :show="showConfirmation" @close="showConfirmation = false">
+        <template #title>
+            <h1 class="font-semibold">Eliminar orden de producción</h1>
+        </template>
+        <template #content>
+            <p class="text-sm">¿Estás seguro de que deseas eliminar esta orden de producción?</p>
+            <p class="text-sm text-red-500 mt-2">Esta acción no se puede deshacer.</p>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <PrimaryButton @click="deleteProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Eliminar
+                </PrimaryButton>
+                <CancelButton @click="showConfirmation = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+            </div>
+        </template>
+    </ConfirmationModal>
 </template>
 
 <script>
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useForm } from '@inertiajs/vue3';
 import { format, parseISO } from 'date-fns';
 import es from 'date-fns/locale/es';
 
 export default {
     name: 'ProductionList',
     data() {
+        const form = useForm({
+            temp: null,
+        });
+
         return {
+            form,
             productions: [],
             fetching: false,
             showDetails: false,
+            showConfirmation: false,
             selectedProduction: null,
             searchTemp: null,
             search: null,
@@ -339,6 +369,9 @@ export default {
     },
     components: {
         DialogModal,
+        ConfirmationModal,
+        PrimaryButton,
+        CancelButton,
         Loading,
     },
     props: {
@@ -369,6 +402,12 @@ export default {
         handleTagClose() {
             this.search = null;
             this.currentPage = 1;
+
+            // quitar de url la variable filter
+            const currentURL = new URL(window.location.href);
+            currentURL.searchParams.delete('filter');
+            window.history.replaceState({}, document.title, currentURL);
+
             this.fetchProductions();
         },
         handleRowClick(row) {
@@ -384,6 +423,9 @@ export default {
 
             if (commandName == 'clone') {
                 this.clone(rowId);
+            } else if (commandName == 'delete') {
+                this.showConfirmation = true;
+                this.selectedProduction = this.productions.find(p => p.id == rowId);
             } else {
                 this.$inertia.get(route('productions.' + commandName, rowId));
             }
@@ -400,6 +442,41 @@ export default {
             } else {
                 this.fetchProductions();
             }
+        },
+        deleteProduction() {
+            this.form.delete(route('productions.destroy', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showConfirmation = false;
+                    this.$notify({
+                        title: "Orden de producción eliminada",
+                        type: "success",
+                    });
+                    this.fetchProductions();
+                    this.selectedProduction = null;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al eliminar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        clone(rowId) {
+            this.form.post(route('productions.clone', rowId), {
+                onSuccess: () => {
+                    this.$notify({
+                        title: "Orden de producción clonada. Edita lo que necesites",
+                        type: "success",
+                    });
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al clonar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
         },
         async updateStation() {
             try {
