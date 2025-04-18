@@ -17,12 +17,12 @@
                 </figure>
                 </Link>
             </div>
-            <nav class="px-2 pt-20 flex flex-col justify-between h-[calc(100vh-5rem)]">
+            <nav class="px-2 flex flex-col justify-between h-[calc(100vh-5rem)]" :class="small ? 'pt-11' : 'pt-7'">
                 <section>
                     <template v-if="small">
                         <div v-for="(menu, index) in menus" :key="index">
                             <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
-                                class="w-full text-center py-2 justify-between rounded-[10px] mt-2 transition ease-linear duration-150"
+                                class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
                                 :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                                 <span v-html="menu.icon"></span>
                             </button>
@@ -120,7 +120,7 @@ export default {
                     active: route().current('productions.*'),
                     options: [],
                     dropdown: false,
-                    show: this.$page.props.auth.user.permissions.includes('Ver producción'),
+                    show: this.$page.props.auth.user.permissions.includes('Ver producciones'),
                 },
                 {
                     label: 'Productos',

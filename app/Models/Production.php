@@ -21,6 +21,8 @@ class Production extends Model
         'gauge',
         'large',
         'dfi',
+        'pps',
+        'adjust',
         'faces',
         'notes',
         'product_id',
@@ -31,6 +33,12 @@ class Production extends Model
         'current_quantity',
         'look',
         'changes',
+        'sheets',
+        'ha',
+        'pf',
+        'ts',
+        'ps',
+        'tps',
     ];
 
     protected $casts = [

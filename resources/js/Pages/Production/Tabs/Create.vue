@@ -148,35 +148,37 @@
             </div>
             <div>
                 <InputLabel value="Pz/H" />
-                <el-input-number v-model="pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
+                <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
+                <InputError :message="form.errors.pps" />
             </div>
             <div>
                 <InputLabel value="Hojas" />
-                <el-input v-model="sheets" placeholder="Hojas" disabled />
+                <el-input v-model="form.sheets" placeholder="Hojas" disabled />
             </div>
             <div>
                 <InputLabel value="Ajuste" />
-                <el-input-number v-model="adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
+                <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
+                <InputError :message="form.errors.adjust" />
             </div>
             <div>
                 <InputLabel value="H/A" />
-                <el-input v-model="ha" placeholder="H/A" disabled />
+                <el-input v-model="form.ha" placeholder="H/A" disabled />
             </div>
             <div>
                 <InputLabel value="P/F" />
-                <el-input v-model="pps" placeholder="P/F" disabled />
+                <el-input v-model="form.pf" placeholder="P/F" disabled />
             </div>
             <div>
                 <InputLabel value="Total de hojas" />
-                <el-input v-model="ts" placeholder="Hojas" disabled />
+                <el-input v-model="form.ts" placeholder="Hojas" disabled />
             </div>
             <div>
                 <InputLabel value="Ta/Im" />
-                <el-input v-model="ps" placeholder="Tamaño de impresión" disabled />
+                <el-input v-model="form.ps" placeholder="Tamaño de impresión" disabled />
             </div>
             <div>
                 <InputLabel value="Total Ta/Im" />
-                <el-input v-model="tps" placeholder="Total de tamaños de impresión" disabled />
+                <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
             </div>
             <div class="col-span-2 text-right mt-4 space-x-2">
                 <PrimaryButton type="button" @click="cleanForm" :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
@@ -218,9 +220,17 @@ export default {
             width: null,
             gauge: null,
             large: null,
+            pps: null,
+            adjust: 0,
             look: null,
             faces: null,
             dfi: null,
+            sheets: null,
+            ha: null,
+            pf: null,
+            ts: null,
+            ps: null,
+            tps: null,
             start_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             estimated_date: null,
         });
@@ -233,15 +243,6 @@ export default {
             fetchingMachines: false,
             // calculos
             dfh: null,
-            dhf: null,
-            pps: null,
-            sheets: null,
-            adjust: 0,
-            ha: null,
-            pf: null,
-            ts: null,
-            ps: null,
-            tps: null,
             // opciones
             seasons: [
                 'Verano',
@@ -386,16 +387,21 @@ export default {
             required: true,
         },
     },
+    emits: ['created'],
     methods: {
         store() {
             this.form.post(route('productions.store'), {
                 onSuccess: () => {
-                    this.form.reset();
+                    this.cleanForm();
+                    // sumar unidad a folio para poder crear otra producción
+                    this.form.folio ++;
+
                     this.$notify({
                         title: 'Orden de producción creada',
                         message: '',
                         type: 'success',
                     });
+                    this.$emit('created');
                 },
                 onError: () => {
                     console.log(this.form.errors);
@@ -404,14 +410,7 @@ export default {
         },
         cleanForm() {
             this.form.reset();
-            this.pps = null;
-            this.sheets = null;
-            this.adjust = 0;
-            this.ha = null;
-            this.pf = null;
-            this.ts = null;
-            this.ps = null;
-            this.tps = null;
+            this.dfh = null;
         },
         handleDfh() {
             if (this.form.width && this.form.large) {
@@ -421,47 +420,54 @@ export default {
             }
         },
         handleSheet(){
-            if (this.form.quantity && this.pps > 0) {
-                this.sheets = Math.ceil(this.form.quantity / this.pps);
+            this.form.pf = this.form.pps;
+            if (this.form.quantity && this.form.pps > 0) {
+                this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
             } else {
-                this.sheets = null;
+                this.form.sheets = null;
             }
-            if (this.pps) {
-                this.ha = Math.ceil(this.pps * this.adjust);
+            if (this.form.pps) {
+                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
             } else {
-                this.ha = null;
+                this.form.ha = null;
             }
-            if (this.sheets && this.ha) {
-                this.ts = Math.ceil(this.sheets + this.ha);
+            if (this.form.sheets && this.form.ha) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
             } else {
-                this.ts = null;
+                this.form.ts = null;
             }
-            if (this.sheets && this.pps) {
-                this.ps = Math.ceil(this.sheets / this.pps);
+            if (this.form.sheets && this.form.pps) {
+                this.form.ps = Math.ceil(this.form.sheets / this.form.pps);
             } else {
-                this.ps = null;
+                this.form.ps = null;
             }
-            if (this.ts && this.pps) {
-                this.tps = Math.ceil(this.ts / this.pps);
+            if (this.form.ts && this.form.pps) {
+                this.form.tps = Math.ceil(this.form.ts / this.form.pps);
             } else {
-                this.tps = null;
+                this.form.tps = null;
             }
         },
         handleHa(){
-            if (this.pps) {
-                this.ha = Math.ceil(this.pps * this.adjust);
+            this.form.pf = this.form.pps;
+            if (this.form.pps) {
+                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
             } else {
-                this.ha = null;
+                this.form.ha = null;
             }
-            if (this.sheets && this.ha) {
-                this.ts = Math.ceil(this.sheets + this.ha);
+            if (this.form.sheets && this.form.ha) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
             } else {
-                this.ts = null;
+                this.form.ts = null;
             }
-            if (this.ts && this.pps) {
-                this.ps = Math.ceil(this.ts / this.pps);
+            if (this.form.sheets && this.form.pps) {
+                this.form.ps = Math.ceil(this.form.sheets / this.form.pps);
             } else {
-                this.ps = null;
+                this.form.ps = null;
+            }
+            if (this.form.ts && this.form.pps) {
+                this.form.tps = Math.ceil(this.form.ts / this.form.pps);
+            } else {
+                this.form.tps = null;
             }
         },
         async fetchProducts() {

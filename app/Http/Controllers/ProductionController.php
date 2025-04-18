@@ -24,17 +24,32 @@ class ProductionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'folio' => 'required|string|max:255|unique:productions,folio',
+            'folio' => 'required|unique:productions,id',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
             'changes' => 'required|numeric|min:0',
-            'station' => 'required|string|max:255',
-            'quantity' => 'required|numeric|min:1',
-            'materials' => 'nullable|array',
-            'notes' => 'nullable|string|max:300',
             'product_id' => 'required|min:1|integer|exists:products,id',
+            'quantity' => 'required|numeric|min:1',
+            'materials' => 'nullable|string|max:255',
+            'station' => 'required|string|max:255',
             'machine_id' => 'required|min:1|integer|exists:machines,id',
+            'notes' => 'nullable|string|max:300',
+            'dfi' => 'nullable|string|max:255',
+            'material' => 'nullable|string|max:255',
+            'width' => 'nullable|string|max:255',
+            'gauge' => 'nullable|string|max:255',
+            'large' => 'nullable|string|max:255',
+            'look' => 'nullable|string|max:255',
+            'faces' => 'nullable|numeric|min:0',
+            'pps' => 'nullable|numeric|min:0',
+            'adjust' => 'nullable|numeric|min:0',
+            'sheets' => 'nullable|numeric|min:0',
+            'ha' => 'nullable|numeric|min:0',
+            'pf' => 'nullable|numeric|min:0',
+            'ts' => 'nullable|numeric|min:0',
+            'ps' => 'nullable|numeric|min:0',
+            'tps' => 'nullable|numeric|min:0',
         ]);
 
         // cambiar un poco el folio
@@ -42,6 +57,7 @@ class ProductionController extends Controller
         // $validated['folio'] = $request->type . $lastProductionId + 1;
         $validated['folio'] = $request->type . $validated['folio'];
         $validated['user_id'] = auth()->id();
+        $validated['materials'] = [$validated['materials']];
 
         $production = Production::create($validated);
     }
@@ -58,7 +74,44 @@ class ProductionController extends Controller
 
     public function update(Request $request, Production $production)
     {
-        //
+        $validated = $request->validate([
+            'folio' => 'required|unique:productions,id,' . $production->id,
+            'start_date' => 'required|date',
+            'estimated_date' => 'required|date',
+            'client' => 'required|string|max:255',
+            'changes' => 'required|numeric|min:0',
+            'product_id' => 'required|min:1|integer|exists:products,id',
+            'quantity' => 'required|numeric|min:1',
+            'materials' => 'nullable|string|max:255',
+            'station' => 'required|string|max:255',
+            'machine_id' => 'required|min:1|integer|exists:machines,id',
+            'notes' => 'nullable|string|max:300',
+            'dfi' => 'nullable|string|max:255',
+            'material' => 'nullable|string|max:255',
+            'width' => 'nullable|string|max:255',
+            'gauge' => 'nullable|string|max:255',
+            'large' => 'nullable|string|max:255',
+            'look' => 'nullable|string|max:255',
+            'faces' => 'nullable|numeric|min:0',
+            'pps' => 'nullable|numeric|min:0',
+            'adjust' => 'nullable|numeric|min:0',
+            'sheets' => 'nullable|numeric|min:0',
+            'ha' => 'nullable|numeric|min:0',
+            'pf' => 'nullable|numeric|min:0',
+            'ts' => 'nullable|numeric|min:0',
+            'ps' => 'nullable|numeric|min:0',
+            'tps' => 'nullable|numeric|min:0',
+        ]);
+
+        // cambiar un poco el folio
+        // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
+        // $validated['folio'] = $request->type . $lastProductionId + 1;
+        $validated['folio'] = $request->type . $validated['folio'];
+        $validated['materials'] = [$validated['materials']];
+
+        $production->update($validated);
+
+        return to_route('productions.index', ["currentTab" => 2]);
     }
 
     public function updateStation(Request $request, Production $production)
@@ -93,6 +146,7 @@ class ProductionController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('folio', 'like', "%{$search}%")
                     ->orWhere('client', 'like', "%{$search}%")
+                    ->orWhere('station', 'like', "%{$search}%")
                     ->orWhereHas('product', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
                         ->orWhere('season', 'like', "%{$search}%");
