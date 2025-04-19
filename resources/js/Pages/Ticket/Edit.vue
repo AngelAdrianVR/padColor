@@ -2,7 +2,6 @@
     <AppLayout title="Editar ticket">
         <div class="lg:p-9 p-1">
             <Back />
-
             <form @submit.prevent="update"
                 class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 grid grid-cols-2 gap-x-3">
                 <h1 class="font-bold ml-2 col-span-2">Crear ticket</h1>

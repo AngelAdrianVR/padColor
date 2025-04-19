@@ -1,228 +1,244 @@
 <template>
-    <div class="mb-4">
-        <form @submit.prevent="update"
-            class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
-            <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
-            <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
-            <div>
-                <InputLabel value="N° de orden*" />
-                <el-input v-model="form.folio" placeholder="">
-                    <template #prepend>
-                        <el-select v-model="form.type" placeholder="Tipo" class="!w-28">
-                            <el-option label="Nuevo" value="N" />
-                            <el-option label="Repetido" value="R" />
+    <AppLayout title="Editar producción">
+        <div class="mb-4">
+            <Back class="mt-5 mx-2 lg:mx-20" />
+            <form @submit.prevent="update"
+                class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
+                <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
+                <div>
+                    <InputLabel value="N° de orden*" />
+                    <el-input v-model="form.folio" placeholder="">
+                        <template #prepend>
+                            <el-select v-model="form.type" placeholder="Tipo" class="!w-28">
+                                <el-option label="Nuevo" value="N" />
+                                <el-option label="Repetido" value="R" />
+                            </el-select>
+                        </template>
+                    </el-input>
+                    <InputError :message="form.errors.folio" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de inicio*" />
+                    <el-date-picker class="!w-full" v-model="form.start_date" type="date" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.start_date" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha estimada de entrega*" />
+                    <el-date-picker class="!w-full" v-model="form.estimated_date" type="date" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.estimated_date" />
+                </div>
+                <div>
+                    <InputLabel value="Cliente*" />
+                    <el-select v-model="form.client" placeholder="" class="!w-full">
+                        <el-option label="PadColor" value="PadColor" />
+                        <el-option label="Empaques" value="Empaques" />
+                    </el-select>
+                    <InputError :message="form.errors.client" />
+                </div>
+                <div>
+                    <InputLabel value="Número de cambios*" />
+                    <el-input v-model="form.changes" placeholder="Ingresa el número de cambios" />
+                    <InputError :message="form.errors.changes" />
+                </div>
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
+                <div>
+                    <InputLabel value="Producto*" />
+                    <div class="flex items-center">
+                        <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                        <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
+                        <el-select v-model="form.product_id" placeholder="Selecciona el producto" class="!w-full"
+                            :disabled="fetchingProducts">
+                            <el-option v-for="product in products" :key="product.id" :label="product.name"
+                                :value="product.id" />
                         </el-select>
-                    </template>
-                </el-input>
-                <InputError :message="form.errors.folio" />
-            </div>
-            <div>
-                <InputLabel value="Fecha de inicio*" />
-                <el-date-picker class="!w-full" v-model="form.start_date" type="date" placeholder="dd/mm/aa"
-                    value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
-                <InputError :message="form.errors.start_date" />
-            </div>
-            <div>
-                <InputLabel value="Fecha estimada de entrega*" />
-                <el-date-picker class="!w-full" v-model="form.estimated_date" type="date" placeholder="dd/mm/aa"
-                    value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
-                <InputError :message="form.errors.estimated_date" />
-            </div>
-            <div>
-                <InputLabel value="Cliente*" />
-                <el-select v-model="form.client" placeholder="" class="!w-full">
-                    <el-option label="PadColor" value="PadColor" />
-                    <el-option label="Empaques" value="Empaques" />
-                </el-select>
-                <InputError :message="form.errors.client" />
-            </div>
-            <div>
-                <InputLabel value="Número de cambios*" />
-                <el-input v-model="form.changes" placeholder="Ingresa el número de cambios" />
-                <InputError :message="form.errors.changes" />
-            </div>
-            <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
-            <div>
-                <InputLabel value="Producto*" />
-                <div class="flex items-center">
-                    <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                    <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
-                    <el-select v-model="form.product_id" placeholder="Selecciona el producto" class="!w-full"
-                        :disabled="fetchingProducts">
-                        <el-option v-for="product in products" :key="product.id" :label="product.name"
-                            :value="product.id" />
-                    </el-select>
-                </div>
-                <InputError :message="form.errors.product_id" />
-            </div>
-            <div>
-                <InputLabel value="Cantidad solicitada*" />
-                <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="1" class="!w-60" />
-                <InputError :message="form.errors.quantity" />
-            </div>
-            <div>
-                <InputLabel value="Lista de material" />
-                <el-select v-model="form.materials" placeholder="Selecciona el progreso actual" class="!w-full">
-                    <el-option v-for="material in materials" :key="material" :label="material" :value="material" />
-                </el-select>
-                <InputError :message="form.errors.materials" />
-            </div>
-            <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Procesos de producción</h2>
-            <div>
-                <InputLabel>
-                    <div class="flex items-center space-x-3">
-                        <span>Progreso*</span>
-                        <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
-                            :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }"
-                            v-html="stations.find(s => s.name === form.station)?.icon"></div>
                     </div>
-                </InputLabel>
-                <el-select v-model="form.station" placeholder="Selecciona el progreso actual" class="!w-full">
-                    <el-option v-for="station in stations" :key="station" :label="station.name" :value="station.name" />
-                </el-select>
-                <InputError :message="form.errors.station" />
-            </div>
-            <div class="mt-1">
-                <InputLabel value="Máquina" />
-                <div class="flex items-center">
-                    <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                    <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
-                    <el-select v-model="form.machine_id" placeholder="Selecciona la máquina" class="!w-full"
-                        :disabled="fetchingMachines">
-                        <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
-                            :value="machine.id" />
-                    </el-select>
+                    <InputError :message="form.errors.product_id" />
                 </div>
-                <InputError :message="form.errors.machine_id" />
-            </div>
-            <div class="col-span-full">
-                <InputLabel value="Notas" />
-                <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea" :maxlength="500"
-                    placeholder="Agrega las notas que consideres relevantes para producción" show-word-limit
-                    clearable />
-                <InputError :message="form.errors.notes" />
-            </div>
-            <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas</h2>
-            <div>
-                <InputLabel value="Material" />
-                <el-input v-model="form.material" placeholder="Escribe el material" />
-                <InputError :message="form.errors.material" />
-            </div>
-            <div>
-                <InputLabel value="Ancho" />
-                <el-input v-model="form.width" placeholder="Ej. 25" />
-                <InputError :message="form.errors.width" />
-            </div>
-            <div>
-                <InputLabel value="Calibre" />
-                <el-input v-model="form.gauge" placeholder="Escribe el calibre" />
-                <InputError :message="form.errors.gauge" />
-            </div>
-            <div>
-                <InputLabel value="Largo" />
-                <el-input v-model="form.large" placeholder="Ej. 30" />
-                <InputError :message="form.errors.large" />
-            </div>
-            <div>
-                <InputLabel value="Acabado" />
-                <el-select v-model="form.look" placeholder="Selecciona el acabado" class="!w-full">
-                    <el-option v-for="look in looks" :key="look" :label="look" :value="look" />
-                </el-select>
-                <InputError :message="form.errors.look" />
-            </div>
-            <div>
-                <InputLabel value="Dim. F/H" />
-                <el-input v-model="dfh" placeholder="Dimensión del formato de hoja" disabled />
-            </div>
-            <div>
-                <InputLabel value="Caras" />
-                <el-select v-model="form.faces" placeholder="Selecciona el número de caras" class="!w-full">
-                    <el-option v-for="face in [0, 1, 2]" :key="face" :label="face" :value="face" />
-                </el-select>
-                <InputError :message="form.errors.faces" />
-            </div>
-            <div>
-                <InputLabel value="Dim. F/im" />
-                <el-input v-model="form.dfi" placeholder="Dimensión del formato de impresión" />
-                <InputError :message="form.errors.dfi" />
-            </div>
-            <div>
-                <InputLabel value="Pz/H" />
-                <el-input v-model="pps" placeholder="Piezas por hoja" disabled />
-            </div>
-            <div>
-                <InputLabel value="Hojas" />
-                <el-input v-model="sheets" placeholder="Hojas" disabled />
-            </div>
-            <div>
-                <InputLabel value="Ajuste" />
-                <el-input v-model="adjust" placeholder="Ajuste" disabled />
-            </div>
-            <div>
-                <InputLabel value="H/A" />
-                <el-input v-model="ha" placeholder="H/A" disabled />
-            </div>
-            <div>
-                <InputLabel value="P/F" />
-                <el-input v-model="pf" placeholder="P/F" disabled />
-            </div>
-            <div>
-                <InputLabel value="Total de hojas" />
-                <el-input v-model="ts" placeholder="Hojas" disabled />
-            </div>
-            <div>
-                <InputLabel value="Ta/Im" />
-                <el-input v-model="ps" placeholder="Tamaño de impresión" disabled />
-            </div>
-            <div>
-                <InputLabel value="Total Ta/Im" />
-                <el-input v-model="tps" placeholder="Total de tamaños de impresión" disabled />
-            </div>
-            <div class="col-span-2 text-right mt-4 space-x-2">
-                <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', {currentTab: 2}))"
-                    :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
-                    Cancelar
-                </PrimaryButton>
-                <PrimaryButton :disabled="form.processing">
-                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                    <span>Guardar cambios</span>
-                </PrimaryButton>
-            </div>
-        </form>
-    </div>
+                <div>
+                    <InputLabel value="Cantidad solicitada*" />
+                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :min="1" class="!w-full" />
+                    <InputError :message="form.errors.quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Lista de material" />
+                    <el-select v-model="form.materials" placeholder="Selecciona el progreso actual" class="!w-full">
+                        <el-option v-for="material in materials" :key="material" :label="material" :value="material" />
+                    </el-select>
+                    <InputError :message="form.errors.materials" />
+                </div>
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Procesos de producción</h2>
+                <div>
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Progreso*</span>
+                            <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
+                                :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }"
+                                v-html="stations.find(s => s.name === form.station)?.icon"></div>
+                        </div>
+                    </InputLabel>
+                    <el-select v-model="form.station" placeholder="Selecciona el progreso actual" class="!w-full">
+                        <el-option v-for="station in stations" :key="station" :label="station.name" :value="station.name" />
+                    </el-select>
+                    <InputError :message="form.errors.station" />
+                </div>
+                <div class="mt-1">
+                    <InputLabel value="Máquina" />
+                    <div class="flex items-center">
+                        <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                        <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
+                        <el-select v-model="form.machine_id" placeholder="Selecciona la máquina" class="!w-full"
+                            :disabled="fetchingMachines">
+                            <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                                :value="machine.id" />
+                        </el-select>
+                    </div>
+                    <InputError :message="form.errors.machine_id" />
+                </div>
+                <div class="col-span-full">
+                    <InputLabel value="Notas" />
+                    <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea" :maxlength="500"
+                        placeholder="Agrega las notas que consideres relevantes para producción" show-word-limit
+                        clearable />
+                    <InputError :message="form.errors.notes" />
+                </div>
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas</h2>
+                <div>
+                    <InputLabel value="Material" />
+                    <el-input v-model="form.material" placeholder="Escribe el material" />
+                    <InputError :message="form.errors.material" />
+                </div>
+                <div>
+                    <InputLabel value="Ancho" />
+                    <el-input v-model="form.width" @change="handleDfh" placeholder="Ej. 25" />
+                    <InputError :message="form.errors.width" />
+                </div>
+                <div>
+                    <InputLabel value="Calibre" />
+                    <el-input v-model="form.gauge" placeholder="Escribe el calibre" />
+                    <InputError :message="form.errors.gauge" />
+                </div>
+                <div>
+                    <InputLabel value="Largo" />
+                    <el-input v-model="form.large" @change="handleDfh" placeholder="Ej. 30" />
+                    <InputError :message="form.errors.large" />
+                </div>
+                <div>
+                    <InputLabel value="Acabado" />
+                    <el-select v-model="form.look" placeholder="Selecciona el acabado" class="!w-full">
+                        <el-option v-for="look in looks" :key="look" :label="look" :value="look" />
+                    </el-select>
+                    <InputError :message="form.errors.look" />
+                </div>
+                <div>
+                    <InputLabel value="Dim. F/H" />
+                    <el-input v-model="dfh" placeholder="Dimensión del formato de hoja" disabled />
+                </div>
+                <div>
+                    <InputLabel value="Caras" />
+                    <el-select v-model="form.faces" placeholder="Selecciona el número de caras" class="!w-full">
+                        <el-option v-for="face in [0,1,2]" :key="face" :label="face" :value="face" />
+                    </el-select>
+                    <InputError :message="form.errors.faces" />
+                </div>
+                <div>
+                    <InputLabel value="Dim. F/im" />
+                    <el-input v-model="form.dfi" placeholder="Dimensión del formato de impresión" />
+                    <InputError :message="form.errors.dfi" />
+                </div>
+                <div>
+                    <InputLabel value="Pz/H" />
+                    <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
+                    <InputError :message="form.errors.pps" />
+                </div>
+                <div>
+                    <InputLabel value="Hojas" />
+                    <el-input v-model="form.sheets" placeholder="Hojas" disabled />
+                </div>
+                <div>
+                    <InputLabel value="Ajuste" />
+                    <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.adjust" />
+                </div>
+                <div>
+                    <InputLabel value="H/A" />
+                    <el-input v-model="form.ha" placeholder="H/A" disabled />
+                </div>
+                <div>
+                    <InputLabel value="P/F" />
+                    <el-input v-model="form.pf" placeholder="P/F" disabled />
+                </div>
+                <div>
+                    <InputLabel value="Total de hojas" />
+                    <el-input v-model="form.ts" placeholder="Hojas" disabled />
+                </div>
+                <div>
+                    <InputLabel value="Ta/Im" />
+                    <el-input v-model="form.ps" placeholder="Tamaño de impresión" disabled />
+                </div>
+                <div>
+                    <InputLabel value="Total Ta/Im" />
+                    <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
+                </div>
+                <div class="col-span-2 text-right mt-4 space-x-2">
+                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', {currentTab: 2}))"
+                        :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
+                        Cancelar
+                    </PrimaryButton>
+                    <PrimaryButton :disabled="form.processing">
+                        <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                        <span>Guardar cambios</span>
+                    </PrimaryButton>
+                </div>
+            </form>
+        </div>
+    </AppLayout>    
 </template>
 
 <script>
+import AppLayout from '@/Layouts/AppLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
+import Back from '@/Components/MyComponents/Back.vue';
 
 export default {
     name: 'EditeProduction',
     data() {
         const form = useForm({
-            folio: this.production.folio,
-            type: this.production.type,
+            // tomar la primera letra de this.production.folio
+            type: this.production.folio.charAt(0),
+            folio: this.production.folio.split(this.production.folio.charAt(0))[1],            
             client: this.production.client,
             changes: this.production.changes,
             season: this.production.season,
             station: this.production.station,
             quantity: this.production.quantity,
-            materials: this.production.materials,
+            materials: this.production.materials[0],
             notes: this.production.notes,
             product_id: this.production.product_id,
             machine_id: this.production.machine_id,
             material: this.production.material,
             width: this.production.width,
-            large: this.production.large,
             gauge: this.production.gauge,
+            large: this.production.large,
+            pps: this.production.pps,
+            adjust: this.production.adjust,
             look: this.production.look,
             faces: this.production.faces,
             dfi: this.production.dfi,
+            sheets: this.production.sheets,
+            ha: this.production.ha,
+            pf: this.production.pf,
+            ts: this.production.ts,
+            ps: this.production.ps,
+            tps: this.production.tps,
             start_date: this.production.start_date,
-            estimated_date: null,
+            estimated_date: this.production.estimated_date,
         });
 
         return {
@@ -232,15 +248,7 @@ export default {
             fetchingProducts: false,
             fetchingMachines: false,
             // calculos
-            dhf: null,
-            pps: null,
-            sheets: null,
-            adjust: null,
-            ha: null,
-            pf: null,
-            ts: null,
-            ps: null,
-            tps: null,
+            dfh: null,
             // opciones
             seasons: [
                 'Verano',
@@ -375,18 +383,19 @@ export default {
         }
     },
     components: {
+        AppLayout,
         InputLabel,
         InputError,
         PrimaryButton,
+        Back,
     },
     props: {
-        production: Object,
+       production: Object,
     },
     methods: {
         update() {
-            this.form.put(route('productions.update'), {
+            this.form.put(route('productions.update', this.production.id), {
                 onSuccess: () => {
-                    this.form.reset();
                     this.$notify({
                         title: 'Orden de producción actualizada',
                         message: '',
@@ -397,6 +406,68 @@ export default {
                     console.log(this.form.errors);
                 },
             });
+        },
+        cleanForm() {
+            this.form.reset();
+            this.dfh = null;
+        },
+        handleDfh() {
+            if (this.form.width && this.form.large) {
+                this.dfh = this.form.width + ' x ' + this.form.large;
+            } else {
+                this.dfh = null;
+            }
+        },
+        handleSheet(){
+            this.form.pf = this.form.pps;
+            if (this.form.quantity && this.form.pps > 0) {
+                this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
+            } else {
+                this.form.sheets = null;
+            }
+            if (this.form.pps) {
+                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
+            } else {
+                this.form.ha = null;
+            }
+            if (this.form.sheets && this.form.ha) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
+            } else {
+                this.form.ts = null;
+            }
+            if (this.form.sheets && this.form.pps) {
+                this.form.ps = Math.ceil(this.form.sheets / this.form.pps);
+            } else {
+                this.form.ps = null;
+            }
+            if (this.form.ts && this.form.pps) {
+                this.form.tps = Math.ceil(this.form.ts / this.form.pps);
+            } else {
+                this.form.tps = null;
+            }
+        },
+        handleHa(){
+            this.form.pf = this.form.pps;
+            if (this.form.pps) {
+                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
+            } else {
+                this.form.ha = null;
+            }
+            if (this.form.sheets && this.form.ha) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
+            } else {
+                this.form.ts = null;
+            }
+            if (this.form.sheets && this.form.pps) {
+                this.form.ps = Math.ceil(this.form.sheets / this.form.pps);
+            } else {
+                this.form.ps = null;
+            }
+            if (this.form.ts && this.form.pps) {
+                this.form.tps = Math.ceil(this.form.ts / this.form.pps);
+            } else {
+                this.form.tps = null;
+            }
         },
         async fetchProducts() {
             this.fetchingProducts = true;

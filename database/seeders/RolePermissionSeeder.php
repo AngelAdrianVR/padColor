@@ -32,6 +32,21 @@ class RolePermissionSeeder extends Seeder
         Permission::create(['name' => 'Editar usuarios', 'category' => 'Usuarios']);
         Permission::create(['name' => 'Eliminar usuarios', 'category' => 'Usuarios']);
 
+        Permission::create(['name' => 'Ver producciones', 'category' => 'Producciones']);
+        Permission::create(['name' => 'Crear producciones', 'category' => 'Producciones']);
+        Permission::create(['name' => 'Editar producciones', 'category' => 'Producciones']);
+        Permission::create(['name' => 'Eliminar producciones', 'category' => 'Producciones']);
+        
+        Permission::create(['name' => 'Ver productos', 'category' => 'Productos']);
+        Permission::create(['name' => 'Crear productos', 'category' => 'Productos']);
+        Permission::create(['name' => 'Editar productos', 'category' => 'Productos']);
+        Permission::create(['name' => 'Eliminar productos', 'category' => 'Productos']);
+        
+        Permission::create(['name' => 'Ver máquinas', 'category' => 'Máquinas']);
+        Permission::create(['name' => 'Crear máquinas', 'category' => 'Máquinas']);
+        Permission::create(['name' => 'Editar máquinas', 'category' => 'Máquinas']);
+        Permission::create(['name' => 'Eliminar máquinas', 'category' => 'Máquinas']);
+        
         Permission::create(['name' => 'Ver configuraciones', 'category' => 'Configuraciones']);
         Permission::create(['name' => 'Crear permisos', 'category' => 'Configuraciones']);
         Permission::create(['name' => 'Crear roles', 'category' => 'Configuraciones']);

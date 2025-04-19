@@ -4,9 +4,9 @@
             <h1 class="font-bold">Ordenes de producción</h1>
             <!-- Buscador -->
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-4">
-                <div class="lg:w-1/4 relative lg:mr-12">
+                <div class="lg:w-1/3 relative lg:mr-12">
                     <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
-                        placeholder="Buscar producción" type="search">
+                        placeholder="Buscar por folio, progreso, producto, cliente, temporada" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
                 <el-dropdown split-button type="primary" @click="" trigger="click" @command="handleCommand">
@@ -57,7 +57,7 @@
                     </el-table-column>
                     <el-table-column prop="notes" label="Notas" width="160">
                         <template #default="scope">
-                            <p class="truncate">{{ scope.row.notes }} asldkj fdaslkñj faslñkjf asñlkfsjd asdrfaoiu</p>
+                            <p class="truncate">{{ scope.row.notes }}</p>
                         </template>
                     </el-table-column>
                     <el-table-column prop="materials" label="Lista de material">
@@ -112,19 +112,57 @@
             </div>
         </div>
     </div>
+    <DialogModal :show="showCloseProduction" @close="showCloseProduction = false">
+        <template #title>
+            <h1 class="font-semibold">Cerrar producción</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Cantidad entregada:" />
+                    <el-input-number v-model="form.close_quantity" @change="handleSheet"
+                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.close_quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de cierre:" />
+                    <el-date-picker class="!w-full" v-model="form.close_date" type="date" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.close_date" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showCloseProduction = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="closeProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
     <DialogModal :show="showDetails" @close="showDetails = false">
         <template #title>
             <h1 class="font-semibold">Orden de producción</h1>
         </template>
         <template #content>
-            <h2 class="text-[#666666] font-bold">Información de la orden</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-[#666666] font-bold">Información de la orden</h2>
+                <button @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
+                    class="text-primary border border-primary rounded-md px-2 py-1">
+                    Editar
+                </button>
+            </div>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">N° de Orden:</p>
                 <p class="col-span-2">{{ selectedProduction.folio }}</p>
                 <p class="text-[#464646]">Fecha de inicio:</p>
-                <p class="col-span-2">{{ selectedProduction.start_date }}</p>
+                <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
                 <p class="text-[#464646]">Fecha estimada de entrega:</p>
-                <p class="col-span-2">{{ selectedProduction.estimated_date }}</p>
+                <p class="col-span-2">{{ formatDate(selectedProduction.estimated_date) }}</p>
                 <p class="text-[#464646]">Cliente:</p>
                 <p class="col-span-2">{{ selectedProduction.client }}</p>
             </div>
@@ -137,7 +175,7 @@
                 <p class="text-[#464646]">Temporada:</p>
                 <p class="col-span-2">{{ selectedProduction.product.season }}</p>
                 <p class="text-[#464646]">Descripción:</p>
-                <p class="col-span-2">{{ selectedProduction.product.description }}</p>
+                <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
                 <p class="text-[#464646]">Cantidad solicitada:</p>
                 <p class="col-span-2 font-bold">
                     {{ selectedProduction.quantity.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
@@ -150,9 +188,9 @@
                 <p class="text-[#464646]">Progreso:</p>
                 <div class="col-span-2 relative">
                     <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
-                        :style="{ backgroundColor: stations.find(s => s.name === selectedProduction.station)?.light, color: stations.find(s => s.name === selectedProduction.station)?.dark }"
-                        v-html="stations.find(s => s.name === selectedProduction.station)?.icon"></div>
-                    <el-select @change="updateStation" v-model="selectedProduction.station" class="!w-2/3">
+                        :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
+                        v-html="stations.find(s => s.name === tempStation)?.icon"></div>
+                    <el-select @change="updateStation" v-model="tempStation" class="!w-2/3">
                         <el-option v-for="station in stations" :key="station" :label="station.name"
                             :value="station.name" />
                     </el-select>
@@ -165,53 +203,95 @@
                 <p class="text-[#464646]">Cantidad actual:</p>
                 <p class="col-span-2">{{ selectedProduction.current_quantity }}</p>
                 <p class="text-[#464646]">Notas:</p>
-                <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes }}</p>
+                <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">Material:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.material ?? '-' }}</p>
                 <p class="text-[#464646]">Dimensiones de la hoja:</p>
                 <p class="col-span-2">{{ selectedProduction.width ?? '-' }} x {{ selectedProduction.large ?? '-' }}</p>
                 <p class="text-[#464646]">Dimensiones de impresión:</p>
-                <p class="col-span-2">{{ selectedProduction.dfi }}</p>
+                <p class="col-span-2">{{ selectedProduction.dfi ?? '-' }}</p>
                 <p class="text-[#464646]">Caras:</p>
                 <p class="col-span-2">{{ selectedProduction.faces }}</p>
                 <p class="text-[#464646]">Pz/H:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.pps }}</p>
                 <p class="text-[#464646]">Hojas:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.sheets }}</p>
                 <p class="text-[#464646]">Ajuste:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.adjust }}</p>
                 <p class="text-[#464646]">H/A:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.ha }}</p>
                 <p class="text-[#464646]">P/F:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.pf }}</p>
                 <p class="text-[#464646]">Total de hojas:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.ts }}</p>
                 <p class="text-[#464646]">Ta/Im:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.ps }}</p>
                 <p class="text-[#464646]">Total Ta/Im:</p>
-                <p class="col-span-2">{{ selectedProduction.material }}</p>
+                <p class="col-span-2">{{ selectedProduction.tps }}</p>
             </div>
         </template>
     </DialogModal>
+    <ConfirmationModal :show="showConfirmation" @close="showConfirmation = false">
+        <template #title>
+            <h1 class="font-semibold">Eliminar orden de producción</h1>
+        </template>
+        <template #content>
+            <p class="text-sm">¿Estás seguro de que deseas eliminar esta orden de producción?</p>
+            <p class="text-sm text-red-500 mt-2">Esta acción no se puede deshacer.</p>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <PrimaryButton @click="deleteProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Eliminar
+                </PrimaryButton>
+                <CancelButton @click="showConfirmation = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+            </div>
+        </template>
+    </ConfirmationModal>
 </template>
 
 <script>
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useForm } from '@inertiajs/vue3';
+import { format, parseISO } from 'date-fns';
+import es from 'date-fns/locale/es';
 
 export default {
     name: 'ProductionList',
     data() {
+        const form = useForm({
+            close_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
+            close_quantity: 0,
+        });
+
         return {
+            form,
             productions: [],
             fetching: false,
             showDetails: false,
+            showConfirmation: false,
+            showCloseProduction: false,
             selectedProduction: null,
+            tempStation: null,
             searchTemp: null,
             search: null,
+            sheets: null,
+            ha: null,
+            ts: null,
+            ps: null,
+            tps: null,
             // paginación
             currentPage: 1,
             total: 0,
@@ -290,7 +370,7 @@ export default {
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" /></svg>',
                 },
                 {
-                    name: 'en X Estampado',
+                    name: 'X Estampado',
                     dark: '#D00A95',
                     light: '#FDCEEF',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>',
@@ -326,11 +406,25 @@ export default {
     },
     components: {
         DialogModal,
+        ConfirmationModal,
+        PrimaryButton,
+        CancelButton,
         Loading,
+        InputLabel,
+        InputError,
     },
     props: {
     },
     methods: {
+        formatDate(dateString) {
+            return format(parseISO(dateString), 'EEE, dd MMMM yyyy', { locale: es });
+        },
+        handleChangeFilter() {
+            this.handleTagClose();
+            if (this.filter) {
+                this.fetchFiltered();
+            }
+        },
         handleCurrentChange() {
             this.fetchProductions();
         },
@@ -347,11 +441,18 @@ export default {
         handleTagClose() {
             this.search = null;
             this.currentPage = 1;
+
+            // quitar de url la variable filter
+            const currentURL = new URL(window.location.href);
+            currentURL.searchParams.delete('filter');
+            window.history.replaceState({}, document.title, currentURL);
+
             this.fetchProductions();
         },
         handleRowClick(row) {
             this.showDetails = true;
             this.selectedProduction = row;
+            this.tempStation = row.station;
         },
         tableRowClassName({ row, rowIndex }) {
             return 'cursor-pointer text-xs';
@@ -362,22 +463,97 @@ export default {
 
             if (commandName == 'clone') {
                 this.clone(rowId);
+            } else if (commandName == 'delete') {
+                this.showConfirmation = true;
+                this.selectedProduction = this.productions.find(p => p.id == rowId);
             } else {
                 this.$inertia.get(route('productions.' + commandName, rowId));
             }
         },
-        async updateStation() {
-            try {
-                const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
-                    { station: this.selectedProduction.station });
-                if (response.status === 200) {
+        getFilter() {
+            // Obtener la URL actual
+            const currentURL = new URL(window.location.href);
+            // Extraer el valor de 'filter' de los parámetros de búsqueda
+            const filterFromURL = currentURL.searchParams.get('filter');
+
+            if (filterFromURL) {
+                this.searchTemp = filterFromURL;
+                this.handleSearch();
+            } else {
+                this.fetchProductions();
+            }
+        },
+        deleteProduction() {
+            this.form.delete(route('productions.destroy', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showConfirmation = false;
                     this.$notify({
-                        title: "Progreso actualizado",
+                        title: "Orden de producción eliminada",
                         type: "success",
                     });
+                    this.fetchProductions();
+                    this.selectedProduction = null;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al eliminar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        clone(rowId) {
+            this.form.post(route('productions.clone', rowId), {
+                onSuccess: () => {
+                    this.$notify({
+                        title: "Orden de producción clonada. Edita lo que necesites",
+                        type: "success",
+                    });
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al clonar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        closeProduction() {
+            this.form.post(route('productions.close', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showCloseProduction = false;
+                    this.$notify({
+                        title: "Orden de producción cerrada",
+                        type: "success",
+                    });
+                    this.selectedProduction.station = this.tempStation;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al cerrar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        async updateStation() {
+            if (this.tempStation == 'Inspección') {
+                this.showCloseProduction = true;
+                this.showDetails = false;
+            } else {
+                try {
+                    const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
+                        { station: this.tempStation });
+                    if (response.status === 200) {
+                        this.$notify({
+                            title: "Progreso actualizado",
+                            type: "success",
+                        });
+                        this.selectedProduction.station = this.tempStation;
+                    }
+                } catch (error) {
+                    console.error('Error updating station:', error);
                 }
-            } catch (error) {
-                console.error('Error updating station:', error);
             }
         },
         async updateMachine() {
@@ -425,8 +601,8 @@ export default {
         },
     },
     mounted() {
-        this.fetchProductions();
         this.fetchMachines();
+        this.getFilter();
     }
 }
 </script>

@@ -17,7 +17,7 @@
                                 <span>Gestión de producción</span>
                             </div>
                         </template>
-                        <Productions />
+                        <Productions ref="productions" />
                     </el-tab-pane>
                     <el-tab-pane name="3">
                         <template #label>
@@ -25,7 +25,7 @@
                                 <span>Nueva producción</span>
                             </div>
                         </template>
-                        <Create />
+                        <Create :nextProduction="next_production" @created="refreshProductionsList" />
                     </el-tab-pane>
                 </el-tabs>
             </main>
@@ -53,6 +53,7 @@ export default {
     },
     props: {
         productions: Array,
+        next_production: Number,
     },
     methods: {
         handleClick(tab) {
@@ -61,7 +62,11 @@ export default {
             currentURL.searchParams.set('currentTab', tab.props.name);
             // Actualiza la URL
             window.history.replaceState({}, document.title, currentURL.href);
-        }
+        },
+        refreshProductionsList() {
+            // Llama al método fetchProductions del componente Productions
+            this.$refs.productions.fetchProductions();
+        },
     },
     mounted() {
         // Obtener la URL actual
