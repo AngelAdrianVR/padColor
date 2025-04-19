@@ -14,7 +14,6 @@ class Production extends Model
         'client',
         'season',
         'station',
-        'quantity',
         'materials',
         'material',
         'width',
@@ -29,7 +28,10 @@ class Production extends Model
         'machine_id',
         'user_id',
         'start_date',
+        'close_date',
         'estimated_date',
+        'quantity',
+        'close_quantity',
         'current_quantity',
         'look',
         'changes',
@@ -45,6 +47,7 @@ class Production extends Model
         'materials' => 'array',
         'estimated_date' => 'date',
         'start_date' => 'date',
+        'close_date' => 'date',
     ];
 
     //realciones

@@ -112,6 +112,38 @@
             </div>
         </div>
     </div>
+    <DialogModal :show="showCloseProduction" @close="showCloseProduction = false">
+        <template #title>
+            <h1 class="font-semibold">Cerrar producción</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Cantidad entregada:" />
+                    <el-input-number v-model="form.close_quantity" @change="handleSheet"
+                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.close_quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de cierre:" />
+                    <el-date-picker class="!w-full" v-model="form.close_date" type="date" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.close_date" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showCloseProduction = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="closeProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
     <DialogModal :show="showDetails" @close="showDetails = false">
         <template #title>
             <h1 class="font-semibold">Orden de producción</h1>
@@ -156,9 +188,9 @@
                 <p class="text-[#464646]">Progreso:</p>
                 <div class="col-span-2 relative">
                     <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
-                        :style="{ backgroundColor: stations.find(s => s.name === selectedProduction.station)?.light, color: stations.find(s => s.name === selectedProduction.station)?.dark }"
-                        v-html="stations.find(s => s.name === selectedProduction.station)?.icon"></div>
-                    <el-select @change="updateStation" v-model="selectedProduction.station" class="!w-2/3">
+                        :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
+                        v-html="stations.find(s => s.name === tempStation)?.icon"></div>
+                    <el-select @change="updateStation" v-model="tempStation" class="!w-2/3">
                         <el-option v-for="station in stations" :key="station" :label="station.name"
                             :value="station.name" />
                     </el-select>
@@ -227,6 +259,8 @@
 <script>
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -238,7 +272,8 @@ export default {
     name: 'ProductionList',
     data() {
         const form = useForm({
-            temp: null,
+            close_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
+            close_quantity: 0,
         });
 
         return {
@@ -247,7 +282,9 @@ export default {
             fetching: false,
             showDetails: false,
             showConfirmation: false,
+            showCloseProduction: false,
             selectedProduction: null,
+            tempStation: null,
             searchTemp: null,
             search: null,
             sheets: null,
@@ -373,6 +410,8 @@ export default {
         PrimaryButton,
         CancelButton,
         Loading,
+        InputLabel,
+        InputError,
     },
     props: {
     },
@@ -413,6 +452,7 @@ export default {
         handleRowClick(row) {
             this.showDetails = true;
             this.selectedProduction = row;
+            this.tempStation = row.station;
         },
         tableRowClassName({ row, rowIndex }) {
             return 'cursor-pointer text-xs';
@@ -478,18 +518,42 @@ export default {
                 },
             });
         },
-        async updateStation() {
-            try {
-                const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
-                    { station: this.selectedProduction.station });
-                if (response.status === 200) {
+        closeProduction() {
+            this.form.post(route('productions.close', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showCloseProduction = false;
                     this.$notify({
-                        title: "Progreso actualizado",
+                        title: "Orden de producción cerrada",
                         type: "success",
                     });
+                    this.selectedProduction.station = this.tempStation;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al cerrar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        async updateStation() {
+            if (this.tempStation == 'Inspección') {
+                this.showCloseProduction = true;
+                this.showDetails = false;
+            } else {
+                try {
+                    const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
+                        { station: this.tempStation });
+                    if (response.status === 200) {
+                        this.$notify({
+                            title: "Progreso actualizado",
+                            type: "success",
+                        });
+                        this.selectedProduction.station = this.tempStation;
+                    }
+                } catch (error) {
+                    console.error('Error updating station:', error);
                 }
-            } catch (error) {
-                console.error('Error updating station:', error);
             }
         },
         async updateMachine() {

@@ -172,4 +172,13 @@ class ProductionController extends Controller
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
     }
+
+    public function close(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Inspección',
+            'close_quantity' => $request->close_quantity,
+            'close_date' => $request->close_date,
+        ]);
+    }
 }
