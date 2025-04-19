@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Production;
 use Illuminate\Http\Request;
+use App\Exports\ProductionsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
 {
@@ -149,7 +151,7 @@ class ProductionController extends Controller
                     ->orWhere('station', 'like', "%{$search}%")
                     ->orWhereHas('product', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('season', 'like', "%{$search}%");
+                            ->orWhere('season', 'like', "%{$search}%");
                     });
             });
         }
@@ -178,7 +180,30 @@ class ProductionController extends Controller
         $production->update([
             'station' => 'Inspección',
             'close_quantity' => $request->close_quantity,
-            'close_date' => $request->close_date,
+            'close_production_date' => $request->close_production_date,
         ]);
+    }
+
+    public function exportExcel()
+    {
+        $startDate = request('startDate');
+        $endDate = request('endDate');
+        $season = request('season');
+        $station = request('station');
+
+        $productions = Production::with(['user', 'product', 'machine', 'modifiedUser'])
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->when($season !== 'Todas', function ($query) use ($season) {
+                return $query->whereHas('product', function ($query) use ($season) {
+                    $query->where('season', $season);
+                });
+            })
+            ->when($station !== 'Todos', function ($query) use ($station) {
+                return $query->where('station', $station);
+            })
+            ->get();
+
+        return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
     }
 }

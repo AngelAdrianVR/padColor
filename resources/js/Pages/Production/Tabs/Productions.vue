@@ -9,11 +9,11 @@
                         placeholder="Buscar por folio, progreso, producto, cliente, temporada" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <el-dropdown split-button type="primary" @click="" trigger="click" @command="handleCommand">
+                <el-dropdown split-button type="primary" @click="" trigger="click">
                     Importar
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item command="export">Exportar</el-dropdown-item>
+                            <el-dropdown-item @click="showExportFilters = true">Exportar</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -112,6 +112,47 @@
             </div>
         </div>
     </div>
+    <DialogModal :show="showExportFilters" @close="showExportFilters = false">
+        <template #title>
+            <h1 class="font-semibold">Exportar órdenes de producción</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Fecha de emisión*" />
+                    <el-date-picker v-model="dateRange" class="!w-full" type="daterange" range-separator="A"
+                        start-placeholder="Fecha de inicio" end-placeholder="Fecha de fin" format="DD/MMM/YYYY"
+                        value-format="YYYY-MM-DD" />
+                </div>
+                <div>
+                    <InputLabel value="Temporada" />
+                    <el-select class="w-full" v-model="season" placeholder="Seleccione la temporada"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option v-for="item in seasons" :key="item" :label="item" :value="item" />
+                    </el-select>
+                </div>
+                <div>
+                    <InputLabel value="Progreso" />
+                    <el-select class="w-full" v-model="station" placeholder="Seleccione el pregreso"
+                        no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                        <el-option label="Todos" value="Todos" />
+                        <el-option v-for="item in stations" :key="item.name" :label="item.name" :value="item.name" />
+                    </el-select>
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showExportFilters = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="exportExcel" :disabled="form.processing || !dateRange">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
     <DialogModal :show="showCloseProduction" @close="showCloseProduction = false">
         <template #title>
             <h1 class="font-semibold">Cerrar producción</h1>
@@ -126,9 +167,9 @@
                 </div>
                 <div>
                     <InputLabel value="Fecha de cierre:" />
-                    <el-date-picker class="!w-full" v-model="form.close_date" type="date" placeholder="dd/mm/aa"
+                    <el-date-picker class="!w-full" v-model="form.close_production_date" type="date" placeholder="dd/mm/aa"
                         value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
-                    <InputError :message="form.errors.close_date" />
+                    <InputError :message="form.errors.close_production_date" />
                 </div>
             </div>
         </template>
@@ -272,7 +313,7 @@ export default {
     name: 'ProductionList',
     data() {
         const form = useForm({
-            close_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
+            close_production_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             close_quantity: 0,
         });
 
@@ -283,6 +324,7 @@ export default {
             showDetails: false,
             showConfirmation: false,
             showCloseProduction: false,
+            showExportFilters: false,
             selectedProduction: null,
             tempStation: null,
             searchTemp: null,
@@ -292,6 +334,10 @@ export default {
             ts: null,
             ps: null,
             tps: null,
+            //exportación
+            dateRange: null,
+            season: 'Todas',
+            station: 'Todos',
             // paginación
             currentPage: 1,
             total: 0,
@@ -402,6 +448,18 @@ export default {
 
             ],
             machines: [],
+            seasons: [
+                'Todas',
+                'Amistad',
+                'Escolar',
+                'Fiestas patrias',
+                'Monarca',
+                'Muestos',
+                'Navidad',
+                'Servicios',
+                'Toda ocasión',
+                'UUPZ',
+            ]
         }
     },
     components: {
@@ -416,6 +474,16 @@ export default {
     props: {
     },
     methods: {
+        exportExcel() {
+            const url = route('productions.export-excel', {
+                startDate: this.dateRange[0],
+                endDate: this.dateRange[1],
+                station: this.station,
+                season: this.season,
+            });
+
+            window.open(url, '_blank');
+        },
         formatDate(dateString) {
             return format(parseISO(dateString), 'EEE, dd MMMM yyyy', { locale: es });
         },

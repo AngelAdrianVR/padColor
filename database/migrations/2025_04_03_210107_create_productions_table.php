@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
             $table->unsignedFloat('current_quantity', 11, 2)->default(0);
-            $table->unsignedFloat('close_date', 11, 2)->default(0);
+            $table->unsignedFloat('close_quantity', 11, 2)->default(0);
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
             $table->unsignedFloat('gauge', 8, 2)->nullable();
@@ -38,9 +38,12 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('machine_id')->constrained('machines')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('modified_user_id')->constrained('users')->cascadeOnDelete();
             $table->date('estimated_date')->nullable();
-            $table->date('close_date')->nullable();
+            $table->date('estimated_package_date')->nullable();
+            $table->date('close_production_date')->nullable();
             $table->date('start_date')->nullable();
+            $table->date('finish_date')->nullable();
             $table->timestamps();
         });
     }
