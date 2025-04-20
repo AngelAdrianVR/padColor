@@ -3,7 +3,7 @@
         <div>
             <h1 class="font-bold">Ordenes de producción</h1>
             <!-- Buscador -->
-            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-4">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-4 space-y-2 lg:space-y-0">
                 <div class="lg:w-1/3 relative lg:mr-12">
                     <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
                         placeholder="Buscar por folio, progreso, producto, cliente, temporada" type="search">
@@ -117,7 +117,7 @@
             <h1 class="font-semibold">Exportar órdenes de producción</h1>
         </template>
         <template #content>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="lg:grid grid-cols-2 gap-3">
                 <div>
                     <InputLabel value="Fecha de emisión*" />
                     <el-date-picker v-model="dateRange" class="!w-full" type="daterange" range-separator="A"

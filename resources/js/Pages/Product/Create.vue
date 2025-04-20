@@ -2,12 +2,12 @@
     <AppLayout title="Agregar producto">
         <main class="px-2 lg:px-14">
             <form @submit.prevent="store"
-                class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
+                class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 lg:grid grid-cols-2 gap-x-3 gap-y-2">
                 <h1 class="font-semibold ml-2 col-span-full">Crear producto</h1>
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información del producto</h2>
                 <div>
                     <InputLabel value="Código*" />
-                    <el-input v-model="form.code" placeholder="Escribe el código del producto" type="text" />                    
+                    <el-input v-model="form.code" placeholder="Escribe el código del producto" type="text" />
                     <InputError :message="form.errors.code" />
                 </div>
 
@@ -29,15 +29,14 @@
 
                 <div class="col-span-full">
                     <InputLabel value="Nombre del producto*" />
-                    <el-input v-model="form.name" placeholder="Escribe el nombre del producto" type="text" />                    
+                    <el-input v-model="form.name" placeholder="Escribe el nombre del producto" type="text" />
                     <InputError :message="form.errors.name" />
                 </div>
 
                 <div class="col-span-full">
                     <InputLabel value="Descripción" />
                     <el-input v-model="form.description" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
-                        :maxlength="500" placeholder="Agrega una descripción al producto"
-                        show-word-limit clearable />
+                        :maxlength="500" placeholder="Agrega una descripción al producto" show-word-limit clearable />
                     <InputError :message="form.errors.description" />
                 </div>
 
@@ -73,7 +72,7 @@
                         :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                         :parser="(value) => value.replace(/\$\s?|(,*)/g, '')">
                         <template #append>cm</template>
-                    </el-input>                    
+                    </el-input>
                     <InputError :message="form.errors.height" />
                 </div>
                 <div>
@@ -82,7 +81,7 @@
                         :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                         :parser="(value) => value.replace(/\$\s?|(,*)/g, '')">
                         <template #append>cm</template>
-                    </el-input>                    
+                    </el-input>
                     <InputError :message="form.errors.width" />
                 </div>
                 <div>
@@ -91,14 +90,14 @@
                         :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                         :parser="(value) => value.replace(/\$\s?|(,*)/g, '')">
                         <template #append>cm</template>
-                    </el-input>                    
+                    </el-input>
                     <InputError :message="form.errors.large" />
                 </div>
 
                 <div class="col-span-2 text-right mt-4">
                     <PrimaryButton :disabled="form.processing">
                         <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span>Guardar producto</span>
+                        <span>Crear</span>
                     </PrimaryButton>
                 </div>
             </form>
@@ -116,71 +115,74 @@ import axios from 'axios';
 import { format } from "date-fns";
 
 export default {
-data() {
-    const form = useForm({
-        name: null,
-        code: null,
-        description: null,
-        season: null,
-        branch: 'PadColor',
-        measure_unit: null,
-        width: null,
-        large: null,
-        height: null,
-        material: null,
-        stock: null,
-        min_stock: null,
-        max_stock: null,
-        price: null,
-        created_at: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
-    });
-    
-    return {
-        form,
-        seasons: [
-            'Verano',
-            'Invierno',
-            'Primavera',
-            'Otoño',
-        ],
-        measure_units: [
-            'mm',
-            'cm',
-            'm',
-            'Piezas',
-        ],
-        materials: [
-            'Material 1',
-            'Material 2',
-            'Material 3',
-            'Material 4',
-        ],
-    }
-},
-components: {
-    AppLayout,
-    InputLabel,
-    InputError,
-    PrimaryButton,
-},
-props: {
-},
-methods: {
-    store() {
-        this.form.post(route('products.store'), {
-            onSuccess: () => {
-                this.form.reset();
-                this.$notify({
-                    title: 'Producto agregado',
-                    message: '',
-                    type: 'success',
-                });
-            },
-            onError: () => {
-                console.log(this.form.errors);
-            },
+    data() {
+        const form = useForm({
+            name: null,
+            code: null,
+            description: null,
+            season: null,
+            branch: 'PadColor',
+            measure_unit: null,
+            width: null,
+            large: null,
+            height: null,
+            material: null,
+            stock: null,
+            min_stock: null,
+            max_stock: null,
+            price: null,
+            created_at: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
         });
+
+        return {
+            form,
+            seasons: [
+                'Amistad',
+                'Escolar',
+                'Fiestas patrias',
+                'Monarca',
+                'Muestos',
+                'Navidad',
+                'Servicios',
+                'Toda ocasión',
+                'UUPZ',
+            ],
+            measure_units: [
+                'Pieza',
+                'Paquete',
+            ],
+            materials: [
+                'Material 1',
+                'Material 2',
+                'Material 3',
+                'Material 4',
+            ],
+        }
     },
-}
+    components: {
+        AppLayout,
+        InputLabel,
+        InputError,
+        PrimaryButton,
+    },
+    props: {
+    },
+    methods: {
+        store() {
+            this.form.post(route('products.store'), {
+                onSuccess: () => {
+                    this.form.reset();
+                    this.$notify({
+                        title: 'Producto agregado',
+                        message: '',
+                        type: 'success',
+                    });
+                },
+                onError: () => {
+                    console.log(this.form.errors);
+                },
+            });
+        },
+    }
 }
 </script>
