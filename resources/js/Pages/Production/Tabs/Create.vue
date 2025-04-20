@@ -1,7 +1,7 @@
 <template>
     <div class="mb-4">
         <form @submit.prevent="store"
-            class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
+            class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 md:grid grid-cols-2 gap-x-3 gap-y-2">
             <h1 class="font-semibold ml-2 col-span-full">Crear orden de producción</h1>
             <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
             <div>
@@ -47,8 +47,8 @@
                 <div class="flex items-center">
                     <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
-                    <el-select v-model="form.product_id" placeholder="Selecciona el producto" class="!w-full"
-                        :disabled="fetchingProducts">
+                    <el-select v-model="form.product_id" @change="handleChangeProduct" filterable placeholder="Selecciona el producto" class="!w-full"
+                        :disabled="fetchingProducts" no-match-text="No hay productos coincidentes">
                         <el-option v-for="product in products" :key="product.id" :label="product.name"
                             :value="product.id" />
                     </el-select>
@@ -314,12 +314,6 @@ export default {
             // calculos
             dfh: null,
             // opciones
-            seasons: [
-                'Verano',
-                'Invierno',
-                'Primavera',
-                'Otoño',
-            ],
             stations: [
                 {
                     name: 'Material pendiente',
@@ -477,6 +471,10 @@ export default {
                     console.log(this.form.errors);
                 },
             });
+        },
+        handleChangeProduct() {
+            const productSelected = this.products.find(product => product.id === this.form.product_id);
+            this.form.material = productSelected.material;
         },
         cleanForm() {
             this.form.reset();

@@ -9,7 +9,7 @@
                                 <span>Home</span>
                             </div>
                         </template>
-                        <Home />
+                        <Home :productions="productions"/>
                     </el-tab-pane>
                     <el-tab-pane name="2">
                         <template #label>

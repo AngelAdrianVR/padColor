@@ -3,7 +3,7 @@
         <div class="mb-4">
             <Back class="mt-5 mx-2 lg:mx-20" />
             <form @submit.prevent="update"
-                class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-2">
+                class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 md:grid grid-cols-2 gap-x-3 gap-y-2">
                 <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
                 <div>
@@ -49,8 +49,8 @@
                     <div class="flex items-center">
                         <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                         <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
-                        <el-select v-model="form.product_id" placeholder="Selecciona el producto" class="!w-full"
-                            :disabled="fetchingProducts">
+                        <el-select v-model="form.product_id" filterable no-match-text="No hay productos coincidentes"
+                            placeholder="Selecciona el producto" class="!w-full" :disabled="fetchingProducts">
                             <el-option v-for="product in products" :key="product.id" :label="product.name"
                                 :value="product.id" />
                         </el-select>
@@ -59,7 +59,8 @@
                 </div>
                 <div>
                     <InputLabel value="Cantidad solicitada*" />
-                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :min="1" class="!w-full" />
+                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad"
+                        :min="1" class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
                 <div>
@@ -80,7 +81,8 @@
                         </div>
                     </InputLabel>
                     <el-select v-model="form.station" placeholder="Selecciona el progreso actual" class="!w-full">
-                        <el-option v-for="station in stations" :key="station" :label="station.name" :value="station.name" />
+                        <el-option v-for="station in stations" :key="station" :label="station.name"
+                            :value="station.name" />
                     </el-select>
                     <InputError :message="form.errors.station" />
                 </div>
@@ -99,9 +101,9 @@
                 </div>
                 <div class="col-span-full">
                     <InputLabel value="Notas" />
-                    <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea" :maxlength="500"
-                        placeholder="Agrega las notas que consideres relevantes para producción" show-word-limit
-                        clearable />
+                    <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
+                        :maxlength="500" placeholder="Agrega las notas que consideres relevantes para producción"
+                        show-word-limit clearable />
                     <InputError :message="form.errors.notes" />
                 </div>
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas</h2>
@@ -139,7 +141,7 @@
                 <div>
                     <InputLabel value="Caras" />
                     <el-select v-model="form.faces" placeholder="Selecciona el número de caras" class="!w-full">
-                        <el-option v-for="face in [0,1,2]" :key="face" :label="face" :value="face" />
+                        <el-option v-for="face in [0, 1, 2]" :key="face" :label="face" :value="face" />
                     </el-select>
                     <InputError :message="form.errors.faces" />
                 </div>
@@ -150,7 +152,8 @@
                 </div>
                 <div>
                     <InputLabel value="Pz/H" />
-                    <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" class="!w-full" />
+                    <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja"
+                        class="!w-full" />
                     <InputError :message="form.errors.pps" />
                 </div>
                 <div>
@@ -159,7 +162,8 @@
                 </div>
                 <div>
                     <InputLabel value="Ajuste" />
-                    <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" class="!w-full" />
+                    <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0"
+                        class="!w-full" />
                     <InputError :message="form.errors.adjust" />
                 </div>
                 <div>
@@ -183,7 +187,7 @@
                     <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
                 </div>
                 <div class="col-span-2 text-right mt-4 space-x-2">
-                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', {currentTab: 2}))"
+                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', { currentTab: 2 }))"
                         :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
                         Cancelar
                     </PrimaryButton>
@@ -194,7 +198,7 @@
                 </div>
             </form>
         </div>
-    </AppLayout>    
+    </AppLayout>
 </template>
 
 <script>
@@ -211,8 +215,8 @@ export default {
     data() {
         const form = useForm({
             // tomar la primera letra de this.production.folio
-            type: this.production.folio.charAt(0),
-            folio: this.production.folio.split(this.production.folio.charAt(0))[1],            
+            type: this.production.folio.split('-')[0],
+            folio: this.production.folio.split('-')[1],
             client: this.production.client,
             changes: this.production.changes,
             season: this.production.season,
@@ -390,7 +394,7 @@ export default {
         Back,
     },
     props: {
-       production: Object,
+        production: Object,
     },
     methods: {
         update() {
@@ -418,7 +422,7 @@ export default {
                 this.dfh = null;
             }
         },
-        handleSheet(){
+        handleSheet() {
             this.form.pf = this.form.pps;
             if (this.form.quantity && this.form.pps > 0) {
                 this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
@@ -446,7 +450,7 @@ export default {
                 this.form.tps = null;
             }
         },
-        handleHa(){
+        handleHa() {
             this.form.pf = this.form.pps;
             if (this.form.pps) {
                 this.form.ha = Math.ceil(this.form.pps * this.form.adjust);

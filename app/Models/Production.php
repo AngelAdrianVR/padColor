@@ -27,9 +27,12 @@ class Production extends Model
         'product_id',
         'machine_id',
         'user_id',
+        'modified_user_id',
         'start_date',
-        'close_date',
+        'finish_date',
+        'close_production_date',
         'estimated_date',
+        'estimated_package_date',
         'quantity',
         'close_quantity',
         'current_quantity',
@@ -46,14 +49,21 @@ class Production extends Model
     protected $casts = [
         'materials' => 'array',
         'estimated_date' => 'date',
+        'estimated_package_date' => 'date',
         'start_date' => 'date',
-        'close_date' => 'date',
+        'finish_date' => 'date',
+        'close_production_date' => 'date',
     ];
 
     //realciones
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function modifiedUser()
+    {
+        return $this->belongsTo(User::class, 'modified_user_id');
     }
 
     public function product()

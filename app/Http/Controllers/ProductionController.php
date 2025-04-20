@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Production;
 use Illuminate\Http\Request;
+use App\Exports\ProductionsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
 {
     public function index()
     {
-        $productions = Production::with(['user', 'product', 'machine'])->latest()->get();
+        $productions = Production::latest()->get(['id', 'station']);
         $next_production = Production::latest()->first();
         $next_production = $next_production ? $next_production->id + 1 : 1;
 
@@ -55,11 +57,11 @@ class ProductionController extends Controller
         // cambiar un poco el folio
         // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
         // $validated['folio'] = $request->type . $lastProductionId + 1;
-        $validated['folio'] = $request->type . $validated['folio'];
+        $validated['folio'] = $request->type . '-' . $validated['folio'];
         $validated['user_id'] = auth()->id();
         $validated['materials'] = [$validated['materials']];
 
-        $production = Production::create($validated);
+        $production = Production::create($validated + ['modified_user_id' => auth()->id()]);
     }
 
     public function show(Production $production)
@@ -106,10 +108,10 @@ class ProductionController extends Controller
         // cambiar un poco el folio
         // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
         // $validated['folio'] = $request->type . $lastProductionId + 1;
-        $validated['folio'] = $request->type . $validated['folio'];
+        $validated['folio'] = $request->type . '-' . $validated['folio'];
         $validated['materials'] = [$validated['materials']];
 
-        $production->update($validated);
+        $production->update($validated + ['modified_user_id' => auth()->id()]);
 
         return to_route('productions.index', ["currentTab" => 2]);
     }
@@ -117,12 +119,14 @@ class ProductionController extends Controller
     public function updateStation(Request $request, Production $production)
     {
         $production->station = $request->station;
+        $production->modified_user_id = auth()->id();
         $production->save();
     }
 
     public function updateMachine(Request $request, Production $production)
     {
         $production->machine_id = $request->machine_id;
+        $production->modified_user_id = auth()->id();
         $production->save();
     }
 
@@ -149,7 +153,7 @@ class ProductionController extends Controller
                     ->orWhere('station', 'like', "%{$search}%")
                     ->orWhereHas('product', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('season', 'like', "%{$search}%");
+                            ->orWhere('season', 'like', "%{$search}%");
                     });
             });
         }
@@ -178,7 +182,31 @@ class ProductionController extends Controller
         $production->update([
             'station' => 'Inspección',
             'close_quantity' => $request->close_quantity,
-            'close_date' => $request->close_date,
+            'close_production_date' => $request->close_production_date,
+            'modified_user_id' => auth()->id(),
         ]);
+    }
+
+    public function exportExcel()
+    {
+        $startDate = request('startDate');
+        $endDate = request('endDate');
+        $season = request('season');
+        $station = request('station');
+
+        $productions = Production::with(['user', 'product', 'machine', 'modifiedUser'])
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->when($season !== 'Todas', function ($query) use ($season) {
+                return $query->whereHas('product', function ($query) use ($season) {
+                    $query->where('season', $season);
+                });
+            })
+            ->when($station !== 'Todos', function ($query) use ($station) {
+                return $query->where('station', $station);
+            })
+            ->get();
+
+        return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
     }
 }
