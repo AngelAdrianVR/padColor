@@ -47,7 +47,7 @@
                 <div class="flex items-center">
                     <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
-                    <el-select v-model="form.product_id" filterable placeholder="Selecciona el producto" class="!w-full"
+                    <el-select v-model="form.product_id" @change="handleChangeProduct" filterable placeholder="Selecciona el producto" class="!w-full"
                         :disabled="fetchingProducts" no-match-text="No hay productos coincidentes">
                         <el-option v-for="product in products" :key="product.id" :label="product.name"
                             :value="product.id" />
@@ -314,12 +314,6 @@ export default {
             // calculos
             dfh: null,
             // opciones
-            seasons: [
-                'Verano',
-                'Invierno',
-                'Primavera',
-                'Otoño',
-            ],
             stations: [
                 {
                     name: 'Material pendiente',
@@ -477,6 +471,10 @@ export default {
                     console.log(this.form.errors);
                 },
             });
+        },
+        handleChangeProduct() {
+            const productSelected = this.products.find(product => product.id === this.form.product_id);
+            this.form.material = productSelected.material;
         },
         cleanForm() {
             this.form.reset();

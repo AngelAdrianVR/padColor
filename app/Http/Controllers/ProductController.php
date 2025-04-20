@@ -98,7 +98,7 @@ class ProductController extends Controller
 
     public function getAll()
     {
-        $items = Product::latest('id')->get(['name', 'id']);
+        $items = Product::latest('id')->get(['name', 'id', 'material']);
 
         return response()->json(compact('items'));
     }
