@@ -167,8 +167,8 @@
                 </div>
                 <div>
                     <InputLabel value="Fecha de cierre:" />
-                    <el-date-picker class="!w-full" v-model="form.close_production_date" type="date" placeholder="dd/mm/aa"
-                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <el-date-picker class="!w-full" v-model="form.close_production_date" type="date"
+                        placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                     <InputError :message="form.errors.close_production_date" />
                 </div>
             </div>
@@ -192,7 +192,8 @@
         <template #content>
             <div class="flex items-center justify-between">
                 <h2 class="text-[#666666] font-bold">Información de la orden</h2>
-                <button @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
+                <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                    @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
                     class="text-primary border border-primary rounded-md px-2 py-1">
                     Editar
                 </button>

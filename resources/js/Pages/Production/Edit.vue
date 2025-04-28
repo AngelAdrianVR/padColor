@@ -32,10 +32,14 @@
                 </div>
                 <div>
                     <InputLabel value="Cliente*" />
-                    <el-select v-model="form.client" placeholder="" class="!w-full">
-                        <el-option label="PadColor" value="PadColor" />
-                        <el-option label="Empaques" value="Empaques" />
-                    </el-select>
+                    <div class="flex items-center">
+                        <i v-if="fetchingClients" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                        <span v-if="fetchingClients" class="text-[10px]">Cargando clientes</span>
+                        <el-select v-model="form.client" placeholder="" class="!w-full" filterable
+                            :disabled="fetchingClients">
+                            <el-option v-for="item in clients" :key="item.id" :label="item.name" :value="item.name" />
+                        </el-select>
+                    </div>
                     <InputError :message="form.errors.client" />
                 </div>
                 <div>
@@ -249,8 +253,10 @@ export default {
             form,
             products: [],
             machines: [],
+            clients: [],
             fetchingProducts: false,
             fetchingMachines: false,
+            fetchingClients: false,
             // calculos
             dfh: null,
             // opciones
@@ -501,10 +507,25 @@ export default {
                 this.fetchingMachines = false;
             }
         },
+        async fetchClients() {
+            this.fetchingClients = true;
+            try {
+                const response = await axios.get(route('clients.get-all'));
+
+                if (response.status === 200) {
+                    this.clients = response.data.items;
+                }
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+            } finally {
+                this.fetchingClients = false;
+            }
+        },
     },
     mounted() {
         this.fetchProducts();
         this.fetchMachines();
+        this.fetchClients();
     },
 }
 </script>
