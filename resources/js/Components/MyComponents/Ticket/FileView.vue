@@ -7,10 +7,13 @@
             <p :title="file.file_name" class="font-bold text-xs lg:text-sm truncate">{{ file.file_name }}</p>
             <p class="text-[10px] lg:text-xs text-gray99">{{ (file.size/1000).toFixed(2) }}KB</p>
         </div>
+        <i v-if="canDelete" @click.stop="deleteFile" class="fa-solid fa-xmark p-1 top-1 right-1 z-50 text-xs cursor-default hover:text-red-500"></i>
     </div>
 </template>
 
 <script>
+import { ElMessageBox } from 'element-plus';
+
 export default {
 data(){
     return{
@@ -18,8 +21,13 @@ data(){
     }
 },
 props:{
-file: Object
+file: Object,
+canDelete: {
+    type: Boolean,
+    default: false,
 },
+},
+$emits: ['delete-file'],
 methods:{
     getFileTypeIcon() {
         // Asocia extensiones de archivo a iconos
@@ -58,6 +66,24 @@ methods:{
             type: "error",
         });
       }
+    },
+    deleteFile() {
+        ElMessageBox.confirm(
+            '¿Estás seguro que deseas eliminar el archivo?',
+            'Confirmar eliminación',
+            {
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning',
+            }
+        )
+        .then(() => {
+            // Usuario confirmó
+            this.$emit('delete-file', this.file);
+        })
+        .catch(() => {
+            // Usuario canceló, no hacemos nada
+        });
     },
 }
 }

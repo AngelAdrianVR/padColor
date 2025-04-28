@@ -34,7 +34,7 @@ const close = () => {
             <div class="font-medium text-gray-900 flex items-center justify-between">
                 <slot name="title" />
                 <button @click="close">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+                    <i class="fa-solid fa-xmark text-sm cursor-default hover:text-red-500"></i>
                 </button>
             </div>
 
