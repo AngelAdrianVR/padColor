@@ -26,7 +26,12 @@ class MachineController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Machine::create($request->all() + ['created_by' => auth()->user()->name]);
+        $machine = Machine::create($request->all() + ['created_by' => auth()->user()->name]);
+         
+        // Guardar el archivo en la colección 'image'
+        if ($request->hasFile('image')) {
+            $machine->addMediaFromRequest('image')->toMediaCollection('image');
+        }
     }
 
     public function show(Machine $machine)
@@ -46,7 +51,7 @@ class MachineController extends Controller
 
     public function destroy(Machine $machine)
     {
-        //
+        $machine->delete();    
     }
 
     public function getAll()
