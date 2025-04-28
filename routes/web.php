@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MachineController;
@@ -129,6 +130,12 @@ Route::post('products/get-matches', [ProductController::class, 'getMatches'])->n
 //------------------------------------------------------------------------------------------
 Route::resource('machines', MachineController::class)->middleware('auth');
 Route::get('machines-get-all', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
+
+
+//clients routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('clients', ClientController::class)->middleware('auth');
+Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('clients.get-all')->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------
