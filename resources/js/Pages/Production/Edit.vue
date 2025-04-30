@@ -226,7 +226,7 @@ export default {
             season: this.production.season,
             station: this.production.station,
             quantity: this.production.quantity,
-            materials: this.production.materials[0],
+            materials: this.production.materials?.length ? this.production.materials[0] : null,
             notes: this.production.notes,
             product_id: this.production.product_id,
             machine_id: this.production.machine_id,

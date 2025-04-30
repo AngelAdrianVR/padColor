@@ -37,7 +37,8 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
         
         // Validación de columnas requeridas
         if (!isset($row['codigo'], $row['almacen'], $row['es'])) {
-            Log::warning("[EXCEL] Fila {$this->processedRows} omitida - Faltan campos requeridos", $row);
+            // Log::warning("[EXCEL] Fila {$this->processedRows} omitida - Faltan campos requeridos", $row);
+            Log::warning("[EXCEL] Fila {$this->processedRows} omitida - Faltan campos requeridos");
             return null;
         }
 
@@ -47,7 +48,7 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
             $esEntrada = strtoupper($row['es']) === 'E';
             $cantidad = $esEntrada ? $row['entrada'] : $row['salida'];
 
-            Log::debug("[EXCEL] Procesando: Código {$codigo}, Almacén {$almacen}, Tipo " . ($esEntrada ? 'Entrada' : 'Salida'));
+            // Log::debug("[EXCEL] Procesando: Código {$codigo}, Almacén {$almacen}, Tipo " . ($esEntrada ? 'Entrada' : 'Salida'));
 
             // Buscar o crear el registro
             $production = Production::firstOrNew(['folio' => $codigo]);
@@ -55,22 +56,27 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
             if (!$production->exists) {
                 $this->createdRecords++;
                 Log::info("[EXCEL] Nuevo registro creado para código {$codigo}");
-            } elseif ($production->current_quantity != $cantidad) {
+            } elseif ($production->current_quantity != $cantidad || $production->station != $almacen) {
                 $this->updatedRecords++;
                 Log::info("[EXCEL] Actualizando registro existente para código {$codigo}");
             }
 
-            if (!$production->exists || $production->current_quantity != $cantidad || $production->station != $almacen) {
+            if (!$production->exists) {
                 $production->fill([
-                    'client' => $cantidad,
-                    'quantity' => $cantidad,
+                    'client' => 'JOSEFINA ISABEL CICERO FERNANDEZ',
+                    'quantity' => 0,
                     'current_quantity' => $cantidad,
                     'station' => $almacen,
-                    'product_id' => auth()->id(),
-                    'machine_id' => auth()->id(),
+                    'product_id' => 1,
+                    'machine_id' => 1,
                     'user_id' => auth()->id(),
                     'modified_user_id' => auth()->id(),
                 ])->save();
+            } elseif ($production->current_quantity != $cantidad || $production->station != $almacen) {
+                $production->current_quantity = $cantidad;
+                $production->station = $almacen;
+                $production->modified_user_id = auth()->id();
+                $production->save();
             }
 
             return null; // No necesitamos retornar el modelo ya que lo manejamos directamente
