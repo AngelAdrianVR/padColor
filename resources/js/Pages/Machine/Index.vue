@@ -10,7 +10,7 @@
                         placeholder="Buscar producto" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <PrimaryButton v-if="this.$page.props.auth.user.permissions.includes('Crear máquinas')" @click="showCreateModal = true">Agregar máquina</PrimaryButton>
+                <PrimaryButton class="mt-3 lg:mt-0" v-if="this.$page.props.auth.user.permissions.includes('Crear máquinas')" @click="showCreateModal = true">Agregar máquina</PrimaryButton>
             </div>
             <div class="mt-2 text-center">
                 <el-tag v-if="search" size="large" closable @close="handleTagClose">
@@ -20,7 +20,7 @@
 
             <!-- pagination -->
             <div class="overflow-auto mb-2 mt-8">
-                <PaginationWithNoMeta :pagination="machines" class="py-2" />
+                <PaginationWithNoMeta v-if="!search" :pagination="machines" class="py-2" />
             </div>
 
             <Loading v-if="loading" />
@@ -55,15 +55,6 @@
                                                 d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                         </svg>
                                         Editar</el-dropdown-item>
-                                    <el-dropdown-item class="!text-xs"
-                                        v-if="$page.props.auth.user.permissions.includes('Crear productos')"
-                                        :command="'clone-' + scope.row.id">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                        </svg>
-                                        Clonar</el-dropdown-item>
                                     <el-dropdown-item class="!text-xs"
                                         v-if="$page.props.auth.user.permissions.includes('Eliminar productos')"
                                         :command="'delete-' + scope.row.id">
@@ -112,46 +103,85 @@
         <template #footer>
             <PrimaryButton @click="store()" :disabled="form.processing">
                 <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                Continuar
+                Guardar máquina
             </PrimaryButton>
         </template>
     </DialogModal>
 
     <!-- Modal para ver detalles de la máquina -->
-    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false">
+    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false; editmode = false">
         <template #title>
             <div class="flex justify-between items-center w-full mr-8"> 
                 <h1 class="font-bold text-sm">Detalles de la máquina</h1>
-                <ThirthButton class="!rounded-md !px-3 !py-1">Editar</ThirthButton>
+                <ThirthButton @click="startEditMode()" v-if="!editmode" class="!rounded-md !px-3 !py-1">Editar</ThirthButton>
             </div>
         </template>
         <template #content>
-            <div>
-                <div class="mb-2">
-                    <InputLabel value="Nombre de la máquina*" />
-                    <el-input v-model="form.name" placeholder="Ej. Suajadora" type="text" />                    
+            <!-- Formularion de edición -->
+            <div v-if="editmode">
+                <div class="mb-4">
+                    <InputLabel value="Nombre de la máquina" />
+                    <el-input v-if="editmode" v-model="form.name" placeholder="Ej. Suajadora" type="text" />
                     <InputError :message="form.errors.name" />
                 </div>
 
-                <div class="mb-2">
+                <div class="mb-4">
                     <InputLabel value="Descripción" />
-                    <el-input v-model="form.description" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
+                    <el-input v-if="editmode" v-model="form.description" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
                         :maxlength="500" placeholder="Agrega una descripción a la máquina"
                         show-word-limit clearable />
                     <InputError :message="form.errors.description" />
                 </div>
 
-                <div class="mb-2">
+                <div class="mb-2 w-auto">
                     <InputLabel value="Imagen de la máquina" class="ml-3 mb-1" />
-                    <InputFilePreview @imagen="saveImage" @cleared="clearImage" />
+                    <InputFilePreview v-if="editmode" @imagen="saveImage" @cleared="clearImage"
+                        :imageUrl="selectedMachine.media[0]?.original_url" />
+                </div>
+            </div>
+
+            <!-- Detalles de máquina -->
+            <div class="md:grid grid-cols-3 gap-5 py-2" v-else>
+                <figure class="h-40 w-auto mt-5 border border-[#D9D9D9] rounded-lg flex items-center justify-center">
+                    <img v-if="selectedMachine.media[0]?.original_url" :src="selectedMachine.media[0]?.original_url" alt="" class="h-full object-contain">
+                    <div v-else>
+                        <img class="h-full object-contain" src="/images/no-image.png" alt="No hay imagen disponible">
+                    </div>
+                </figure>
+
+                <div class="col-span-2 mt-5">
+                    <h2 class="text-[#464646]">Nombre de la máquina:</h2>
+                    <h2 class="text-black font-bold text-lg">{{ selectedMachine.name }}</h2>
+
+                    <section class="grid grid-cols-2 gap-2 mt-5">
+                        <div>
+                            <p class="text-[#464646]">ID:</p>
+                            <p class="text-black">{{ selectedMachine.id }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[#464646]">Creado el:</p>
+                            <p class="text-black">{{ formatDate2(selectedMachine.created_at) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[#464646]">Creado por:</p>
+                            <p class="text-black">{{ selectedMachine.created_by }}</p>
+                        </div>
+                        <div class="col-span-full mt-2">
+                            <p class="text-[#464646]">Descripción:</p>
+                            <p class="text-black">{{ selectedMachine.description }}</p>
+                        </div>
+                    </section>
                 </div>
             </div>
         </template>
         <template #footer>
-            <PrimaryButton @click="store()" :disabled="form.processing">
-                <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                Continuar
-            </PrimaryButton>
+            <div class="flex items-center space-x-2">
+                <ThirthButton @click="editmode = false" v-if="editmode">Cancelar edición</ThirthButton>
+                <PrimaryButton v-if="editmode" @click="update()" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Guardar cambios
+                </PrimaryButton>
+            </div>
         </template>
     </DialogModal>
   </AppLayout>
@@ -167,6 +197,8 @@ import Loading from "@/Components/MyComponents/Loading.vue";
 import DialogModal from "@/Components/DialogModal.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import InputError from "@/Components/InputError.vue";
+import { format, parseISO } from 'date-fns';
+import es from 'date-fns/locale/es';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -177,6 +209,7 @@ data() {
         name: null,
         description: null,
         image: null,
+        imageCleared: false,
     });
 
     return {
@@ -188,6 +221,7 @@ data() {
         showCreateModal: false, // Para crear máquina
         showDetailsModal: false, // Para mostrar detalles de la máquina.
         selectedMachine: null, // Para mostrar detalles de la máquina.
+        editmode: false, // Para editar máquina
     }
 },
 components: {
@@ -205,9 +239,14 @@ props: {
     machines: Object,
 },
 methods: {
-    store() {
-        this.form.post(route('machines.store'), {
-            onSuccess: () => {
+    async store() {
+        try {
+            const response = await axios.post(route('machines.store'), this.form);
+
+            if (response.status === 200) {
+                const newMachine = response.data.machine;
+                this.filteredMachines.data.unshift(newMachine);
+
                 this.form.reset();
                 this.$notify({
                     title: 'Máquina agregada correctamente',
@@ -215,12 +254,56 @@ methods: {
                     type: 'success',
                 });
                 this.showCreateModal = false;
-                window.location.reload();
-            },
-            onError: () => {
-                console.log(this.form.errors);
-            },
-        });
+            }
+        } catch (error) {
+            console.log(error.response?.data?.errors || error);
+            this.$notify({
+                title: 'Error al guardar',
+                message: 'Verifica los campos requeridos e inténtalo de nuevo',
+                type: 'error',
+            });
+        }
+    },
+    update() {
+        if ( this.form.image ) {
+            this.form.post(route("machines.update-with-media", this.selectedMachine.id), {
+                method: '_put',
+                onSuccess: () => {
+                    this.$notify({
+                        title: "Máquina actualizada",
+                        message: "",
+                        type: "success",
+                    });
+                    window.location.reload();
+                    // this.selectedMachine.name = this.form.name;
+                    // this.selectedMachine.description = this.form.description;
+                    // this.editmode = false;
+                },
+            });
+        } else {
+            this.form.put(route('machines.update', this.selectedMachine.id), {
+                onSuccess: () => {
+                    this.$notify({
+                        title: 'Máquina actualizada',
+                        message: '',
+                        type: 'success',
+                    });
+                    window.location.reload();
+                    // this.selectedMachine.name = this.form.name;
+                    // this.selectedMachine.description = this.form.description;
+                    // this.editmode = false;
+                },
+                onError: () => {
+                    console.log(this.form.errors);
+                },
+            });
+        }
+        
+    },
+    startEditMode() {
+        this.form.name = this.selectedMachine.name;
+        this.form.description = this.selectedMachine.description;
+        this.editmode = true;
     },
     formatDate(date) {
         const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -230,6 +313,9 @@ methods: {
         const year = d.getFullYear();
 
         return `${day}-${month}-${year}`;
+    },
+    formatDate2(dateString) {
+        return format(parseISO(dateString), 'dd MMMM, yyyy', { locale: es });
     },
     async handleSearch() {
         this.loading = true;
@@ -267,13 +353,16 @@ methods: {
         return 'cursor-pointer text-xs';
     },
     handleCommand(command) {
-        const commandName = command.split('-')[0];
-        const rowId = command.split('-')[1];
+        const [commandName, rowId] = command.split('-');
+        const machineId = parseInt(rowId);
 
-        if (commandName == 'clone') {
-            this.clone(rowId);
-        } else if (commandName == 'edit') {
-            this.$inertia.get(route('machines.edit', rowId));
+        if (commandName == 'edit') {
+            const machine = this.filteredMachines.data.find(m => m.id === machineId);
+            if (machine) {
+                this.selectedMachine = machine;
+                this.showDetailsModal = true;
+                this.startEditMode();
+            }
         } else if (commandName == 'delete') {
             this.delete(rowId);
         }
@@ -287,33 +376,28 @@ methods: {
         }).then(() => {
             axios.delete(route('machines.destroy', id))
                 .then(response => {
+                    const index = this.filteredMachines.data.findIndex(machine => machine.id == id);
+                    if (index !== -1) {
+                        this.filteredMachines.data.splice(index, 1);
+                    }
+
                     this.$message({
                         type: 'success',
-                        message: 'Producto eliminado correctamente',
+                        message: 'Máquina eliminado correctamente',
                     });
-                    this.$inertia.reload();
                 })
                 .catch(error => {
                     this.$message.error(error.response.data.message);
                 });
         }).catch(() => {});
     },
-    clone(id) {
-        this.$confirm('¿Estás seguro de que deseas clonar esta máquina?', 'Clonar máquina', {
-            type: 'warning',
-            showCancelButton: true,
-            cancelButtonText: 'Cancelar',
-            confirmButtonText: 'Clonar',
-        }).then(() => {
-            this.$inertia.get(route('machines.clone', id));
-            
-        }).catch(() => {});
-    },
     saveImage(image) {
         this.form.image = image;
+        this.form.imageCleared = false;
     },
     clearImage() {
         this.form.image = null;
+        this.form.imageCleared = true;
     },
 }
 }
