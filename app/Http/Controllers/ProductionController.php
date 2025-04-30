@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Production;
 use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
+use App\Imports\ProductionsImport;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
@@ -208,5 +210,16 @@ class ProductionController extends Controller
             ->get();
 
         return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
+    }
+
+    public function importExcel(Request $request)
+    {
+        // $request->validate([
+        //     'excel' => 'required|mimes:xlsx,xls,csv',
+        // ]);
+        // dd($request->excel[0]);
+        // Log::info('excel: ', $request->excel);
+
+        Excel::import(new ProductionsImport, $request->file('excel')[0]);
     }
 }

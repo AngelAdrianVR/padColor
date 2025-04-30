@@ -1,6 +1,7 @@
 <template>
     <div class="w-full">
-        <input type="file" ref="fileInput" style="display: none" @change="handleFileInputChange" :multiple="multiple" :accept="getAcceptedFormat()" />
+        <input type="file" ref="fileInput" style="display: none" @change="handleFileInputChange" :multiple="multiple"
+            :accept="getAcceptedFormat()" />
         <button type="button" @click="openFileBrowser">
             <p class="flex items-center space-x-2 text-sm text-primary cursor-pointer flex-shrink-0 flex-grow-0">
                 <!-- <i class="fa-solid fa-plus"></i> -->
@@ -22,7 +23,7 @@
         </div>
     </div>
 </template>
-  
+
 <script>
 export default {
     data() {
@@ -47,7 +48,8 @@ export default {
             if (format === 'video') return 'video/*';
             else if (format === 'pdf') return 'application/pdf';
             else if (format === 'imagen') return 'image/*';
-            else '*/*';
+            else if (format === 'excel') return '.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel';
+            else return '*/*';
         },
         openFileBrowser() {
             // Simula el clic en el input file al hacer clic en el botón personalizado
@@ -90,4 +92,3 @@ export default {
     },
 };
 </script>
-  
