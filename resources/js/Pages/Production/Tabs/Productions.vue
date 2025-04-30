@@ -537,6 +537,7 @@ export default {
             });
         },
         formatDate(dateString) {
+            if (!dateString) return '-';
             return format(parseISO(dateString), 'EEE, dd MMMM yyyy', { locale: es });
         },
         handleChangeFilter() {
