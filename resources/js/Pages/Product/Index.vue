@@ -10,7 +10,7 @@
                         placeholder="Buscar producto" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <PrimaryButton v-if="this.$page.props.auth.user.permissions.includes('Crear productos')" @click="$inertia.get(route('products.create'))">Agregar producto</PrimaryButton>
+                <PrimaryButton class="mt-3 lg:mt-0" v-if="this.$page.props.auth.user.permissions.includes('Crear productos')" @click="$inertia.get(route('products.create'))">Agregar producto</PrimaryButton>
             </div>
             <div class="mt-2 text-center">
                 <el-tag v-if="search" size="large" closable @close="handleTagClose">
@@ -20,7 +20,7 @@
 
             <!-- pagination -->
             <div class="overflow-auto mb-2 mt-8">
-                <PaginationWithNoMeta :pagination="products" class="py-2" />
+                <PaginationWithNoMeta v-if="!search" :pagination="products" class="py-2" />
             </div>
 
             <Loading v-if="loading" />
@@ -84,7 +84,7 @@
     </main>
 
     <!-- Modal para ver detalles del producto -->
-    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false">
+    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false" :max-width="'3xl'">
         <template #title>
             <div class="flex justify-between items-center w-full mr-8"> 
                 <h1>Detalles del producto</h1>
@@ -92,16 +92,60 @@
             </div>
         </template>
         <template #content>
-            <section class="grid grid-cols-2">
+            <section class="md:grid grid-cols-2">
                 <figure class="border border-[#D9D9D9] rounded-xl w-[80%] h-48 flex items-center justify-center">
-                    <img class="h-full object-contain" 
+                    <img v-if="selectedProduct.media?.some(m => m.collection_name === 'image')" class="h-full object-contain" 
                         :src="selectedProduct.media?.find(m => m.collection_name === 'image')?.original_url" :alt="selectedProduct.media?.find(m => m.collection_name === 'image')?.file_name">
+                    <div v-else>
+                        <img class="h-full object-contain" src="/images/no-image.png" alt="No hay imagen disponible">
+                    </div>
                 </figure>
                 <div>
-                    <div class="mb-2">
+                    <div class="mb-4">
                         <h2 class="text-[#727272]">Nombre del producto:</h2>
-                        <p class="text-md text-black font-semibold">{{ selectedProduct.name }}</p>
+                        <p class="text-[15px] text-black font-semibold mt-1">{{ selectedProduct.name }}</p>
                     </div>
+
+                    <section class="grid grid-cols-2 gap-1">
+                        <!-- Parte izquierda -->
+                        <article>
+                            <div class="mb-2">
+                                <h2 class="text-[#727272]">Código:</h2>
+                                <p class="text-[15px] text-black mt-1">{{ selectedProduct.code }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <h2 class="text-[#727272]">Temporada:</h2>
+                                <p class="text-[15px] text-black mt-1">{{ selectedProduct.season }}</p>
+                            </div>
+                        </article>
+                        
+                        <!-- Parte derecha -->
+                        <article>
+                            <div class="mb-2">
+                                <h2 class="text-[#727272]">Fecha de creación:</h2>
+                                <p class="text-[15px] text-black mt-1">{{ formatDate(selectedProduct.created_at) }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <h2 class="text-[#727272]">Material:</h2>
+                                <p class="text-[15px] text-black mt-1">{{ selectedProduct.material }}</p>
+                            </div>
+                        </article>
+
+                        <div class="mb-2 col-span-full">
+                            <h2 class="text-[#727272]">Descripción:</h2>
+                            <p class="text-[15px] text-black mt-1">{{ selectedProduct.description }}</p>
+                        </div>
+                        
+                        <div class="colspan-full">
+                            <p class="text-[#727272] mb-1">Archivos adjuntos:</p>
+                            <div class="space-y-1" v-if="selectedProduct.media?.some(m => m.collection_name === 'files')">
+                                <FileView v-for="file in selectedProduct.media?.filter(m => m.collection_name === 'files')"  
+                                    :key="file" :file="file" @delete-file="deleteFile($event)" />
+                            </div>
+                            <p v-else class="text-xs text-gray-400">No hay archivos adjuntos</p>
+                        </div>
+
+                    </section>
                 </div>
             </section>
         </template>
@@ -117,7 +161,10 @@ import DialogModal from "@/Components/DialogModal.vue";
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ThirthButton from '@/Components/MyComponents/ThirthButton.vue';
 import PaginationWithNoMeta from "@/Components/MyComponents/PaginationWithNoMeta.vue";
+import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
+import { format, parseISO } from 'date-fns';
+import es from 'date-fns/locale/es';
 import axios from 'axios';
 
 export default {
@@ -133,6 +180,7 @@ data() {
 },
 components: {
     Loading,
+    FileView,
     AppLayout,
     DialogModal,
     ThirthButton,
@@ -199,11 +247,15 @@ methods: {
         }).then(() => {
             axios.delete(route('products.destroy', id))
                 .then(response => {
+                    const index = this.filteredProducts.data.findIndex(product => product.id == id);
+                    if (index !== -1) {
+                        this.filteredProducts.data.splice(index, 1);
+                    }
+
                     this.$message({
                         type: 'success',
                         message: 'Producto eliminado correctamente',
                     });
-                    this.$inertia.reload();
                 })
                 .catch(error => {
                     this.$message.error(error.response.data.message);
@@ -220,6 +272,9 @@ methods: {
             this.$inertia.get(route('products.clone', id));
             
         }).catch(() => {});
+    },
+    formatDate(dateString) {
+        return format(parseISO(dateString), 'dd MMMM, yyyy', { locale: es });
     },
 }
 }
