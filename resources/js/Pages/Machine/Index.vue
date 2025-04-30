@@ -116,12 +116,51 @@
             </PrimaryButton>
         </template>
     </DialogModal>
+
+    <!-- Modal para ver detalles de la máquina -->
+    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false">
+        <template #title>
+            <div class="flex justify-between items-center w-full mr-8"> 
+                <h1 class="font-bold text-sm">Detalles de la máquina</h1>
+                <ThirthButton class="!rounded-md !px-3 !py-1">Editar</ThirthButton>
+            </div>
+        </template>
+        <template #content>
+            <div>
+                <div class="mb-2">
+                    <InputLabel value="Nombre de la máquina*" />
+                    <el-input v-model="form.name" placeholder="Ej. Suajadora" type="text" />                    
+                    <InputError :message="form.errors.name" />
+                </div>
+
+                <div class="mb-2">
+                    <InputLabel value="Descripción" />
+                    <el-input v-model="form.description" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
+                        :maxlength="500" placeholder="Agrega una descripción a la máquina"
+                        show-word-limit clearable />
+                    <InputError :message="form.errors.description" />
+                </div>
+
+                <div class="mb-2">
+                    <InputLabel value="Imagen de la máquina" class="ml-3 mb-1" />
+                    <InputFilePreview @imagen="saveImage" @cleared="clearImage" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <PrimaryButton @click="store()" :disabled="form.processing">
+                <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                Continuar
+            </PrimaryButton>
+        </template>
+    </DialogModal>
   </AppLayout>
 </template>
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ThirthButton from '@/Components/MyComponents/ThirthButton.vue';
 import PaginationWithNoMeta from "@/Components/MyComponents/PaginationWithNoMeta.vue";
 import InputFilePreview from "@/Components/MyComponents/InputFilePreview.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
@@ -146,7 +185,9 @@ data() {
         search: null,
         searchTemp: null,
         filteredMachines: this.machines,
-        showCreateModal: false
+        showCreateModal: false, // Para crear máquina
+        showDetailsModal: false, // Para mostrar detalles de la máquina.
+        selectedMachine: null, // Para mostrar detalles de la máquina.
     }
 },
 components: {
@@ -155,6 +196,7 @@ components: {
     InputLabel,
     InputError,
     DialogModal,
+    ThirthButton,
     PrimaryButton,
     InputFilePreview,
     PaginationWithNoMeta,
@@ -218,8 +260,8 @@ methods: {
         this.filteredMachines = this.machines;
     },
     handleRowClick(row) {
-        this.showDetails = true;
-        this.selectedProduction = row;
+        this.showDetailsModal = true;
+        this.selectedMachine = row;
     },
     tableRowClassName({ row, rowIndex }) {
         return 'cursor-pointer text-xs';

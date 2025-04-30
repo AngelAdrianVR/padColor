@@ -11,13 +11,13 @@
         </button>
 
         <div v-if="selectedFiles.length">
-            <ul class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 text-sm mt-2">
+            <ul class="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 text-sm mt-2">
                 <li v-for="(file, index) in selectedFiles" :key="index" class="flex items-center justify-between px-2">
                     <p class="flex items-center">
                         <i :class="getFileTypeIcon(file.name)"></i>
-                        <span class="ml-2">{{ file.name }}</span>
+                        <span class="ml-2 truncate xl:w-48 lg:w-40">{{ file.name }}</span>
                     </p>
-                    <button type="button" @click="removeFile(index)"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    <button type="button" @click="removeFile(index)"><i class="fa-solid fa-xmark text-xs cursor-default hover:text-red-500"></i></button>
                 </li>
             </ul>
         </div>
