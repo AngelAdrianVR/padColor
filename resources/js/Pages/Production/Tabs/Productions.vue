@@ -9,7 +9,7 @@
                         placeholder="Buscar por folio, progreso, producto, cliente, temporada" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <el-dropdown split-button type="primary" @click="" trigger="click">
+                <el-dropdown split-button type="primary" @click="showImportModal = true" trigger="click">
                     Importar
                     <template #dropdown>
                         <el-dropdown-menu>
@@ -147,6 +147,33 @@
                     Cancelar
                 </CancelButton>
                 <PrimaryButton @click="exportExcel" :disabled="form.processing || !dateRange">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
+    <DialogModal :show="showImportModal" @close="showImportModal = false">
+        <template #title>
+            <h1 class="font-semibold">Importar órdenes de producción</h1>
+        </template>
+        <template #content>
+            <p>
+                Antes de importar, asegúrate de que tu archivo Excel tenga las columnas: Código, Almacén, E/S, Entrada
+                y Salida. Al dar clic en "Continuar", el sistema agregará los registros nuevos y actualizará los
+                existentes si así lo requiere.
+            </p>
+            <div class="ml-2 mt-8">
+                <FileUploader @files-selected="form.excel = $event" :multiple="false" acceptedFormat="excel" />
+                <InputError :message="form.errors.excel" />
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showImportModal = false; form.excel = []" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="importExcel" :disabled="form.processing || !form.excel.length">
                     <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     Continuar
                 </PrimaryButton>
@@ -304,6 +331,7 @@ import DialogModal from '@/Components/DialogModal.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
+import FileUploader from '@/Components/MyComponents/FileUploader.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
@@ -316,6 +344,7 @@ export default {
         const form = useForm({
             close_production_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             close_quantity: 0,
+            excel: [], // solo se usa en importación
         });
 
         return {
@@ -326,6 +355,7 @@ export default {
             showConfirmation: false,
             showCloseProduction: false,
             showExportFilters: false,
+            showImportModal: false,
             selectedProduction: null,
             tempStation: null,
             searchTemp: null,
@@ -471,6 +501,7 @@ export default {
         Loading,
         InputLabel,
         InputError,
+        FileUploader,
     },
     props: {
     },
@@ -484,6 +515,26 @@ export default {
             });
 
             window.open(url, '_blank');
+        },
+        importExcel() {
+            this.form.post(route('productions.import-excel'), {
+                onSuccess: () => {
+                    this.$notify({
+                        title: "Órdenes de producción importadas",
+                        type: "success",
+                    });
+                    this.form.reset();
+                    this.showImportModal = false;
+                    this.fetchProductions();
+                },
+                onError: (err) => {
+                    console.log(err);
+                    this.$notify({
+                        title: "Error al importar las órdenes de producción",
+                        type: "error",
+                    });
+                },
+            });
         },
         formatDate(dateString) {
             return format(parseISO(dateString), 'EEE, dd MMMM yyyy', { locale: es });
