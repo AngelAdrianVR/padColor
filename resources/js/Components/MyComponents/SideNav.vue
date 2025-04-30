@@ -8,10 +8,10 @@
         <div class="bg-grayED h-full overflow-auto px-1">
             <!-- Logo -->
             <div class="flex items-center justify-center mt-7">
-                <Link v-if="small" :href="route('tickets.index')">
+                <Link v-if="small" :href="route('dashboard')">
                 <ApplicationMark />
                 </Link>
-                <Link v-else :href="route('tickets.index')">
+                <Link v-else :href="route('dashboard')">
                 <figure class="">
                     <img class="w-32" src="@/../../public/images/logo_name.png" alt="logo">
                 </figure>
