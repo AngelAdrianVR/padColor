@@ -82,12 +82,40 @@
             </el-table>
         </div>
     </main>
+
+    <!-- Modal para ver detalles del producto -->
+    <DialogModal :show="showDetailsModal" @close="showDetailsModal = false">
+        <template #title>
+            <div class="flex justify-between items-center w-full mr-8"> 
+                <h1>Detalles del producto</h1>
+                <ThirthButton @click="$inertia.get(route('products.edit', selectedProduct.id))" class="!rounded-md !px-3 !py-1">Editar</ThirthButton>
+            </div>
+        </template>
+        <template #content>
+            <section class="grid grid-cols-2">
+                <figure class="border border-[#D9D9D9] rounded-xl w-[80%] h-48 flex items-center justify-center">
+                    <img class="h-full object-contain" 
+                        :src="selectedProduct.media?.find(m => m.collection_name === 'image')?.original_url" :alt="selectedProduct.media?.find(m => m.collection_name === 'image')?.file_name">
+                </figure>
+                <div>
+                    <div class="mb-2">
+                        <h2 class="text-[#727272]">Nombre del producto:</h2>
+                        <p class="text-md text-black font-semibold">{{ selectedProduct.name }}</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+        <template #footer>
+        </template>
+    </DialogModal>
   </AppLayout>
 </template>
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DialogModal from "@/Components/DialogModal.vue";
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ThirthButton from '@/Components/MyComponents/ThirthButton.vue';
 import PaginationWithNoMeta from "@/Components/MyComponents/PaginationWithNoMeta.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
 import axios from 'axios';
@@ -99,11 +127,15 @@ data() {
         search: null,
         searchTemp: null,
         filteredProducts: this.products,
+        showDetailsModal: false, //mostrar detalles del producto (modal)
+        selectedProduct: null, //Producto seleccionado para mostrar sus detalles
     }
 },
 components: {
     Loading,
     AppLayout,
+    DialogModal,
+    ThirthButton,
     PrimaryButton,
     PaginationWithNoMeta,
 },
@@ -140,8 +172,8 @@ methods: {
         this.filteredProducts = this.products;
     },
     handleRowClick(row) {
-        this.showDetails = true;
-        this.selectedProduction = row;
+        this.showDetailsModal = true;
+        this.selectedProduct = row;
     },
     tableRowClassName({ row, rowIndex }) {
         return 'cursor-pointer text-xs';
