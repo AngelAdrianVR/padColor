@@ -1,6 +1,8 @@
 <template>
-    <main class="w-full mx-auto p-1 text-sm">
-        <Head :title="'Hoja Viajera'" />
+    
+    <main class="mx-auto p-1 text-sm" :class="printing ? 'w-full' : 'w-1/2'">
+        <Head :title="'Hoja Viajera ' + production.folio" />
+        <PrintButton class="mx-auto" v-if="!printing" @click="print" />
         <!-- Header  -->
         <section class="flex justify-between items-center space-x-3 mb-3">
             <figure class="">
@@ -12,10 +14,10 @@
                 <h3>Ingeniería de procesos</h3>
             </div>
 
-            <div class="border border-[#D9D9D9] rounded-xl py-2 *:px-3">
+            <div class="border border-[#D9D9D9] rounded-xl py-2 *:px-4">
                 <p class="text-center font-bold">Código</p>
-                <p class="py-2 text-sm">{{ 'PADI-FT-PRO-07' }}</p>
-                <p class="border-t border-[#D9D9D9] py-2 text-center">1 de 1</p>
+                <p class="py-2 text-sm">{{ production.folio }}</p>
+                <p class="border-t border-[#D9D9D9] py-2 text-center">1 de 1 ?</p>
             </div>
         </section>
 
@@ -24,17 +26,17 @@
             <section class="border border-[#D9D9D9] rounded-xl py-2 px-7 flex justify-between space-x-7 mb-3">
                 <div class="text-center">
                     <p class="text-[#676777]">Fecha de emisión</p>
-                    <p class="text-black">{{ '07/08/2018' }}</p>
+                    <p class="text-black">{{ formatDate(production.created_at) }}</p>
                 </div>
 
                 <div class="text-center">
                     <p class="text-[#676777]">Próxima revisión</p>
-                    <p class="text-black">{{ '07/08/2019' }}</p>
+                    <p class="text-black">{{ formatDate(currentDate) }} ?</p>
                 </div>
 
                 <div class="text-center">
                     <p class="text-[#676777]">Nivel de revisión</p>
-                    <p class="text-black">{{ '0' }}</p>
+                    <p class="text-black">{{ '0 ?' }}</p>
                 </div>
             </section>
 
@@ -44,15 +46,15 @@
                 <div class="border-t border-[#D9D9D9] py-2 px-7 flex justify-between space-x-7">
                     <div class="text-center">
                         <p class="text-[#676777]">No. Orden:</p>
-                        <p class="text-black">{{ '26405' }}</p>
+                        <p class="text-black">{{ production.id }}</p>
                     </div>
                     <div>
                         <p class="text-[#676777]">Modelo:</p>
-                        <p class="text-black">{{ '682158020347 Bolsa Grande Campeones-Ninguno' }}</p>
+                        <p class="text-black">{{ production.product.name }}</p>
                     </div>
                     <div>
                         <p class="text-[#676777]">Fecha:</p>
-                        <p class="text-black">{{ '14/03/2025' }}</p>
+                        <p class="text-black">{{ formatDate(currentDate) }} ?</p>
                     </div>
                 </div>
             </section>
@@ -65,23 +67,23 @@
                     <section>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Hojas necesarias:</p>
-                            <p class="text-black">{{ '13,000' }}</p>
+                            <p class="text-black">{{ production.ts }} ? (ts)</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Dimensiones:</p>
-                            <p class="text-black">{{ '73 x 51' }}</p>
+                            <p class="text-black">{{ production.width }} x {{ production.large }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">No. De Cambios:</p>
-                            <p class="text-black">{{ '4' }}</p>
+                            <p class="text-black">{{ production.changes}}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Tamaños a Imprimir:</p>
-                            <p class="text-black">{{ '12,000' }}</p>
+                            <p class="text-black">{{ production.dfi }} ? (dfi)</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="text-black">{{ 'Mandar a máquina' }}</p>
+                            <p class="text-black">{{ production.notes }}</p>
                         </div>
                     </section>
 
@@ -89,19 +91,19 @@
                     <section>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Material/Calibre:</p>
-                            <p class="text-black">{{ 'Multicapa 13.4 pts' }}</p>
+                            <p class="text-black">{{ production.material }} / {{ production.gauge }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Acabado/Caras:</p>
-                            <p class="text-black">{{ 'Brillante 0 Capas' }}</p>
+                            <p class="text-black">{{ production.look + ' ' + production.faces + ' Capas' }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Impresión por cambio:</p>
-                            <p class="text-black">{{ '3,250' }}</p>
+                            <p class="text-black">{{ '3,250 ?' }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Cantidad solicitada:</p>
-                            <p class="text-black">{{ '12,000' }}</p>
+                            <p class="text-black">{{ production.ts }} ? (ts)</p>
                         </div>
                     </section>
                 </article>
@@ -469,21 +471,52 @@
                 </article>
             </section>
         </body>
-
     </main>
 </template>
 
 <script>
+import PrintButton from '@/Components/MyComponents/PrintButton.vue';
 import { Head } from '@inertiajs/vue3';
 
 export default {
 data() {
     return {
-
+        currentDate: new Date(), //fecha del día de hoy
+        printing: false
     }
 },
 components:{
     Head,
+    PrintButton
+},
+props:{
+    production: Object
+},
+methods:{
+    formatDate(date) {
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = months[d.getMonth()];
+        const year = d.getFullYear();
+
+        return `${day}/${month}/${year}`;
+    },
+    print() {
+      this.printing = true;
+      setTimeout(() => {
+        window.print();
+      }, 200);
+    },
+    handleAfterPrint() {
+      this.printing = false;
+    },
+},
+mounted() {
+    window.addEventListener('afterprint', this.handleAfterPrint);
+},
+beforeDestroy() {
+    window.removeEventListener('afterprint', this.handleAfterPrint);
 }
 }
 </script>
