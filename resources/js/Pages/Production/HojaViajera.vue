@@ -67,7 +67,7 @@
                     <section>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Hojas necesarias:</p>
-                            <p class="text-black">{{ production.ts }} ? (ts)</p>
+                            <p class="text-black">{{ production.ts }} ? (total de hojas)</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Dimensiones:</p>
@@ -95,7 +95,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Acabado/Caras:</p>
-                            <p class="text-black">{{ production.look + ' ' + production.faces + ' Capas' }}</p>
+                            <p class="text-black">{{ production.look + ' /' + production.faces + ' cara(s)' }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Impresión por cambio:</p>
@@ -103,7 +103,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Cantidad solicitada:</p>
-                            <p class="text-black">{{ production.ts }} ? (ts)</p>
+                            <p class="text-black">{{ production.quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                         </div>
                     </section>
                 </article>

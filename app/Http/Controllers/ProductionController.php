@@ -93,7 +93,7 @@ class ProductionController extends Controller
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
             'width' => 'nullable|numeric|min:0',
-            'gauge' => 'nullable|numeric|min:0',
+            'gauge' => 'nullable|max:255',
             'large' => 'nullable|numeric|min:0',
             'look' => 'nullable|string|max:255',
             'faces' => 'nullable|numeric|min:0',
@@ -173,7 +173,7 @@ class ProductionController extends Controller
     {
         $lastProductionId = Production::latest('id')->first()?->id;
         $newProduction = $production->replicate();
-        $newProduction->folio = 'R' . $lastProductionId + 1;
+        $newProduction->folio = 'R-' . $lastProductionId + 1;
         $newProduction->save();
 
         return to_route('productions.edit', ['production' => $newProduction->id]);

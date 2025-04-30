@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('season')->nullable();
             $table->string('station');
             $table->string('dfi')->nullable();
+            $table->string('gauge')->nullable();
             $table->unsignedSmallInteger('faces')->nullable();
             $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
@@ -22,7 +23,6 @@ return new class extends Migration
             $table->unsignedFloat('close_quantity', 11, 2)->default(0);
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
-            $table->unsignedFloat('gauge', 8, 2)->nullable();
             $table->unsignedFloat('pps', 8, 2)->nullable();
             $table->unsignedFloat('adjust', 8, 2)->nullable();
             $table->unsignedFloat('sheets', 8, 2)->nullable();
