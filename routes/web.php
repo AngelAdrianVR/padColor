@@ -117,6 +117,11 @@ Route::put('productions-update-machine/{production}', [ProductionController::cla
 Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
 Route::post('productions-close/{production}', [ProductionController::class, 'close'])->name('productions.close')->middleware('auth');
+//hoja viajera -------------------
+Route::get('/productions-hoja-viajera', function () {
+    return inertia('HojaViajera');
+});
+    
 
 
 //products routes---------------------------------------------------------------------------
@@ -133,6 +138,8 @@ Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'delete
 //------------------------------------------------------------------------------------------
 Route::resource('machines', MachineController::class)->middleware('auth');
 Route::get('machines-get-all', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
+Route::post('machines/update-with-media/{machine}', [MachineController::class, 'updateWithMedia'])->name('machines.update-with-media')->middleware('auth');
+Route::post('machines/get-matches', [MachineController::class, 'getMatches'])->name('machines.get-matches');
 
 
 //clients routes---------------------------------------------------------------------------
