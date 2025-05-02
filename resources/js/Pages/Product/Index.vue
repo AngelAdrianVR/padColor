@@ -270,7 +270,10 @@ methods: {
             confirmButtonText: 'Clonar',
         }).then(() => {
             this.$inertia.get(route('products.clone', id));
-            
+            this.$message({
+                type: 'success',
+                message: 'Producto clonado correctamente',
+            });
         }).catch(() => {});
     },
     formatDate(dateString) {
