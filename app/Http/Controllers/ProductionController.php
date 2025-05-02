@@ -50,7 +50,7 @@ class ProductionController extends Controller
             'adjust' => 'nullable|numeric|min:0',
             'sheets' => 'nullable|numeric|min:0',
             'ha' => 'nullable|numeric|min:0',
-            'pf' => 'nullable|numeric|min:0',
+            'pf' => 'required|numeric|min:0',
             'ts' => 'nullable|numeric|min:0',
             'ps' => 'nullable|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
@@ -93,7 +93,7 @@ class ProductionController extends Controller
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
             'width' => 'nullable|numeric|min:0',
-            'gauge' => 'nullable|max:255',
+            'gauge' => 'nullable|string|max:255',
             'large' => 'nullable|numeric|min:0',
             'look' => 'nullable|string|max:255',
             'faces' => 'nullable|numeric|min:0',
@@ -103,7 +103,7 @@ class ProductionController extends Controller
             'ha' => 'nullable|numeric|min:0',
             'pf' => 'nullable|numeric|min:0',
             'ts' => 'nullable|numeric|min:0',
-            'ps' => 'nullable|numeric|min:0',
+            'pf' => 'required|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
         ]);
 
