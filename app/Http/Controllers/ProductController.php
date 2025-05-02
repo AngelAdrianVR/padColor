@@ -166,6 +166,12 @@ class ProductController extends Controller
         $clonedProduct->name = $product->name . ' (Copia)';
 
         $clonedProduct->save();
+
+        // Clonar media
+        foreach ($product->media as $mediaItem) {
+            $mediaItem->copy($clonedProduct, $mediaItem->collection_name);
+        }
+
     }
 
     public function getAll()

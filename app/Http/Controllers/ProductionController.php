@@ -226,7 +226,7 @@ class ProductionController extends Controller
     public function hojaViajera(Production $production)
     {
         $production->load(['product', 'machine', 'modifiedUser']);
-        
+
         return inertia('Production/HojaViajera', compact('production'));
     }
 }
