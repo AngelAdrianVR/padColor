@@ -215,6 +215,21 @@ class ProductionController extends Controller
             'modified_user_id' => auth()->id(),
         ]);
     }
+    
+    public function addPartial(Request $request, Production $production)
+    {
+        $partials = $production->partials ?? [];
+        $partials[] = [
+            'quantity' => $request->quantity,
+            'date' => $request->date,
+        ];
+
+        $production->update([
+            'partials' => $partials,
+            'modified_user_id' => auth()->id(),
+            'close_quantity' => $production->close_quantity + $request->quantity,
+        ]);
+    }
 
     public function exportExcel()
     {
