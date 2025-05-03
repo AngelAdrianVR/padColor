@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('station');
             $table->string('dfi')->nullable();
             $table->string('gauge')->nullable();
+            $table->string('production_close_type')->nullable();
             $table->unsignedSmallInteger('faces')->nullable();
             $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->unsignedFloat('ts', 8, 2)->nullable();
             $table->unsignedFloat('ps', 8, 2)->nullable();
             $table->unsignedFloat('tps', 8, 2)->nullable();
+            $table->json('partials')->nullable();
             $table->string('look')->nullable();
             $table->json('materials')->nullable();
             $table->string('material')->nullable();

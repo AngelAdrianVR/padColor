@@ -181,12 +181,29 @@ class ProductionController extends Controller
 
     public function close(Request $request, Production $production)
     {
-        $production->update([
-            'station' => 'Inspección',
-            'close_quantity' => $request->close_quantity,
-            'close_production_date' => $request->close_production_date,
-            'modified_user_id' => auth()->id(),
-        ]);
+        if ($request->production_close_type === 'Parcialidades') {
+            $partials = $production->partilas;
+            $partials[] = [
+                'quantity' => $request->close_quantity,
+                'date' => $request->close_production_date,
+            ];
+            $production->update([
+                'station' => 'Inspección',
+                'production_close_type' => $request->production_close_type,
+                'close_quantity' => $request->close_quantity,
+                'close_production_date' => $request->close_production_date,
+                'partials' => $partials,
+                'modified_user_id' => auth()->id(),
+            ]);
+        } else {
+            $production->update([
+                'station' => 'Inspección',
+                'production_close_type' => $request->production_close_type,
+                'close_quantity' => $request->close_quantity,
+                'close_production_date' => $request->close_production_date,
+                'modified_user_id' => auth()->id(),
+            ]);
+        }
     }
 
     public function qualityRelease(Request $request, Production $production)

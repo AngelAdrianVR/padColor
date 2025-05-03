@@ -35,6 +35,7 @@ class Production extends Model
         'estimated_date',
         'estimated_package_date',
         'quantity',
+        'production_close_type',
         'close_quantity',
         'quality_quantity',
         'current_quantity',
@@ -46,10 +47,12 @@ class Production extends Model
         'ts',
         'ps',
         'tps',
+        'partials',
     ];
 
     protected $casts = [
         'materials' => 'array',
+        'partials' => 'array',
         'estimated_date' => 'date',
         'estimated_package_date' => 'date',
         'start_date' => 'date',
