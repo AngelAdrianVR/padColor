@@ -189,6 +189,16 @@ class ProductionController extends Controller
         ]);
     }
 
+    public function qualityRelease(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Liberado por calidad',
+            'quality_quantity' => $request->quality_quantity,
+            'quality_released_date' => $request->quality_released_date,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+
     public function exportExcel()
     {
         $startDate = request('startDate');

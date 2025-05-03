@@ -31,10 +31,12 @@ class Production extends Model
         'start_date',
         'finish_date',
         'close_production_date',
+        'quality_released_date',
         'estimated_date',
         'estimated_package_date',
         'quantity',
         'close_quantity',
+        'quality_quantity',
         'current_quantity',
         'look',
         'changes',
@@ -53,6 +55,7 @@ class Production extends Model
         'start_date' => 'date',
         'finish_date' => 'date',
         'close_production_date' => 'date',
+        'quality_released_date' => 'date',
     ];
 
     //realciones
