@@ -33,7 +33,8 @@
                     <!-- <el-table-column type="selection" width="45" /> -->
                     <el-table-column prop="folio" label="N° Orden">
                         <template #default="scope">
-                            <div v-if="!scope.row.quantity" class="flex items-center space-x-2" :class="!scope.row.quantity ? 'text-red-600' : null">
+                            <div v-if="!scope.row.quantity" class="flex items-center space-x-2"
+                                :class="!scope.row.quantity ? 'text-red-600' : null">
                                 <span>{{ scope.row.folio }}</span>
                                 <el-tooltip content="Llenar información faltante" placement="top">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -88,10 +89,11 @@
                                 </button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
-                                        <el-dropdown-item class="!text-xs"
-                                            :command="'viajera-' + scope.row.id">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
+                                        <el-dropdown-item class="!text-xs" :command="'viajera-' + scope.row.id">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
                                             </svg>
                                             Hoja viajera</el-dropdown-item>
                                         <el-dropdown-item class="!text-xs"
@@ -205,6 +207,17 @@
         </template>
         <template #content>
             <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Typo de entrega:" />
+                    <el-select v-model="form.production_close_type">
+                        <el-option v-for="item in ['Única', 'Parcialidades']" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors.production_close_type" />
+                </div>
+                <div v-if="form.production_close_type == 'Parcialidades'"
+                    class="mt-3 bg-[#E9E9E9] py-2 px-4 rounded-full col-span-full">
+                    Parcialidad 1
+                </div>
                 <div>
                     <InputLabel value="Cantidad entregada:" />
                     <el-input-number v-model="form.close_quantity" @change="handleSheet"
@@ -325,6 +338,40 @@
                 <p class="text-[#464646]">Notas:</p>
                 <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
             </div>
+            <div v-if="selectedProduction.quality_released_date"
+                class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
+                <h2 class="font-bold col-span-full">Liberado por calidad</h2>
+                <p>Fecha de liberación:</p>
+                <p>{{ formatDate(selectedProduction.quality_released_date) }}</p>
+                <p>Cantidad entregada:</p>
+                <p>{{ selectedProduction.quality_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+            </div>
+            <div v-if="selectedProduction.close_production_date"
+                class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
+                <div class="flex items-center justify-between col-span-full">
+                    <h2 class="font-bold">Inspección</h2>
+                    <PrimaryButton
+                        v-if="selectedProduction.production_close_type == 'Parcialidades' && selectedProduction.station != 'Terminadas'"
+                        @click="showAddPartial = true">
+                        Registrar parcialidad
+                    </PrimaryButton>
+                </div>
+                <p>Tipo de entrega:</p>
+                <p>{{ selectedProduction.production_close_type }}</p>
+                <section v-for="(partial, index) in selectedProduction.partials" :key="index" class="col-span-full">
+                    <div class="bg-white py-1 px-3 rounded-full mt-3">Parcialidad {{ index + 1 }}</div>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <p>Fecha de entrega:</p>
+                        <p>{{ formatDate(partial.date) }}</p>
+                        <p>Cantidad entregada:</p>
+                        <p>{{ partial.quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                    </div>
+                </section>
+                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
+                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{ formatDate(selectedProduction.close_production_date) }}</p>
+                <p class="pt-3 font-semibold">Cantidad total entregada:</p>
+                <p class="pt-3 font-semibold">{{ selectedProduction.close_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+            </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">Material:</p>
@@ -351,6 +398,41 @@
                 <p class="col-span-2">{{ selectedProduction.ps }}</p>
                 <p class="text-[#464646]">Total Ta/Im:</p>
                 <p class="col-span-2">{{ selectedProduction.tps }}</p>
+            </div>
+        </template>
+    </DialogModal>
+    <DialogModal :show="showAddPartial" @close="showAddPartial = false">
+        <template #title>
+            <h1 class="font-semibold">Registrar parcialidad</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-full bg-[#E9E9E9] py-2 px-4 rounded-full">
+                    Parcialidad {{ selectedProduction.partials.length + 1 }}
+                </div>
+                <div class="mt-3">
+                    <InputLabel value="Cantidad entregada:" />
+                    <el-input-number v-model="form.quantity" @change="handleSheet"
+                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.quantity" />
+                </div>
+                <div class="mt-3">
+                    <InputLabel value="Fecha de entrega:" />
+                    <el-date-picker class="!w-full" v-model="form.date" type="date"
+                        placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.date" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showAddPartial = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="addPartial" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Registrar
+                </PrimaryButton>
             </div>
         </template>
     </DialogModal>
@@ -393,11 +475,15 @@ export default {
     name: 'ProductionList',
     data() {
         const form = useForm({
+            production_close_type: 'Única',
             close_production_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             close_quantity: 0,
             quality_released_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             quality_quantity: 0,
             excel: [], // solo se usa en importación
+            //parcialidades
+            quantity: 0,
+            date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto,
         });
 
         return {
@@ -410,6 +496,7 @@ export default {
             showQualityModal: false,
             showExportFilters: false,
             showImportModal: false,
+            showAddPartial: false,
             selectedProduction: null,
             tempStation: null,
             searchTemp: null,
@@ -606,6 +693,10 @@ export default {
             if (!dateString) return '-';
             return format(parseISO(dateString), 'EEE, dd MMMM yyyy', { locale: es });
         },
+        formatDateTime(dateString) {
+            if (!dateString) return '-';
+            return format(parseISO(dateString), 'EEE, dd MMMM yyyy hh:mm a', { locale: es });
+        },
         handleChangeFilter() {
             this.handleTagClose();
             if (this.filter) {
@@ -709,6 +800,27 @@ export default {
                 },
             });
         },
+        addPartial() {
+            this.form.post(route('productions.add-partial', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showAddPartial = false;
+                    this.$notify({
+                        title: "Parcialidad registrada",
+                        type: "success",
+                    });
+                    // ageregar date y quantity nueva parcialidad
+                    this.selectedProduction.partials.push({date: this.form.date, quantity: this.form.quantity});
+                    this.selectedProduction.close_quantity += this.form.quantity;
+                    this.form.reset();
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al registrar parcialidad",
+                        type: "error",
+                    });
+                },
+            });
+        },
         closeProduction() {
             this.form.post(route('productions.close', this.selectedProduction.id), {
                 onSuccess: () => {
@@ -749,7 +861,7 @@ export default {
             if (this.tempStation == 'Inspección') {
                 this.showCloseProduction = true;
                 this.showDetails = false;
-            }  else if (this.tempStation == 'Liberado por calidad') {
+            } else if (this.tempStation == 'Liberado por calidad') {
                 this.showQualityModal = true;
                 this.showDetails = false;
             } else {
