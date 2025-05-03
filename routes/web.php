@@ -1,8 +1,12 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MachineController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketHistoryController;
@@ -10,7 +14,6 @@ use App\Http\Controllers\TicketSolutionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -103,6 +106,45 @@ Route::post('categories/store', [SettingController::class, 'storeCategory'])->mi
 //------------------------------------------------------------------------------------------
 Route::resource('categories', CategoryController::class)->middleware('auth');
 
+
+//production routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('productions', ProductionController::class)->middleware('auth');
+Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
+Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');
+Route::post('productions-import-excel', [ProductionController::class, 'importExcel'])->name('productions.import-excel')->middleware('auth');
+Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
+Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
+Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
+Route::post('productions-close/{production}', [ProductionController::class, 'close'])->name('productions.close')->middleware('auth');
+Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
+Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
+Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
+    
+
+
+//products routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('products', ProductController::class)->middleware('auth');
+Route::get('products-get-all', [ProductController::class, 'getAll'])->name('products.get-all')->middleware('auth');
+Route::get('products-clone/{product}', [ProductController::class, 'clone'])->name('products.clone')->middleware('auth');
+Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
+Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
+Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
+
+
+//machines routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('machines', MachineController::class)->middleware('auth');
+Route::get('machines-get-all', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
+Route::post('machines/update-with-media/{machine}', [MachineController::class, 'updateWithMedia'])->name('machines.update-with-media')->middleware('auth');
+Route::post('machines/get-matches', [MachineController::class, 'getMatches'])->name('machines.get-matches');
+
+
+//clients routes---------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+Route::resource('clients', ClientController::class)->middleware('auth');
+Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('clients.get-all')->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------
