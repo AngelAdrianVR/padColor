@@ -50,7 +50,7 @@ class ProductionController extends Controller
             'adjust' => 'nullable|numeric|min:0',
             'sheets' => 'nullable|numeric|min:0',
             'ha' => 'nullable|numeric|min:0',
-            'pf' => 'nullable|numeric|min:0',
+            'pf' => 'required|numeric|min:0',
             'ts' => 'nullable|numeric|min:0',
             'ps' => 'nullable|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
@@ -93,7 +93,7 @@ class ProductionController extends Controller
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
             'width' => 'nullable|numeric|min:0',
-            'gauge' => 'nullable|numeric|min:0',
+            'gauge' => 'nullable|string|max:255',
             'large' => 'nullable|numeric|min:0',
             'look' => 'nullable|string|max:255',
             'faces' => 'nullable|numeric|min:0',
@@ -103,7 +103,7 @@ class ProductionController extends Controller
             'ha' => 'nullable|numeric|min:0',
             'pf' => 'nullable|numeric|min:0',
             'ts' => 'nullable|numeric|min:0',
-            'ps' => 'nullable|numeric|min:0',
+            'pf' => 'required|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
         ]);
 
@@ -173,7 +173,7 @@ class ProductionController extends Controller
     {
         $lastProductionId = Production::latest('id')->first()?->id;
         $newProduction = $production->replicate();
-        $newProduction->folio = 'R' . $lastProductionId + 1;
+        $newProduction->folio = 'R-' . $lastProductionId + 1;
         $newProduction->save();
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
@@ -185,6 +185,16 @@ class ProductionController extends Controller
             'station' => 'Inspección',
             'close_quantity' => $request->close_quantity,
             'close_production_date' => $request->close_production_date,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+
+    public function qualityRelease(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Liberado por calidad',
+            'quality_quantity' => $request->quality_quantity,
+            'quality_released_date' => $request->quality_released_date,
             'modified_user_id' => auth()->id(),
         ]);
     }

@@ -63,7 +63,7 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
 
             if (!$production->exists) {
                 $production->fill([
-                    'client' => 'JOSEFINA ISABEL CICERO FERNANDEZ',
+                    'client' => 'POR DEFINIR',
                     'quantity' => 0,
                     'current_quantity' => $cantidad,
                     'station' => $almacen,

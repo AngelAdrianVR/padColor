@@ -161,7 +161,18 @@
                     <InputError :message="form.errors.pps" />
                 </div>
                 <div>
-                    <InputLabel value="Hojas" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Hojas</span>
+                            <el-tooltip content="Cantidad solicitada / Piezas por hoja" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="form.sheets" placeholder="Hojas" disabled />
                 </div>
                 <div>
@@ -171,12 +182,24 @@
                     <InputError :message="form.errors.adjust" />
                 </div>
                 <div>
-                    <InputLabel value="H/A" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>H/A</span>
+                            <el-tooltip content="Ajuste / P/F" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="form.ha" placeholder="H/A" disabled />
                 </div>
                 <div>
                     <InputLabel value="P/F" />
-                    <el-input v-model="form.pf" placeholder="P/F" disabled />
+                    <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.pf" />
                 </div>
                 <div>
                     <InputLabel value="Total de hojas" />
@@ -260,18 +283,18 @@ export default {
             // calculos
             dfh: null,
             // opciones
-            seasons: [
-                'Verano',
-                'Invierno',
-                'Primavera',
-                'Otoño',
-            ],
             stations: [
                 {
                     name: 'Material pendiente',
                     dark: '#005DB5',
                     light: '#C2E1FF',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
+                },
+                {
+                    name: 'Solicitado',
+                    dark: '#00A9B5',
+                    light: '#bef4f8',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" /></svg>',
                 },
                 {
                     name: 'X Offset',
@@ -326,6 +349,12 @@ export default {
                     dark: '#C6A317',
                     light: '#FAF2D1',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>',
+                },
+                {
+                    name: 'Liberado por calidad',
+                    dark: '#558233',
+                    light: '#b1db92',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75" /></svg>',
                 },
                 {
                     name: 'Inspección',
@@ -429,19 +458,18 @@ export default {
             }
         },
         handleSheet() {
-            this.form.pf = this.form.pps;
             if (this.form.quantity && this.form.pps > 0) {
                 this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
             } else {
                 this.form.sheets = null;
             }
-            if (this.form.pps) {
-                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
+            if (this.form.adjust && this.form.pf) {
+                this.form.ha = Math.ceil(this.form.adjust / this.form.pf);
             } else {
                 this.form.ha = null;
             }
-            if (this.form.sheets && this.form.ha) {
-                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
+            if (this.form.sheets && this.form.adjust) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.adjust);
             } else {
                 this.form.ts = null;
             }
@@ -457,14 +485,13 @@ export default {
             }
         },
         handleHa() {
-            this.form.pf = this.form.pps;
-            if (this.form.pps) {
-                this.form.ha = Math.ceil(this.form.pps * this.form.adjust);
+            if (this.form.adjust && this.form.pf) {
+                this.form.ha = Math.ceil(this.form.adjust / this.form.pf);
             } else {
                 this.form.ha = null;
             }
-            if (this.form.sheets && this.form.ha) {
-                this.form.ts = Math.ceil(this.form.sheets + this.form.ha);
+            if (this.form.sheets && this.form.adjust) {
+                this.form.ts = Math.ceil(this.form.sheets + this.form.adjust);
             } else {
                 this.form.ts = null;
             }

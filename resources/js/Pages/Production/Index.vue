@@ -17,7 +17,7 @@
                                 <span>Gestión de producción</span>
                             </div>
                         </template>
-                        <Productions ref="productions" />
+                        <Productions ref="productions"/>
                     </el-tab-pane>
                     <el-tab-pane name="3">
                         <template #label>

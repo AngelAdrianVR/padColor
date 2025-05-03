@@ -15,14 +15,15 @@ return new class extends Migration
             $table->string('season')->nullable();
             $table->string('station');
             $table->string('dfi')->nullable();
+            $table->string('gauge')->nullable();
             $table->unsignedSmallInteger('faces')->nullable();
             $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
             $table->unsignedFloat('current_quantity', 11, 2)->default(0);
             $table->unsignedFloat('close_quantity', 11, 2)->default(0);
+            $table->unsignedFloat('quality_quantity', 11, 2)->default(0);
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
-            $table->unsignedFloat('gauge', 8, 2)->nullable();
             $table->unsignedFloat('pps', 8, 2)->nullable();
             $table->unsignedFloat('adjust', 8, 2)->nullable();
             $table->unsignedFloat('sheets', 8, 2)->nullable();
@@ -42,6 +43,7 @@ return new class extends Migration
             $table->date('estimated_date')->nullable();
             $table->date('estimated_package_date')->nullable();
             $table->date('close_production_date')->nullable();
+            $table->date('quality_released_date')->nullable();
             $table->date('start_date')->nullable();
             $table->date('finish_date')->nullable();
             $table->timestamps();

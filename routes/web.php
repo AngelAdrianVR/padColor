@@ -117,6 +117,7 @@ Route::put('productions-update-machine/{production}', [ProductionController::cla
 Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
 Route::post('productions-close/{production}', [ProductionController::class, 'close'])->name('productions.close')->middleware('auth');
+Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
     
 
