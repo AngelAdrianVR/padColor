@@ -28,6 +28,8 @@
                         <span v-html="getIcon(ticket)"></span>
                     </el-tooltip>
                     <span>{{ ticket.updated_at }}</span>
+                    <span>•</span>
+                    <span>{{ ticket.user?.phone }}</span>
                 </div>
             </div>
         </section>

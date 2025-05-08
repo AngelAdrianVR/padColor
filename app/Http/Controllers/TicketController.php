@@ -20,13 +20,13 @@ class TicketController extends Controller
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
         if ($userCanSeeAllTickets) {
             $tickets = TicketResource::collection(Ticket::latest('id')
-                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path,phone')
                 ->take(20)
                 ->get());
             $total_tickets = Ticket::all()->count();
         } else {
             $tickets = TicketResource::collection(Ticket::latest('id')
-                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path,phone')
                 ->where('user_id', auth()->id())
                 ->take(20)
                 ->get());
@@ -69,7 +69,7 @@ class TicketController extends Controller
         $ticket = Ticket::create($validated + ['user_id' => auth()->id(), 'opened_at' => now()->toDateTimeString()]);
 
         // Guardar media
-        $ticket->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
+        $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
 
         //Crear registro de actividad
         TicketHistory::create([
@@ -93,7 +93,7 @@ class TicketController extends Controller
 
     public function show($ticket_id)
     {
-        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,email,profile_photo_path', 'category:id,name')->find($ticket_id));
+        $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,email,profile_photo_path,phone', 'category:id,name')->find($ticket_id));
 
         return inertia('Ticket/Show', compact('ticket'));
     }
@@ -191,7 +191,7 @@ class TicketController extends Controller
         $ticket->update($request->all());
 
         // Guardar media
-        $ticket->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
+        $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
 
         //Crear registro de actividad si se cambio al responsable
         if ($current_responsible_id != $request->responsible_id) {

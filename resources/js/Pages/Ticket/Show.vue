@@ -29,6 +29,8 @@
                             }}</span></p>
                     <p>Sucursal: <span class="text-black ml-1">{{ ticket.data.branch
                             }}</span></p>
+                    <p>Tel: <span class="text-black ml-1">{{ ticket.data.user?.phone
+                            }}</span></p>
                 </div>
                 <div class="lg:flex flex-wrap items-center space-x-3 ml-2 text-gray66 mt-3">
                     <p>Tipo de ticket: <span class="text-black ml-1">{{ ticket.data.ticket_type
