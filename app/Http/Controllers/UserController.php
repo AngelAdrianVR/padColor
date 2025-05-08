@@ -12,7 +12,6 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-
     public function index()
     {
         $users = UserResource::collection(User::all()->take(20));
@@ -21,7 +20,6 @@ class UserController extends Controller
         return inertia('User/Index', compact('users', 'total_users'));
     }
 
-
     public function create()
     {
         $roles = Role::all();
@@ -29,13 +27,12 @@ class UserController extends Controller
         return inertia('User/Create', compact('roles'));
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:15',
+            'phone' => 'required|string|max:30',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
             'employee_properties.branch' => 'required|string|max:255',
@@ -81,7 +78,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:15',
+            'phone' => 'required|string|max:30',
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',
@@ -105,7 +102,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:15',
+            'phone' => 'required|string|max:30',
             'is_active' => 'boolean',
             'employee_properties.department' => 'required|string|max:255',
             'employee_properties.job_position' => 'required|string|max:255',

@@ -53,9 +53,7 @@
                 </div>
                 <div>
                     <InputLabel value="Número de télefono*" class="ml-3 mb-1" />
-                    <el-input v-model="form.phone" placeholder="Escribe aqui tu número"
-                        :formatter="(value) => `${value}`.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3')"
-                        :parser="(value) => value.replace(/\D/g, '')" maxlength="10" clearable />
+                    <el-input v-model="form.phone" placeholder="Escribe aqui tu número" clearable />
                     <InputError :message="form.errors.phone" />
                 </div>
                 <div>
