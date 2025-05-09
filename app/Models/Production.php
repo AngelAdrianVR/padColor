@@ -48,6 +48,8 @@ class Production extends Model
         'ps',
         'tps',
         'partials',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [

@@ -12,6 +12,8 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketHistoryController;
 use App\Http\Controllers\TicketSolutionController;
 use App\Http\Controllers\UserController;
+use App\Models\Product;
+use App\Models\Production;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 
@@ -120,7 +122,7 @@ Route::post('productions-close/{production}', [ProductionController::class, 'clo
 Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
 Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
-    
+
 
 
 //products routes---------------------------------------------------------------------------
@@ -150,3 +152,134 @@ Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('client
 //comments routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('comments', CommentController::class)->middleware('auth');
+
+
+// use Carbon\Carbon;
+// Route::get('/import-productions', function () {
+//     set_time_limit(300); // Por si acaso
+//     $filePath = public_path('productions.csv');
+
+//     if (!file_exists($filePath)) {
+//         return response()->json(['error' => 'El archivo productions.csv no existe en la carpeta public'], 404);
+//     }
+
+//     // Leer el archivo CSV
+//     $file = fopen($filePath, 'r');
+//     $header = fgetcsv($file);
+
+//     if (empty($header)) {
+//         fclose($file);
+//         return response()->json(['error' => 'El archivo CSV está vacío o no tiene encabezados'], 400);
+//     }
+
+//     $importedCount = 0;
+//     $errors = [];
+//     $lineNumber = 1;
+
+//     while (($row = fgetcsv($file)) !== false) {
+//         $lineNumber++;
+//         $data = array_combine($header, $row);
+
+//         try {
+//             // // 1. Buscar el ID del producto por nombre
+//             // $product = Product::
+//             //             where('id', $data['p_name'])
+//             //             ->first();
+
+//             // if (!$product) {
+//             //     throw new \Exception("Producto '{$data['p_name']}' no encontrado");
+//             // }
+
+//             // 2. Procesar materials (array o null)
+//             $materials = !empty(trim($data['materials'])) ? [trim($data['materials'])] : null;
+
+//             // 3. Procesar notes con rn
+//             $notes = trim($data['notes']);
+//             if (!empty(trim($data['rn']))) {
+//                 $notes .= " (" . trim($data['rn']) . "). Producto: " . $data['p_name'];
+//             }
+
+//             // 4. Procesar ts (reemplazar coma por punto)
+//             $ts = str_replace(',', '.', trim($data['ts']));
+
+//             // 5. Procesar fechas
+//             $startDate = Carbon::createFromFormat('Y/m/d', trim($data['start_date']))->format('Y-m-d');
+
+//             $estimatedDate = !empty(trim($data['estimated_date'])) ?
+//                 Carbon::createFromFormat('n/j/Y', trim($data['estimated_date']))->format('Y-m-d') :
+//                 null;
+
+//             $estimatedPackageDate = !empty(trim($data['estimated_package_date'])) ?
+//                 Carbon::createFromFormat('n/j/Y', trim($data['estimated_package_date']))->format('Y-m-d') :
+//                 null;
+
+//             // 6. Procesar partials (array JSON o null)
+//             $partials = null;
+//             $partial1 = !empty(trim($data['partial1'])) ? (float)trim($data['partial1']) : 0;
+
+//             if ($partial1 > 0) {
+//                 $partials = [
+//                     [
+//                         'quantity' => $partial1,
+//                         'date' => $startDate
+//                     ]
+//                 ];
+
+//                 // Agregar partialn si existe
+//                 $partialn = !empty(trim($data['partialn'])) ? (float)trim($data['partialn']) : 0;
+//                 if ($partialn > 0) {
+//                     $partials[] = [
+//                         'quantity' => $partialn,
+//                         'date' => $startDate
+//                     ];
+//                 }
+//             }
+
+//             // Insertar en la base de datos
+//             Production::create([
+//                 'product_id' => 1,
+//                 'materials' => $materials ? [$data['materials']] : null,
+//                 'notes' => $notes,
+//                 'season' => $data['season'] ?? null,
+//                 'folio' => $data['folio'],
+//                 'client' => $data['client'],
+//                 'station' => trim($data['station']),
+//                 'material' => $data['material'] ?? null,
+//                 'quantity' => (int) str_replace(['.', ','], ['', ''], $data['quantity']),
+//                 'dfi' => $data['dfi'],
+//                 'close_production_date' => $data['close_production_date'] ? explode(' ', $data['close_production_date'])[0] : null,
+//                 'close_quantity' => $data['close_quantity'] ? (int) $data['close_quantity'] : 0.0,
+//                 'finish_date' => $data['finish_date'] ? explode(' ', $data['finish_date'])[0] : null,
+//                 'current_quantity' => $data['current_quantity'] == "" ? 0.0 : (int) $data['current_quantity'],
+//                 'ts' => $ts,
+//                 'start_date' => $startDate,
+//                 'estimated_date' => $estimatedDate,
+//                 'estimated_package_date' => $estimatedPackageDate,
+//                 'partials' => $partials ? json_encode($partials) : null,
+//                 'modified_user_id' => $data['modified_user_id'],
+//                 'user_id' => $data['modified_user_id'],
+//                 'created_at' => $startDate,
+//                 'updated_at' => $data['updated_at'] ?? now(),
+//                 'machine_id' => (int) trim($data['machine_id']),
+//             ]);
+
+//             $importedCount++;
+//         } catch (\Exception $e) {
+//             $errors[] = [
+//                 'line' => $lineNumber,
+//                 'machine_id' => (int) $data['machine_id'],
+//                 'error' => $e->getMessage(),
+//                 // 'data' => $data
+//             ];
+//         }
+//     }
+
+//     fclose($file);
+
+//     return response()->json([
+//         'message' => 'Importación completada',
+//         'imported' => $importedCount,
+//         'errors' => $errors,
+//         'error_count' => count($errors)
+//     ]);
+// });
