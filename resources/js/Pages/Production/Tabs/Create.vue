@@ -83,7 +83,7 @@
                             v-html="stations.find(s => s.name === form.station)?.icon"></div>
                     </div>
                 </InputLabel>
-                <el-select v-model="form.station" placeholder="Selecciona el progreso actual" class="!w-full">
+                <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual" class="!w-full">
                     <el-option v-for="station in stations" :key="station" :label="station.name" :value="station.name" />
                 </el-select>
                 <InputError :message="form.errors.station" />
@@ -93,7 +93,7 @@
                 <div class="flex items-center">
                     <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
-                    <el-select v-model="form.machine_id" placeholder="Selecciona la máquina" class="!w-full"
+                    <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina" class="!w-full"
                         :disabled="fetchingMachines">
                         <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
                             :value="machine.id" />
