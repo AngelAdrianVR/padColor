@@ -180,10 +180,18 @@
         </template>
         <template #content>
             <p>
-                Antes de importar, asegúrate de que tu archivo Excel tenga las columnas: Código, Almacén, E/S, Entrada
-                y Salida. Al dar clic en "Continuar", el sistema agregará los registros nuevos y actualizará los
+                Antes de importar, asegúrate de que tu archivo Excel tenga las columnas: <br>
+                Código (es el N° de la orden), Almacén y cantidad (es la cantidad actual).
+                Al dar clic en "Continuar", el sistema agregará los
+                registros nuevos y actualizará los
                 existentes si así lo requiere.
             </p>
+            <div class="mt-3">
+                <a class="text-primary font-semibold" href="@/../../Layout_importar_producciones.xlsx"
+                    download="Layout_importar_producciones.xlsx">
+                    Descargar plantilla
+                </a>
+            </div>
             <div class="ml-2 mt-8">
                 <FileUploader @files-selected="form.excel = $event" :multiple="false" acceptedFormat="excel" />
                 <InputError :message="form.errors.excel" />
@@ -368,9 +376,11 @@
                     </div>
                 </section>
                 <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
-                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{ formatDate(selectedProduction.close_production_date) }}</p>
+                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{
+                    formatDate(selectedProduction.close_production_date) }}</p>
                 <p class="pt-3 font-semibold">Cantidad total entregada:</p>
-                <p class="pt-3 font-semibold">{{ selectedProduction.close_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                <p class="pt-3 font-semibold">{{
+                    selectedProduction.close_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
@@ -412,14 +422,14 @@
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.quantity" @change="handleSheet"
-                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad"
+                        :min="0" class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Fecha de entrega:" />
-                    <el-date-picker class="!w-full" v-model="form.date" type="date"
-                        placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <el-date-picker class="!w-full" v-model="form.date" type="date" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                     <InputError :message="form.errors.date" />
                 </div>
             </div>
@@ -809,7 +819,7 @@ export default {
                         type: "success",
                     });
                     // ageregar date y quantity nueva parcialidad
-                    this.selectedProduction.partials.push({date: this.form.date, quantity: this.form.quantity});
+                    this.selectedProduction.partials.push({ date: this.form.date, quantity: this.form.quantity });
                     this.selectedProduction.close_quantity += this.form.quantity;
                     this.form.reset();
                 },

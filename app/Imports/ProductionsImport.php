@@ -36,7 +36,7 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
         $this->processedRows++;
         
         // Validación de columnas requeridas
-        if (!isset($row['codigo'], $row['almacen'], $row['es'])) {
+        if (!isset($row['codigo'], $row['almacen'], $row['cantidad'])) {
             // Log::warning("[EXCEL] Fila {$this->processedRows} omitida - Faltan campos requeridos", $row);
             Log::warning("[EXCEL] Fila {$this->processedRows} omitida - Faltan campos requeridos");
             return null;
@@ -45,8 +45,8 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
         try {
             $codigo = $row['codigo'];
             $almacen = $row['almacen'];
-            $esEntrada = strtoupper($row['es']) === 'E';
-            $cantidad = $esEntrada ? $row['entrada'] : $row['salida'];
+            // $esEntrada = strtoupper($row['es']) === 'E';
+            // $cantidad = $esEntrada ? $row['entrada'] : $row['salida'];
 
             // Log::debug("[EXCEL] Procesando: Código {$codigo}, Almacén {$almacen}, Tipo " . ($esEntrada ? 'Entrada' : 'Salida'));
 
@@ -56,7 +56,7 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
             if (!$production->exists) {
                 $this->createdRecords++;
                 Log::info("[EXCEL] Nuevo registro creado para código {$codigo}");
-            } elseif ($production->current_quantity != $cantidad || $production->station != $almacen) {
+            } elseif ($production->current_quantity != $row['cantidad'] || $production->station != $almacen) {
                 $this->updatedRecords++;
                 Log::info("[EXCEL] Actualizando registro existente para código {$codigo}");
             }
@@ -65,15 +65,15 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
                 $production->fill([
                     'client' => 'POR DEFINIR',
                     'quantity' => 0,
-                    'current_quantity' => $cantidad,
+                    'current_quantity' => $row['cantidad'],
                     'station' => $almacen,
                     'product_id' => 1,
                     'machine_id' => 1,
                     'user_id' => auth()->id(),
                     'modified_user_id' => auth()->id(),
                 ])->save();
-            } elseif ($production->current_quantity != $cantidad || $production->station != $almacen) {
-                $production->current_quantity = $cantidad;
+            } elseif ($production->current_quantity != $row['cantidad'] || $production->station != $almacen) {
+                $production->current_quantity = $row['cantidad'];
                 $production->station = $almacen;
                 $production->modified_user_id = auth()->id();
                 $production->save();

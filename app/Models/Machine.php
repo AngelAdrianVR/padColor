@@ -17,4 +17,10 @@ class Machine extends Model implements HasMedia
         'created_by',
         'created_at',
     ];
+
+    //relaciones
+    public function productions()
+    {
+        return $this->hasMany(Production::class);
+    }
 }
