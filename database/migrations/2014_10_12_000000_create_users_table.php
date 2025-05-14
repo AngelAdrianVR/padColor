@@ -16,8 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->text('two_factor_secret')->nullable();
-            $table->text('two_factor_recovery_codes')->nullable();
             $table->boolean('is_active')->default(true);
             $table->json('employee_properties')->nullable();
             $table->timestamp('email_verified_at')->nullable();

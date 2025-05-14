@@ -13,8 +13,8 @@ class ProductionController extends Controller
 {
     public function index()
     {
-        $productions = Production::latest()->get(['id', 'station']);
-        $next_production = Production::latest()->first();
+        $productions = Production::latest('id')->get(['id', 'station']);
+        $next_production = Production::latest('id')->first();
         $next_production = $next_production ? $next_production->id + 1 : 1;
 
         return inertia('Production/Index', compact('productions', 'next_production'));
@@ -145,8 +145,7 @@ class ProductionController extends Controller
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
-        $query = Production::with(['user', 'product', 'machine'])
-            ->latest('id');
+        $query = Production::with(['user', 'product', 'machine'])->latest('id');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
