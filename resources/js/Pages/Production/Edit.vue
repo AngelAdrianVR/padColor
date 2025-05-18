@@ -50,9 +50,9 @@
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
                 <div>
                     <InputLabel value="Producto*" />
-                    <el-select v-model="form.product_id" filterable
-                        placeholder="Selecciona el producto" remote reserve-keyword :remote-method="fetchProductsMatch"
-                        :loading="fetchingProducts" class="!w-full" no-match-text="No hay productos coincidentes">
+                    <el-select v-model="form.product_id" filterable placeholder="Selecciona el producto" remote
+                        reserve-keyword :remote-method="fetchProductsMatch" :loading="fetchingProducts" class="!w-full"
+                        no-match-text="No hay productos coincidentes">
                         <el-option v-for="product in products" :key="product.id" :label="product.name"
                             :value="product.id" />
                     </el-select>
@@ -128,6 +128,18 @@
                     <InputLabel value="Largo" />
                     <el-input v-model="form.large" @change="handleDfh" placeholder="Ej. 30" />
                     <InputError :message="form.errors.large" />
+                </div>
+                <div class="mt-6">
+                    <InputLabel class="flex items-center">
+                        <input type="checkbox" v-model="form.has_varnish" @change="handleVarnish"
+                            class="rounded text-primary shadow-sm focus:ring-primary bg-transparent" />
+                        <span class="ml-2 text-sm">Con Barniz</span>
+                    </InputLabel>
+                </div>
+                <div v-if="form.has_varnish">
+                    <InputLabel value="Tipo de barniz*" />
+                    <el-input v-model="form.varnish_type" placeholder="Ej. Barniz UV" />
+                    <InputError :message="form.errors.varnish_type" />
                 </div>
                 <div>
                     <InputLabel value="Acabado" />
@@ -266,6 +278,8 @@ export default {
             ts: this.production.ts,
             ps: this.production.ps,
             tps: this.production.tps,
+            has_varnish: !! this.production.varnish_type,
+            varnish_type: this.production.varnish_type,
             start_date: this.production.start_date,
             estimated_date: this.production.estimated_date,
         });
@@ -448,6 +462,11 @@ export default {
         cleanForm() {
             this.form.reset();
             this.dfh = null;
+        },
+        handleVarnish() {
+            if (!this.form.has_varnish) {
+                this.form.varnish_type = null;
+            }
         },
         handleDfh() {
             if (this.form.width && this.form.large) {

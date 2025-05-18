@@ -54,6 +54,9 @@ class ProductionController extends Controller
             'ts' => 'nullable|numeric|min:0',
             'ps' => 'nullable|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
+            'varnish_type' => 'required_if_accepted:has_varnish',
+        ], [
+            'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
         ]);
 
         // cambiar un poco el folio
@@ -106,6 +109,9 @@ class ProductionController extends Controller
             'ts' => 'nullable|numeric|min:0',
             'pf' => 'required|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
+            'varnish_type' => 'required_if_accepted:has_varnish',
+        ], [
+            'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
         ]);
 
         // cambiar un poco el folio

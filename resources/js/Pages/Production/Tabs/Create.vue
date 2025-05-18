@@ -126,6 +126,18 @@
                 <el-input v-model="form.large" @change="handleDfh" placeholder="Ej. 30" />
                 <InputError :message="form.errors.large" />
             </div>
+            <div class="mt-6">
+                <InputLabel class="flex items-center">
+                    <input type="checkbox" v-model="form.has_varnish" @change="handleVarnish"
+                        class="rounded text-primary shadow-sm focus:ring-primary bg-transparent" />
+                    <span class="ml-2 text-sm">Con Barniz</span>
+                </InputLabel>
+            </div>
+            <div v-if="form.has_varnish">
+                <InputLabel value="Tipo de barniz*" />
+                <el-input v-model="form.varnish_type" placeholder="Ej. Barniz UV" />
+                <InputError :message="form.errors.varnish_type" />
+            </div>
             <div>
                 <InputLabel value="Acabado" />
                 <el-select v-model="form.look" placeholder="Selecciona el acabado" class="!w-full">
@@ -304,6 +316,8 @@ export default {
             ts: null,
             ps: null,
             tps: null,
+            has_varnish: false,
+            varnish_type: null,
             start_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             estimated_date: null,
         });
@@ -470,6 +484,11 @@ export default {
     },
     emits: ['created'],
     methods: {
+        handleVarnish() {
+            if (!this.form.has_varnish) {
+                this.form.varnish_type = null;
+            }
+        },
         store() {
             this.form.post(route('productions.store'), {
                 onSuccess: () => {
