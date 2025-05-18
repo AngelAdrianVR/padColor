@@ -291,11 +291,18 @@
         <template #content>
             <div class="flex items-center justify-between">
                 <h2 class="text-[#666666] font-bold">Información de la orden</h2>
-                <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
-                    @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
-                    class="text-primary border border-primary rounded-md px-2 py-1">
-                    Editar
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                        @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
+                        class="text-secondary border border-secondary rounded-md px-2 py-1">
+                        Hoja viajera
+                    </button>
+                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                        @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
+                        class="text-primary border border-primary rounded-md px-2 py-1">
+                        Editar
+                    </button>
+                </div>
             </div>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">N° de Orden:</p>
@@ -386,6 +393,13 @@
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">Material:</p>
                 <p class="col-span-2">{{ selectedProduction.material ?? '-' }}</p>
+                <p class="text-[#464646]">Con barníz:</p>
+                <p class="col-span-2">
+                    <i v-if="selectedProduction.varnish_type" class="fa-solid fa-check text-[#059A05]"></i>
+                    <i v-else class="fa-solid fa-xmark text-red-600"></i>
+                </p>
+                <p class="text-[#464646]">Tipo de barníz:</p>
+                <p class="col-span-2">{{ selectedProduction.varnish_type ?? '-' }}</p>
                 <p class="text-[#464646]">Dimensiones de la hoja:</p>
                 <p class="col-span-2">{{ selectedProduction.width ?? '-' }} x {{ selectedProduction.large ?? '-' }}</p>
                 <p class="text-[#464646]">Dimensiones de impresión:</p>

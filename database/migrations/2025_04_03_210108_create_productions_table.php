@@ -33,6 +33,7 @@ return new class extends Migration
             $table->unsignedFloat('ts', 8, 2)->nullable();
             $table->unsignedFloat('ps', 8, 2)->nullable();
             $table->unsignedFloat('tps', 8, 2)->nullable();
+            $table->string('varnish_type')->nullable();
             $table->json('partials')->nullable();
             $table->string('look')->nullable();
             $table->json('materials')->nullable();

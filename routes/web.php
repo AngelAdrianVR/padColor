@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Models\Product;
 use App\Models\Production;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
@@ -129,6 +130,7 @@ Route::get('productions-hoja-viajera/{production}', [ProductionController::class
 //------------------------------------------------------------------------------------------
 Route::resource('products', ProductController::class)->middleware('auth');
 Route::get('products-get-all', [ProductController::class, 'getAll'])->name('products.get-all')->middleware('auth');
+Route::get('products-get-match/{query}', [ProductController::class, 'getMatch'])->name('products.get-match')->middleware('auth');
 Route::get('products-clone/{product}', [ProductController::class, 'clone'])->name('products.clone')->middleware('auth');
 Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
@@ -154,6 +156,92 @@ Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('client
 Route::resource('comments', CommentController::class)->middleware('auth');
 
 
+//artisan commands -------------------
+Route::get('/clear-all', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    return 'cleared.';
+});
+
+// Route::get('/set-productions-product', function () {
+//     $productions = Production::where('product_id', 1)->get();
+//     $products_found = 0;
+//     foreach ($productions as $production) {
+//         // obtener nombre del producto de la nota desdepues de la palabra "Producto: "
+//         $product_name = explode('Producto: ', $production->notes);
+//         if (count($product_name) > 1) {
+//             $product_name = trim($product_name[1]);
+//         } else {
+//             $product_name = null;
+//         }
+//         // buscar el producto por nombre
+//         $product = Product::where('name', $product_name)->first();
+//         if ($product) {
+//             $products_found++;
+//             $production->product_id = $product->id;
+//             $production->save();
+//         }
+//     }
+//     return 'updated.' . $products_found . ' productions updated.';
+// });
+
+// Route::get('/import-products', function () {
+//     set_time_limit(400); // Por si acaso
+//     $filePath = public_path('products.csv');
+
+//     if (!file_exists($filePath)) {
+//         return response()->json(['error' => 'El archivo products.csv no existe en la carpeta public'], 404);
+//     }
+
+//     // Leer el archivo CSV
+//     $file = fopen($filePath, 'r');
+//     $header = fgetcsv($file);
+
+//     if (empty($header)) {
+//         fclose($file);
+//         return response()->json(['error' => 'El archivo CSV está vacío o no tiene encabezados'], 400);
+//     }
+
+//     $importedCount = 0;
+//     $errors = [];
+//     $lineNumber = 1;
+
+//     while (($row = fgetcsv($file)) !== false) {
+//         $lineNumber++;
+//         $data = array_combine($header, $row);
+
+//         try {
+//             // Insertar en la base de datos
+//             Product::create([
+//                 'name' => $data['name'],
+//                 'code' => $data['code'] ?? null,
+//                 'season' => $data['season'] ?? null,
+//                 'branch' => $data['branch'] ?? null,
+//                 'measure_unit' => $data['measure_unit'] ?? null,
+//             ]);
+
+//             $importedCount++;
+//         } catch (\Exception $e) {
+//             $errors[] = [
+//                 'line' => $lineNumber,
+//                 'machine_id' => (int) $data['machine_id'],
+//                 'error' => $e->getMessage(),
+//                 // 'data' => $data
+//             ];
+//         }
+//     }
+
+//     fclose($file);
+
+//     return response()->json([
+//         'message' => 'Importación completada',
+//         'imported' => $importedCount,
+//         'errors' => $errors,
+//         'error_count' => count($errors)
+//     ]);
+// });
 // use Carbon\Carbon;
 // Route::get('/import-productions', function () {
 //     set_time_limit(300); // Por si acaso

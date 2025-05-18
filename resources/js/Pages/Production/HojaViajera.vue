@@ -69,17 +69,17 @@
                             <p class="text-[#676777]">Hojas necesarias:</p>
                             <p class="text-black">{{ production.ts }}</p>
                         </div>
-                        <!-- <div class="flex items-center space-x-2">
-                            <p class="text-[#676777]">Dimensiones:</p>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-[#676777]">Dimensiones (ancho x largo):</p>
                             <p class="text-black">{{ production.width }} x {{ production.large }}</p>
-                        </div> -->
+                        </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">No. De Cambios:</p>
                             <p class="text-black">{{ production.changes }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Tamaños a Imprimir:</p>
-                            <p class="text-black">{{ production.width }} x {{ production.large }}</p>
+                            <p class="text-black">{{ production.dfi }}</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Observaciones:</p>
@@ -106,6 +106,10 @@
                             <p class="text-[#676777]">Cantidad solicitada:</p>
                             <p class="text-black">{{ production.ts.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} </p>
                         </div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-[#676777]">Ajuste:</p>
+                            <p class="text-black">{{ production.adjust.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} </p>
+                        </div>
                     </section>
                 </article>
             </section>
@@ -117,25 +121,25 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Fecha de Surtido:</p>
-                            <p class="w-[182px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Hojas Surtidas:</p>
-                            <p class="w-[192px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Tarimas:</p>
-                            <p class="w-[252px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -145,15 +149,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[179px] h-[14px] border border-[#D9D9D9] px-2">
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9] px-2">
                                 {{ production.dfi }}
                             </p>
                         </div>
@@ -179,9 +183,9 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-10 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-10 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -190,15 +194,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[168px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -222,13 +226,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -237,15 +241,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[168px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -269,13 +273,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -287,15 +291,21 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[175px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-[#676777]">Tipo de barníz:</p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]">
+                                {{ production.varnish_type }}
+                            </p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -319,13 +329,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -334,15 +344,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[175px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -366,13 +376,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -381,15 +391,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[175px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -413,13 +423,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
 
@@ -428,15 +438,15 @@
                     <div class="border-t border-[#D9D9D9] py-px px-3 space-y-[px]">
                         <div class="flex items-center">
                             <p class="text-[#676777]">Operador:</p>
-                            <p class="w-60 h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Máquina:</p>
-                            <p class="w-[245px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Formato de corte:</p>
-                            <p class="w-[175px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <article class="flex items-center space-x-2">
                             <div class="flex items-center">
@@ -460,13 +470,13 @@
                         </article>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Pliegos procesados:</p>
-                            <p class="w-[169px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
                         <div class="flex items-center">
                             <p class="text-[#676777]">Observaciones:</p>
-                            <p class="w-[198px] h-[14px] border border-[#D9D9D9]"></p>
+                            <p class="flex-1 h-[14px] border border-[#D9D9D9]"></p>
                         </div>
-                        <p class="w-[305px] h-12 border border-[#D9D9D9]"></p>
+                        <p class="flex-1 h-12 border border-[#D9D9D9]"></p>
                     </div>
                 </article>
             </section>

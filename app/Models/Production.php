@@ -47,6 +47,7 @@ class Production extends Model
         'ts',
         'ps',
         'tps',
+        'varnish_type',
         'partials',
         'created_at',
         'updated_at',
