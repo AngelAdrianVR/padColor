@@ -50,15 +50,12 @@
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
                 <div>
                     <InputLabel value="Producto*" />
-                    <div class="flex items-center">
-                        <i v-if="fetchingProducts" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingProducts" class="text-[10px]">Cargando productos</span>
-                        <el-select v-model="form.product_id" filterable no-match-text="No hay productos coincidentes"
-                            placeholder="Selecciona el producto" class="!w-full" :disabled="fetchingProducts">
-                            <el-option v-for="product in products" :key="product.id" :label="product.name"
-                                :value="product.id" />
-                        </el-select>
-                    </div>
+                    <el-select v-model="form.product_id" filterable
+                        placeholder="Selecciona el producto" remote reserve-keyword :remote-method="fetchProductsMatch"
+                        :loading="fetchingProducts" class="!w-full" no-match-text="No hay productos coincidentes">
+                        <el-option v-for="product in products" :key="product.id" :label="product.name"
+                            :value="product.id" />
+                    </el-select>
                     <InputError :message="form.errors.product_id" />
                 </div>
                 <div>
@@ -84,7 +81,8 @@
                                 v-html="stations.find(s => s.name === form.station)?.icon"></div>
                         </div>
                     </InputLabel>
-                    <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual" class="!w-full">
+                    <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual"
+                        class="!w-full">
                         <el-option v-for="station in stations" :key="station" :label="station.name"
                             :value="station.name" />
                     </el-select>
@@ -95,8 +93,8 @@
                     <div class="flex items-center">
                         <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                         <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
-                        <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina" class="!w-full"
-                            :disabled="fetchingMachines">
+                        <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina"
+                            class="!w-full" :disabled="fetchingMachines">
                             <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
                                 :value="machine.id" />
                         </el-select>
@@ -274,7 +272,7 @@ export default {
 
         return {
             form,
-            products: [],
+            products: [this.product],
             machines: [],
             clients: [],
             fetchingProducts: false,
@@ -430,6 +428,7 @@ export default {
     },
     props: {
         production: Object,
+        product: Object,
     },
     methods: {
         update() {
@@ -506,10 +505,19 @@ export default {
                 this.form.tps = null;
             }
         },
-        async fetchProducts() {
+        handleChangeProduct() {
+            const productSelected = this.products.find(product => product.id === this.form.product_id);
+            this.form.material = productSelected.material;
+        },
+        async fetchProductsMatch(query) {
+            if (!query) {
+                this.products = [];
+                return;
+            }
+
             this.fetchingProducts = true;
             try {
-                const response = await axios.get(route('products.get-all'));
+                const response = await axios.get(route('products.get-match', { query }));
 
                 if (response.status === 200) {
                     this.products = response.data.items;
@@ -520,6 +528,20 @@ export default {
                 this.fetchingProducts = false;
             }
         },
+        // async fetchProducts() {
+        //     this.fetchingProducts = true;
+        //     try {
+        //         const response = await axios.get(route('products.get-all'));
+
+        //         if (response.status === 200) {
+        //             this.products = response.data.items;
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching products:', error);
+        //     } finally {
+        //         this.fetchingProducts = false;
+        //     }
+        // },
         async fetchMachines() {
             this.fetchingMachines = true;
             try {
@@ -550,7 +572,7 @@ export default {
         },
     },
     mounted() {
-        this.fetchProducts();
+        // this.fetchProducts();
         this.fetchMachines();
         this.fetchClients();
     },

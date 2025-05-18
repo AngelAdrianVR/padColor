@@ -73,7 +73,8 @@ class ProductionController extends Controller
 
     public function edit(Production $production)
     {
-        return inertia('Production/Edit', compact('production'));
+        $product = $production->product; 
+        return inertia('Production/Edit', compact('production', 'product'));
     }
 
     public function update(Request $request, Production $production)
