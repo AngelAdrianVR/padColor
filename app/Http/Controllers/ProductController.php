@@ -43,7 +43,7 @@ class ProductController extends Controller
 
         // Guardar el archivo de portada de producto en la colección 'image'
         if ($request->hasFile('image')) {
-           $product->addMediaFromRequest('image')->toMediaCollection('image');
+            $product->addMediaFromRequest('image')->toMediaCollection('image');
         }
 
         // Guardar los archivos en la colección 'files'
@@ -64,7 +64,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $product->load('media');
-        
+
         return inertia('Product/Edit', [
             'product' => $product,
         ]);
@@ -161,7 +161,7 @@ class ProductController extends Controller
     public function clone(Product $product)
     {
         $clonedProduct = $product->replicate();
-        
+
         // Si necesitas modificar el nombre, por ejemplo para evitar duplicados
         $clonedProduct->name = $product->name . ' (Copia)';
 
@@ -171,12 +171,21 @@ class ProductController extends Controller
         foreach ($product->media as $mediaItem) {
             $mediaItem->copy($clonedProduct, $mediaItem->collection_name);
         }
-
     }
 
     public function getAll()
     {
-        $items = Product::latest('id')->get(['name', 'id', 'material']);
+        $items = Product::latest('id')->get(['name', 'id', 'material'])->take(100);
+
+        return response()->json(compact('items'));
+    }
+
+    public function getMatch($query)
+    {
+        $items = Product::latest('id')
+            ->where('name', 'like', "%$query%")
+            ->get(['name', 'id', 'material'])
+            ->take(100);
 
         return response()->json(compact('items'));
     }
@@ -187,11 +196,11 @@ class ProductController extends Controller
 
         // Realiza la búsqueda correctamente
         $products = Product::where(function ($q) use ($query) {
-                $q->where('code', 'like', "%{$query}%")
+            $q->where('code', 'like', "%{$query}%")
                 ->orWhere('name', 'like', "%{$query}%")
                 ->orWhere('season', 'like', "%{$query}%")
                 ->orWhere('description', 'like', "%{$query}%");
-            })
+        })
             ->paginate(200);
 
         // Devuelve los items encontrados

@@ -183,5 +183,7 @@ return [
         'changes' => 'número de cambios',
         'materials' => 'lista de materiales',
         'material' => 'material',
+        'varnish' => 'con barniz',
+        'varnish_type' => 'tipo de barniz',
     ],
 ];
