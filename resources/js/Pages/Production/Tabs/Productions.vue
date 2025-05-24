@@ -186,12 +186,12 @@
                 registros nuevos y actualizará los
                 existentes si así lo requiere.
             </p>
-            <div class="mt-3">
+            <!-- <div class="mt-3">
                 <a class="text-primary font-semibold" href="@/../../Layout_importar_producciones.xlsx"
                     download="Layout_importar_producciones.xlsx">
                     Descargar plantilla
                 </a>
-            </div>
+            </div> -->
             <div class="ml-2 mt-8">
                 <FileUploader @files-selected="form.excel = $event" :multiple="false" acceptedFormat="excel" />
                 <InputError :message="form.errors.excel" />
@@ -326,7 +326,7 @@
                 <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
                 <p class="text-[#464646]">Cantidad solicitada:</p>
                 <p class="col-span-2 font-bold">
-                    {{ selectedProduction.quantity.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                    {{ selectedProduction.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                 </p>
                 <p class="text-[#464646]">Lista de material:</p>
                 <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
@@ -359,7 +359,7 @@
                 <p>Fecha de liberación:</p>
                 <p>{{ formatDate(selectedProduction.quality_released_date) }}</p>
                 <p>Cantidad entregada:</p>
-                <p>{{ selectedProduction.quality_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                <p>{{ selectedProduction.quality_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <div v-if="selectedProduction.close_production_date"
                 class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
@@ -379,7 +379,7 @@
                         <p>Fecha de entrega:</p>
                         <p>{{ formatDate(partial.date) }}</p>
                         <p>Cantidad entregada:</p>
-                        <p>{{ partial.quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                        <p>{{ partial.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                     </div>
                 </section>
                 <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
@@ -387,7 +387,7 @@
                     formatDate(selectedProduction.close_production_date) }}</p>
                 <p class="pt-3 font-semibold">Cantidad total entregada:</p>
                 <p class="pt-3 font-semibold">{{
-                    selectedProduction.close_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                    selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">

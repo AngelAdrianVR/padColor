@@ -38,24 +38,27 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function headings(): array
     {
         return [
-            'N° Orden',
             'Producto',
             'Temporada',
-            'Cantidad solicitada',
-            'Cantidad entregada',
-            'Medida',
+            'N° Orden',
             'Cliente',
             'Progreso',
             'Notas',
             'Lista material',
-            'Material',
             'Máquina',
+            'Cantidad programada',
+            'Material',
+            'Medida',
             'Total hojas',
             'Fecha inicio',
             'Fecha esperada producción',
             'Fecha fin producción',
+            'Cantidad entregada',
             'Fecha esperada empaque',
-            'Fecha producto terminado',
+            'Producto terminado',
+            'Parcial 1°',
+            'Parcial N°',
+            'Cantidad final',
             'Última modificación',
             'Modificado por'
         ];
@@ -77,12 +80,12 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $production->material,
             $production->machine->name ?? '',
             $production->ts,
-            $production->start_date?->isoFormat('ddd, D MMM YYYY'),
-            $production->estimated_date?->isoFormat('ddd, D MMM YYYY'),
-            $production->close_production_date?->isoFormat('ddd, D MMM YYYY'),
-            $production->estimated_package_date?->isoFormat('ddd, D MMM YYYY'),
-            $production->finish_date?->isoFormat('ddd, D MMM YYYY'),
-            $production->updated_at?->isoFormat('ddd, D MMM YYYY h:mm A'),
+            $production->start_date?->isoFormat('DD/MM/YYYY'),
+            $production->estimated_date?->isoFormat('DD/MM/YYYY'),
+            $production->close_production_date?->isoFormat('DD/MM/YYYY'),
+            $production->estimated_package_date?->isoFormat('DD/MM/YYYY'),
+            $production->finish_date?->isoFormat('DD/MM/YYYY'),
+            $production->updated_at?->isoFormat('DD/MM/YYYY h:mm A'),
             $production->modifiedUser->name ?? ''
         ];
     }
