@@ -160,6 +160,10 @@
                         <el-option v-for="item in stations" :key="item.name" :label="item.name" :value="item.name" />
                     </el-select>
                 </div>
+                <div class="col-span-full text-end text-xs">
+                    <button @click="showImportModal = true; showExportFilters = false"
+                        class="text-secondary font-semibold">Ir a importar</button>
+                </div>
             </div>
         </template>
         <template #footer>
@@ -179,19 +183,31 @@
             <h1 class="font-semibold">Importar órdenes de producción</h1>
         </template>
         <template #content>
-            <p>
-                Antes de importar, asegúrate de que tu archivo Excel tenga las columnas: <br>
-                Código (es el N° de la orden), Almacén y cantidad (es la cantidad actual).
-                Al dar clic en "Continuar", el sistema agregará los
-                registros nuevos y actualizará los
-                existentes si así lo requiere.
-            </p>
-            <div class="mt-3">
+            <h2 class="font-bold">Prepara tu archivo:</h2>
+            <ul class="ml-5 text-xs">
+                <li class="list-disc">Utiliza el mismo layout que puedes exportar desde esta sección (SwAssistant)</li>
+                <li @click="showImportModal = false; showExportFilters = true"
+                    class="cursor-pointer text-secondary font-semibold">Ir a exportar</li>
+            </ul>
+            <h2 class="font-bold mt-3">Proceso de importación:</h2>
+            <ul class="list-disc ml-5 text-xs">
+                <li>Las órdenes que ya existan en el sistema se actualizarán automáticamente (progreso, máquina y
+                    cantidad final)</li>
+                <li>Las órdenes nuevas se crearán con la información proporcionada en el archivo</li>
+            </ul>
+            <h2 class="font-bold mt-3">Sube tu archivo:</h2>
+            <ul class="list-disc ml-5 text-xs">
+                <li>Haz clic en "Adjuntar archivo" para seleccionar tu archivo Excel</li>
+                <li>Al terminar la importación, se cargará nuevamente la lista de órdenes de la tabla con los nuevos
+                    registros o las actualizaciones correspondientes.</li>
+            </ul>
+
+            <!-- <div class="mt-3">
                 <a class="text-primary font-semibold" href="@/../../Layout_importar_producciones.xlsx"
                     download="Layout_importar_producciones.xlsx">
                     Descargar plantilla
                 </a>
-            </div>
+            </div> -->
             <div class="ml-2 mt-8">
                 <FileUploader @files-selected="form.excel = $event" :multiple="false" acceptedFormat="excel" />
                 <InputError :message="form.errors.excel" />
@@ -326,7 +342,7 @@
                 <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
                 <p class="text-[#464646]">Cantidad solicitada:</p>
                 <p class="col-span-2 font-bold">
-                    {{ selectedProduction.quantity.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                    {{ selectedProduction.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                 </p>
                 <p class="text-[#464646]">Lista de material:</p>
                 <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
@@ -359,7 +375,7 @@
                 <p>Fecha de liberación:</p>
                 <p>{{ formatDate(selectedProduction.quality_released_date) }}</p>
                 <p>Cantidad entregada:</p>
-                <p>{{ selectedProduction.quality_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                <p>{{ selectedProduction.quality_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <div v-if="selectedProduction.close_production_date"
                 class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
@@ -379,7 +395,7 @@
                         <p>Fecha de entrega:</p>
                         <p>{{ formatDate(partial.date) }}</p>
                         <p>Cantidad entregada:</p>
-                        <p>{{ partial.quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                        <p>{{ partial.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                     </div>
                 </section>
                 <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
@@ -387,7 +403,7 @@
                     formatDate(selectedProduction.close_production_date) }}</p>
                 <p class="pt-3 font-semibold">Cantidad total entregada:</p>
                 <p class="pt-3 font-semibold">{{
-                    selectedProduction.close_quantity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                    selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">

@@ -78,7 +78,7 @@
                             <p class="text-[#676777]">Tamaños a Imprimir:</p>
                             <p class="text-black">{{ production.dfi }}</p>
                         </div>
-                        <div class="flex items-center space-x-2">
+                        <div class="flex space-x-2">
                             <p class="text-[#676777]">Observaciones:</p>
                             <p class="text-black">{{ production.notes }}</p>
                         </div>

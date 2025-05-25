@@ -2,7 +2,7 @@
     <AppLayout title="Editar producción">
         <div class="mb-4">
             <Back class="mt-5 mx-2 lg:mx-20" />
-            <form @submit.prevent="update"
+            <form @submit.prevent="update" ref="formContainer"
                 class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 md:grid grid-cols-2 gap-x-3 gap-y-2">
                 <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
@@ -456,6 +456,15 @@ export default {
                 },
                 onError: () => {
                     console.log(this.form.errors);
+
+                    this.$refs.formContainer.scrollIntoView({
+                        behavior: 'smooth',
+                    });
+
+                    this.$notify({
+                        title: 'Verifique los campos requeridos',
+                        type: 'warning',
+                    });
                 },
             });
         },
