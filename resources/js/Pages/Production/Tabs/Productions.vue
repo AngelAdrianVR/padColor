@@ -160,6 +160,10 @@
                         <el-option v-for="item in stations" :key="item.name" :label="item.name" :value="item.name" />
                     </el-select>
                 </div>
+                <div class="col-span-full text-end text-xs">
+                    <button @click="showImportModal = true; showExportFilters = false"
+                        class="text-secondary font-semibold">Ir a importar</button>
+                </div>
             </div>
         </template>
         <template #footer>
@@ -179,13 +183,25 @@
             <h1 class="font-semibold">Importar órdenes de producción</h1>
         </template>
         <template #content>
-            <p>
-                Antes de importar, asegúrate de que tu archivo Excel tenga las columnas: <br>
-                Código (es el N° de la orden), Almacén y cantidad (es la cantidad actual).
-                Al dar clic en "Continuar", el sistema agregará los
-                registros nuevos y actualizará los
-                existentes si así lo requiere.
-            </p>
+            <h2 class="font-bold">Prepara tu archivo:</h2>
+            <ul class="ml-5 text-xs">
+                <li class="list-disc">Utiliza el mismo layout que puedes exportar desde esta sección (SwAssistant)</li>
+                <li @click="showImportModal = false; showExportFilters = true"
+                    class="cursor-pointer text-secondary font-semibold">Ir a exportar</li>
+            </ul>
+            <h2 class="font-bold mt-3">Proceso de importación:</h2>
+            <ul class="list-disc ml-5 text-xs">
+                <li>Las órdenes que ya existan en el sistema se actualizarán automáticamente (progreso, máquina y
+                    cantidad final)</li>
+                <li>Las órdenes nuevas se crearán con la información proporcionada en el archivo</li>
+            </ul>
+            <h2 class="font-bold mt-3">Sube tu archivo:</h2>
+            <ul class="list-disc ml-5 text-xs">
+                <li>Haz clic en "Adjuntar archivo" para seleccionar tu archivo Excel</li>
+                <li>Al terminar la importación, se cargará nuevamente la lista de órdenes de la tabla con los nuevos
+                    registros o las actualizaciones correspondientes.</li>
+            </ul>
+
             <!-- <div class="mt-3">
                 <a class="text-primary font-semibold" href="@/../../Layout_importar_producciones.xlsx"
                     download="Layout_importar_producciones.xlsx">

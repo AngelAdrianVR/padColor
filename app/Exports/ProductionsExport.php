@@ -28,7 +28,7 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
         $sheet->getStyle(1)->getFont()->setBold(true);
 
         // Autoajustar el ancho de las columnas
-        foreach (range('A', 'T') as $columnID) {
+        foreach (range('A', 'X') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
