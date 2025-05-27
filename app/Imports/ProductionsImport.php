@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\BeforeImport;
 use Maatwebsite\Excel\Events\AfterImport;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
 {
@@ -47,7 +48,16 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
 
         try {
             $n_orden = $row['n_orden'];
-            $progreso = $row['progreso'];
+            // quitar espacios en blanco al inicio y al final
+            $progreso = trim($row['progreso']);
+
+            if ($progreso == 'Producto Terminado') {
+                $progreso = 'Terminadas';
+            } else if ($progreso == 'X Material') {
+                $progreso = 'Material pendiente';
+            } else if (!$progreso) {
+                $progreso = 'NO ESPECIFICADO';
+            }
 
             // Log::debug("[EXCEL] Procesando: Código {$n_orden}, Almacén {$progreso}, Tipo " . ($esEntrada ? 'Entrada' : 'Salida'));
 
@@ -74,19 +84,33 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
                 $large = explode('x', $dfi)[1];
 
                 // Procesar fechas
-                $startDate = Carbon::createFromFormat('d/m/Y', trim($row['fecha_inicio']))->format('Y-m-d');
-                $estimatedDate = !empty(trim($row['fecha_esperada_produccion'])) ?
-                    Carbon::createFromFormat('d/m/Y', trim($row['fecha_esperada_produccion']))->format('Y-m-d') :
-                    null;
-                $estimatedPackageDate = !empty(trim($row['fecha_esperada_empaque'])) ?
-                    Carbon::createFromFormat('d/m/Y', trim($row['fecha_esperada_empaque']))->format('Y-m-d') :
-                    null;
-                $closeProductionDate = !empty(trim($row['fecha_fin_produccion'])) ?
-                    Carbon::createFromFormat('d/m/Y', trim($row['fecha_fin_produccion']))->format('Y-m-d') :
-                    null;
-                $finishDate = !empty(trim($row['producto_terminado'])) ?
-                    Carbon::createFromFormat('d/m/Y', trim($row['producto_terminado']))->format('Y-m-d') :
-                    null;
+                try {
+                    $startDate = is_numeric($row['fecha_inicio'])
+                        ? Carbon::instance(ExcelDate::excelToDateTimeObject($row['fecha_inicio']))->format('Y-m-d')
+                        : Carbon::createFromFormat('Y/d/m', trim($row['fecha_inicio']))->format('Y-m-d');
+                } catch (\Exception $e) {
+                    $startDate = null; // o manejar el error como prefieras
+                }
+                $estimatedDate = null;
+                if (!empty(trim($row['fecha_esperada_produccion']))) {
+                    try {
+                        $estimatedDate = is_numeric($row['fecha_esperada_produccion'])
+                            ? Carbon::instance(ExcelDate::excelToDateTimeObject($row['fecha_esperada_produccion']))->format('Y-m-d')
+                            : Carbon::createFromFormat('d/m/Y', trim($row['fecha_esperada_produccion']))->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $estimatedDate = null;
+                    }
+                }
+                $estimatedPackageDate = null;
+                if (!empty(trim($row['fecha_esperada_empaque']))) {
+                    try {
+                        $estimatedPackageDate = is_numeric($row['fecha_esperada_empaque'])
+                            ? Carbon::instance(ExcelDate::excelToDateTimeObject($row['fecha_esperada_empaque']))->format('Y-m-d')
+                            : Carbon::createFromFormat('d/m/Y', trim($row['fecha_esperada_empaque']))->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $estimatedPackageDate = null;
+                    }
+                }
 
                 // Procesar partials (array o null)
                 $partials = null;
@@ -113,8 +137,7 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
                 $production->fill([
                     'client' => $row['cliente'],
                     'quantity' => $row['cantidad_programada'],
-                    'current_quantity' => $row['cantidad_final'],
-                    'notes' => $row['notas'],
+                    'notes' => $row['descripcion'],
                     'materials' => [$row['lista_material']],
                     'material' => $row['material'],
                     'dfi' => $row['medida'],
@@ -123,23 +146,23 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
                     'ts' => $row['total_hojas'],
                     'start_date' => $startDate,
                     'estimated_date' => $estimatedDate,
-                    'close_production_date' => $closeProductionDate,
+                    'close_production_date' => $row['fecha_fin_produccion'] ?? null,
                     'estimated_package_date' => $estimatedPackageDate,
-                    'finish_date' => $finishDate,
-                    'close_quantity' => $row['cantidad_entregada'],
-                    'current_quantity' => $row['cantidad_final'],
+                    'finish_date' => $row['producto_terminado'],
+                    'close_quantity' => $row['cantidad_entregada'] ?? 0,
+                    'current_quantity' => $row['cantidad_final'] ?? 0,
                     'station' => $progreso,
                     'partials' => $partials,
-                    'product_id' => $product->id ?? 1,
-                    'machine_id' => $machine->id ?? 28,
+                    'product_id' => $product?->id ?? 1,
+                    'machine_id' => $machine?->id ?? 28,
                     'user_id' => auth()->id(),
                     'modified_user_id' => auth()->id(),
                 ])->save();
-            } elseif ($production->current_quantity != $row['cantidad_final'] || $production->station != $progreso || $production->machine_id != $machine->id) {
+            } elseif ($production->current_quantity != $row['cantidad_final'] || $production->station != $progreso || $production->machine_id != $machine?->id) {
                 // Actualizar el registro existente
                 $production->current_quantity = $row['cantidad_final'];
                 $production->station = $progreso;
-                $production->machine_id = $machine->id ?? 28;
+                $production->machine_id = $machine?->id ?? 28;
                 $production->modified_user_id = auth()->id();
                 $production->save();
             }

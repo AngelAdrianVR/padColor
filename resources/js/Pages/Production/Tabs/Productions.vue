@@ -185,9 +185,42 @@
         <template #content>
             <h2 class="font-bold">Prepara tu archivo:</h2>
             <ul class="ml-5 text-xs">
-                <li class="list-disc">Utiliza el mismo layout que puedes exportar desde esta sección (SwAssistant)</li>
-                <li @click="showImportModal = false; showExportFilters = true"
-                    class="cursor-pointer text-secondary font-semibold">Ir a exportar</li>
+                <li class="list-disc">
+                    Utiliza el mismo layout que puedes exportar desde esta sección (SwAssistant)
+                    <span @click="showImportModal = false; showExportFilters = true"
+                        class="cursor-pointer text-secondary font-semibold"> Ir a exportar</span>
+                </li>
+                <p>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-4 text-amber-600 inline-block mr-1">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                    </svg>
+                    <span>Es importante cumplir con los siguientes formatos de fecha y en caso de cambiar alguno, avisar
+                        a desarrolladores para hacer los cambios necesarios:</span>
+                </p>
+                <ul class="ml-5 list-disc">
+                    <li>Fecha de inicio: aaaa/mm/dd</li>
+                    <li>Fecha esperada producción y fecha esperada empaque: dd/mm/aaaa</li>
+                    <li>Fecha fin producción y producto terminado: aaaa-mm-dd hh:mm:ss</li>
+                </ul>
+                <p>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-4 text-amber-600 inline-block mr-1">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                    </svg>
+                    <span>
+                        Atención con los siguientes casos:
+                    </span>
+                </p>
+                <ul class="ml-5 list-disc">
+                    <li>Si una producción contiene un producto y/o máquina que no existen en el sistema, se registrarán como "POR DEFINIR"</li>
+                    <li>Si una producción no contiene producto y/o máquina, se registrarán como "POR DEFINIR"</li>
+                    <li>Si una producción no contiene progreso se registrará como "NO ESPECIFICADO"</li>
+                    <li>El progreso "Producto Terminado" se cambiará automáticamente a "Terminadas" por estándares del sistema</li>
+                    <li>El progreso "X Material" se cambiará automáticamente a "Material pendiente" por estándares del sistema</li>
+                </ul>
             </ul>
             <h2 class="font-bold mt-3">Proceso de importación:</h2>
             <ul class="list-disc ml-5 text-xs">
