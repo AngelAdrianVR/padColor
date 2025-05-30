@@ -76,14 +76,15 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Tamaños a Imprimir:</p>
-                            <p class="text-black">{{ production.dfi }}</p>
+                            <p class="text-black">
+                                {{ (production.quantity / production.pps)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            </p>
                         </div>
                         <div class="flex space-x-2">
                             <p class="text-[#676777]">Observaciones:</p>
                             <p class="text-black">{{ production.notes }}</p>
                         </div>
                     </section>
-
                     <!-- Parte derecha -->
                     <section>
                         <div class="flex items-center space-x-2">
@@ -101,7 +102,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Cantidad solicitada:</p>
-                            <p class="text-black">{{ production.ts?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} </p>
+                            <p class="text-black">{{ production.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} </p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <p class="text-[#676777]">Ajuste:</p>
