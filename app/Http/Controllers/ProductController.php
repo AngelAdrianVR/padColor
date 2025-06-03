@@ -190,10 +190,8 @@ class ProductController extends Controller
         return response()->json(compact('items'));
     }
 
-    public function getMatches(Request $request)
+    public function getMatches($query)
     {
-        $query = $request->input('query');
-
         // Realiza la búsqueda correctamente
         $products = Product::where(function ($q) use ($query) {
             $q->where('code', 'like', "%{$query}%")
