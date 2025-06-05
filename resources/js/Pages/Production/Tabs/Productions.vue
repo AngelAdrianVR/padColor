@@ -442,6 +442,8 @@
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                 <p class="text-[#464646]">Material:</p>
                 <p class="col-span-2">{{ selectedProduction.material ?? '-' }}</p>
+                <p class="text-[#464646]">Calibre:</p>
+                <p class="col-span-2">{{ selectedProduction.gauge ?? '-' }}</p>
                 <p class="text-[#464646]">Con barníz:</p>
                 <p class="col-span-2">
                     <i v-if="selectedProduction.varnish_type" class="fa-solid fa-check text-[#059A05]"></i>

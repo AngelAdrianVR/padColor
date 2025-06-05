@@ -429,6 +429,9 @@ class TicketController extends Controller
             $end = now()->subYear()->endOfYear();
 
             $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+        } else {
+            // Si el valor no coincide con ninguna de las opciones predefinidas, se devuelve un array vacío
+            $tickets = collect([]);
         }
 
         return $tickets;

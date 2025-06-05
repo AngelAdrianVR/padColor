@@ -66,17 +66,17 @@ class ProductionsImport implements ToModel, WithHeadingRow, WithEvents
 
             if (!$production->exists) {
                 $this->createdRecords++;
-                Log::info("[EXCEL] Nuevo registro creado para código {$n_orden}");
+                // Log::info("[EXCEL] Nuevo registro creado para código {$n_orden}");
             } elseif ($production->current_quantity != $row['cantidad_final'] || $production->station != $progreso) {
                 $this->updatedRecords++;
-                Log::info("[EXCEL] Actualizando registro existente para código {$n_orden}");
+                // Log::info("[EXCEL] Actualizando registro existente para código {$n_orden}");
             }
 
             //buscar maquina por nombre
-            $machine = Machine::where('name', $row['maquina'])->first();
+            $machine = Machine::where('name', trim($row['maquina']))->first();
             if (!$production->exists) {
                 // buscar el producto por nombre
-                $product = Product::where('name', $row['producto'])->first();
+                $product = Product::where('name', trim($row['producto']))->first();
 
                 //medidas
                 $dfi = str_replace(' ', '', $row['medida']);
