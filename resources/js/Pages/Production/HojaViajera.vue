@@ -12,11 +12,11 @@
                 <h2 class="font-semibold">Departamento Emisor</h2>
                 <h3>Ingeniería de procesos</h3>
             </div>
-            <div class="border border-[#D9D9D9] rounded-xl py-px *:px-4">
+            <!-- <div class="border border-[#D9D9D9] rounded-xl py-px *:px-4">
                 <p class="text-center font-semibold">Código</p>
                 <p class="py-px text-center">{{ production.folio }}</p>
-                <!-- <p class="border-t border-[#D9D9D9] py-px text-center">1 de 1 ?</p> -->
-            </div>
+                <p class="border-t border-[#D9D9D9] py-px text-center">1 de 1 ?</p>
+            </div> -->
         </section>
         <body>
             <section class="border border-[#D9D9D9] rounded-xl py-px px-3 flex justify-between space-x-7 mb-[2px]">
@@ -43,7 +43,7 @@
                 <div class="border-t border-[#D9D9D9] py-px px-3 flex justify-between space-x-7">
                     <div class="text-center">
                         <p class="text-[#676777]">No. Orden:</p>
-                        <p class="text-black">{{ production.id }}</p>
+                        <p class="text-black">{{ production.folio }}</p>
                     </div>
                     <div>
                         <p class="text-[#676777]">Modelo:</p>
