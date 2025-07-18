@@ -36,7 +36,7 @@ class TicketSolutionController extends Controller
         // $ticket_solution->ticket->update(['status' => 'Completado']); //quisieron quitar esta funcion el 02/Abr/2024 por Rmses
 
         // Guardar media
-        $ticket_solution->addAllMediaFromRequest()->each(fn ($file) => $file->toMediaCollection());
+        $ticket_solution->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
 
         //Crear registro de actividad
         TicketHistory::create([
@@ -89,7 +89,10 @@ class TicketSolutionController extends Controller
 
     public function fetchSolutions($ticket)
     {
-        $ticket_solutions = TicketSolutionResource::collection(TicketSolution::with('user:id,name,profile_photo_path')->where('ticket_id', $ticket)->get());
+        $ticket_solutions = TicketSolutionResource::collection(TicketSolution::with('user:id,name,profile_photo_path')
+            ->where('ticket_id', $ticket)
+            ->oldest('created_at')
+            ->get());
 
         return response()->json(['items' => $ticket_solutions]);
     }

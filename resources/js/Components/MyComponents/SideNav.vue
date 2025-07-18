@@ -21,7 +21,8 @@
                 <section>
                     <template v-if="small">
                         <div v-for="(menu, index) in menus" :key="index">
-                            <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active" :title="menu.label"
+                            <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
+                                :title="menu.label"
                                 class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
                                 :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
                                 <span v-html="menu.icon"></span>
@@ -30,8 +31,8 @@
                     </template>
                     <template v-else v-for="(menu, index) in menus" :key="index">
                         <div v-if="menu.show">
-                            <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active" :title="menu.label"
-                                :id="index">
+                            <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active"
+                                :title="menu.label" :id="index">
                                 <div v-for="(option, index2) in menu.options" :key="index2">
                                     <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
                                         :title="option.label"
@@ -41,30 +42,61 @@
                                     </button>
                                 </div>
                             </Accordion>
-                            <button v-else-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
-                                :title="menu.label"
+                            <button v-else-if="menu.show" @click="goToRoute(menu.route)" :title="menu.label"
                                 class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
                                 :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{ menu.label
+                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{
+                                    menu.label
                                 }}</p>
                             </button>
                         </div>
                     </template>
+                    <!-- Capacitacion visible para todos -->
+                    <button v-if="small"
+                        @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
+                        title="Capacitación"
+                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                class="size-[22px] inline">
+                                <path
+                                    d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                            </svg>
+                        </span>
+                    </button>
+                    <button v-else
+                        @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
+                        title="Capacitación"
+                        class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        <p class="w-full text-sm truncate">
+                            <span class="mr-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                    class="size-[22px] inline">
+                                    <path
+                                        d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                                </svg>
+                            </span>
+                            <span>Capacitación</span>
+                        </p>
+                    </button>
                 </section>
 
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
-                    <button v-if="$page.props.jetstream.managesProfilePhotos" @click="showProfileCard = !showProfileCard"
-                        class="flex items-center space-x-2 text-sm border rounded-full focus:outline-none transition"
+                    <button v-if="$page.props.jetstream.managesProfilePhotos"
+                        @click="showProfileCard = !showProfileCard"
+                        class="flex items-center space-x-2 text-sm border rounded-full focus:outline-none transition mt-4"
                         :class="{ 'border-primary': showProfileCard, 'border-[#999999]': !showProfileCard, 'size-12 justify-center': small, 'h-12 w-full px-2 justify-between': !small }">
                         <div class="flex items-center">
                             <img class="size-9 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
                                 :alt="$page.props.auth.user.name">
-                            <p v-if="!small" class="text-[11px] text-gray99 leading-snug text-start mt-1 ml-2">{{ $page.props.auth.user.name }}</p>
+                            <p v-if="!small" class="text-[11px] text-gray99 leading-snug text-start mt-1 ml-2">{{
+                                $page.props.auth.user.name }}</p>
                         </div>
                         <i v-if="!small" class="fa-solid fa-angle-right text-center text-xs text-[#999999]"></i>
                     </button>
-                    <ProfileCard v-if="showProfileCard" @close="showProfileCard = false" class="bottom-3 left-[calc(100%+0.75rem)]" />
+                    <ProfileCard v-if="showProfileCard" @close="showProfileCard = false"
+                        class="bottom-3 left-[calc(100%+0.75rem)]" />
                 </div>
             </nav>
         </div>
@@ -194,6 +226,9 @@ export default {
         ProfileCard,
     },
     methods: {
+        openNewTab(url) {
+            window.open(url, 'blank');
+        },
         handleClickInMenu(index) {
             if (this.menus[index].options.length) {
                 if (this.collapsedMenu === index) {
@@ -211,7 +246,7 @@ export default {
         logout() {
             this.$inertia.post(route('logout'));
         },
-        updateSideNavSize(is_small){
+        updateSideNavSize(is_small) {
             this.small = is_small;
             localStorage.setItem('is_sidenav_small', is_small);
         }
