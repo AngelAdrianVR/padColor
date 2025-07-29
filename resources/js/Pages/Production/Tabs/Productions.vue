@@ -415,7 +415,7 @@
                 <div class="flex items-center justify-between col-span-full">
                     <h2 class="font-bold">Inspección</h2>
                     <PrimaryButton
-                        v-if="selectedProduction.production_close_type == 'Parcialidades' && selectedProduction.station != 'Terminadas'"
+                        v-if="selectedProduction.station == 'Inspección'"
                         @click="showAddPartial = true">
                         Registrar parcialidad
                     </PrimaryButton>
@@ -437,6 +437,9 @@
                 <p class="pt-3 font-semibold">Cantidad total entregada:</p>
                 <p class="pt-3 font-semibold">{{
                     selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                <p class="pt-3 font-semibold">Cantidad restante:</p>
+                <p class="pt-3 font-semibold">{{
+                    (selectedProduction.quantity - selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
@@ -905,6 +908,7 @@ export default {
                         type: "success",
                     });
                     this.selectedProduction.station = this.tempStation;
+                    this.selectedProduction.close_production_date = new Date().toISOString();
                 },
                 onError: () => {
                     this.$notify({
@@ -923,6 +927,7 @@ export default {
                         type: "success",
                     });
                     this.selectedProduction.station = this.tempStation;
+                    this.selectedProduction.close_production_date = new Date().toISOString();
                 },
                 onError: () => {
                     this.$notify({
