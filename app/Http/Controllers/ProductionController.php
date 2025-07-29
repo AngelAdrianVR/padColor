@@ -76,7 +76,7 @@ class ProductionController extends Controller
 
     public function edit(Production $production)
     {
-        $product = $production->product; 
+        $product = $production->product;
         return inertia('Production/Edit', compact('production', 'product'));
     }
 
@@ -178,8 +178,21 @@ class ProductionController extends Controller
     public function clone(Production $production)
     {
         $lastProductionId = Production::latest('id')->first()?->id;
-        $newProduction = $production->replicate();
+        $newProduction = $production->replicate([
+            'finish_date',
+            'close_production_date',
+            'quality_released_date',
+            'estimated_package_date',
+            'estimated_date',
+            'production_close_type',
+            'quality_quantity',
+            'current_quantity',
+            'partials',
+            'start_date',
+        ]);
         $newProduction->folio = 'R-' . $lastProductionId + 1;
+        $newProduction->station = 'Solicitado';
+        $newProduction->start_date = now();
         $newProduction->save();
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
@@ -221,7 +234,7 @@ class ProductionController extends Controller
             'modified_user_id' => auth()->id(),
         ]);
     }
-    
+
     public function addPartial(Request $request, Production $production)
     {
         $partials = $production->partials ?? [];
