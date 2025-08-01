@@ -215,11 +215,14 @@
                     </span>
                 </p>
                 <ul class="ml-5 list-disc">
-                    <li>Si una producción contiene un producto y/o máquina que no existen en el sistema, se registrarán como "POR DEFINIR"</li>
+                    <li>Si una producción contiene un producto y/o máquina que no existen en el sistema, se registrarán
+                        como "POR DEFINIR"</li>
                     <li>Si una producción no contiene producto y/o máquina, se registrarán como "POR DEFINIR"</li>
                     <li>Si una producción no contiene progreso se registrará como "NO ESPECIFICADO"</li>
-                    <li>El progreso "Producto Terminado" se cambiará automáticamente a "Terminadas" por estándares del sistema</li>
-                    <li>El progreso "X Material" se cambiará automáticamente a "Material pendiente" por estándares del sistema</li>
+                    <li>El progreso "Producto Terminado" se cambiará automáticamente a "Terminadas" por estándares del
+                        sistema</li>
+                    <li>El progreso "X Material" se cambiará automáticamente a "Material pendiente" por estándares del
+                        sistema</li>
                 </ul>
             </ul>
             <h2 class="font-bold mt-3">Proceso de importación:</h2>
@@ -387,8 +390,9 @@
                     <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
                         :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
                         v-html="stations.find(s => s.name === tempStation)?.icon"></div>
-                    <el-select @change="updateStation" v-model="tempStation" class="!w-2/3">
-                        <el-option v-for="station in stations" :key="station" :label="station.name"
+                    <el-select @change="updateStation" v-model="tempStation" class="!w-2/3"
+                        :disabled="tempStation === 'Terminadas'">
+                        <el-option v-for="station in filteredStations" :key="station.name" :label="station.name"
                             :value="station.name" />
                     </el-select>
                 </div>
@@ -414,9 +418,7 @@
                 class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
                 <div class="flex items-center justify-between col-span-full">
                     <h2 class="font-bold">Inspección</h2>
-                    <PrimaryButton
-                        v-if="selectedProduction.station == 'Inspección'"
-                        @click="showAddPartial = true">
+                    <PrimaryButton v-if="selectedProduction.station == 'Inspección'" @click="showAddPartial = true">
                         Registrar parcialidad
                     </PrimaryButton>
                 </div>
@@ -439,7 +441,8 @@
                     selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                 <p class="pt-3 font-semibold">Cantidad restante:</p>
                 <p class="pt-3 font-semibold">{{
-                    (selectedProduction.quantity - selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                    (selectedProduction.quantity -
+                        selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
             </div>
             <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
             <div class="text-sm grid grid-cols-3 gap-2 mt-3">
@@ -486,7 +489,7 @@
         <template #content>
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-full bg-[#E9E9E9] py-2 px-4 rounded-full">
-                    Parcialidad {{ selectedProduction.partials.length + 1 }}
+                    Parcialidad {{ selectedProduction.partials?.length ? selectedProduction.partials?.length + 1 : 1 }}
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Cantidad entregada:" />
@@ -514,6 +517,28 @@
             </div>
         </template>
     </DialogModal>
+    <ConfirmationModal :show="showFinishedConfirmation" @close="showFinishedConfirmation = false; tempStation = currentStation">
+        <template #title>
+            <h1 class="font-semibold">Terminar orden de producción</h1>
+        </template>
+        <template #content>
+            <p class="text-sm">
+                Al marcar como terminada una orden de producción, se actualizará su estado y no podrá ser editada. <br>
+                ¿Estás seguro de que deseas finalizar esta orden de producción?
+            </p>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <PrimaryButton @click="finishProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Si, continuar
+                </PrimaryButton>
+                <CancelButton @click="showFinishedConfirmation = false; tempStation = currentStation" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+            </div>
+        </template>
+    </ConfirmationModal>
     <ConfirmationModal :show="showConfirmation" @close="showConfirmation = false">
         <template #title>
             <h1 class="font-semibold">Eliminar orden de producción</h1>
@@ -575,8 +600,10 @@ export default {
             showExportFilters: false,
             showImportModal: false,
             showAddPartial: false,
+            showFinishedConfirmation: false,
             selectedProduction: null,
             tempStation: null,
+            currentStation: null,
             searchTemp: null,
             search: null,
             sheets: null,
@@ -736,6 +763,25 @@ export default {
     },
     props: {
     },
+    computed: {
+        filteredStations() {
+            // Si la estación actual es 'Terminadas', no mostramos opciones
+            if (this.currentStation === 'Terminadas') {
+                return [];
+            }
+
+            // Si la estación actual es 'Inspección', solo mostramos 'Maquila' y 'Terminadas'
+            if (this.currentStation === 'Inspección') {
+                return this.stations.filter(station =>
+                    station.name === 'Maquila' || station.name === 'Terminadas'
+                );
+            }
+
+            // Para otros casos, mostramos todas las estaciones excepto 'Terminadas' si no viene de 'Inspección'
+            // (Ajusta esta lógica según tus necesidades específicas)
+            return this.stations.filter(station => station.name !== 'Terminadas');
+        }
+    },
     methods: {
         exportExcel() {
             const url = route('productions.export-excel', {
@@ -809,6 +855,7 @@ export default {
             this.showDetails = true;
             this.selectedProduction = row;
             this.tempStation = row.station;
+            this.currentStation = row.station;
         },
         tableRowClassName({ row, rowIndex }) {
             return 'cursor-pointer text-xs';
@@ -889,6 +936,10 @@ export default {
                     // ageregar date y quantity nueva parcialidad
                     this.selectedProduction.partials.push({ date: this.form.date, quantity: this.form.quantity });
                     this.selectedProduction.close_quantity += this.form.quantity;
+                    if (this.selectedProduction.close_quantity >= this.selectedProduction.quantity) {
+                        this.selectedProduction.station = 'Terminadas';
+                        this.tempStation = 'Terminadas';
+                    }
                     this.form.reset();
                 },
                 onError: () => {
@@ -937,6 +988,26 @@ export default {
                 },
             });
         },
+        finishProduction() {
+            this.form.post(route('productions.finish-production', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showQualityModal = false;
+                    this.$notify({
+                        title: "Orden de producción Terminada",
+                        type: "success",
+                    });
+                    this.selectedProduction.station = this.tempStation;
+                    this.showFinishedConfirmation = false
+                    this.showDetails = false;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al liberar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
         async updateStation() {
             if (this.tempStation == 'Inspección') {
                 this.showCloseProduction = true;
@@ -944,6 +1015,8 @@ export default {
             } else if (this.tempStation == 'Liberado por calidad') {
                 this.showQualityModal = true;
                 this.showDetails = false;
+            } else if (this.tempStation == 'Terminadas') {
+                this.showFinishedConfirmation = true;
             } else {
                 try {
                     const response = await axios.put(route('productions.update-station', this.selectedProduction.id),

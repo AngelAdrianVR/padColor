@@ -154,6 +154,22 @@ class ProductionController extends Controller
 
         $query = Production::with(['user', 'product', 'machine'])->latest('id');
 
+        // Obtener los estacion permitidos para el usuario
+        $user = auth()->user();
+        $permissions = $user->getAllPermissions()
+            ->filter(function ($permission) {
+                return str_starts_with($permission->name, 'Ver en estacion');
+            })
+            ->map(function ($permission) {
+                return str_replace('Ver en estacion ', '', $permission->name);
+            })
+            ->toArray();
+
+        // Si el usuario tiene permisos específicos, filtrar por esos estación
+        if (!empty($permissions)) {
+            $query->whereIn('station', $permissions);
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('folio', 'like', "%{$search}%")
@@ -170,7 +186,7 @@ class ProductionController extends Controller
             ->limit($perPage)
             ->get();
 
-        $total = $search ? $query->count() : Production::count();
+        $total = $query->count();
 
         return response()->json(compact('items', 'total'));
     }
@@ -234,6 +250,14 @@ class ProductionController extends Controller
             'modified_user_id' => auth()->id(),
         ]);
     }
+    
+    public function finishProduction(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Terminadas',
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
 
     public function addPartial(Request $request, Production $production)
     {
@@ -243,8 +267,16 @@ class ProductionController extends Controller
             'date' => $request->date,
         ];
 
+        // revisar si la suma de las parcialidades es mayor o igual a la cantidad total para cambiar la estación a 'Terminadas'
+        if (array_sum(array_column($partials, 'quantity')) >= $production->quantity) {
+            $station = 'Terminadas';
+        } else {
+            $station = 'Inspección';
+        }
+
         $production->update([
             'partials' => $partials,
+            'station' => $station,
             'modified_user_id' => auth()->id(),
             'close_quantity' => $production->close_quantity + $request->quantity,
         ]);
