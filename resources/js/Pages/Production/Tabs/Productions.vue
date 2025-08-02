@@ -114,6 +114,13 @@
                                                     d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             Repetir</el-dropdown-item>
+                                        <el-dropdown-item class="!text-xs" :command="'report-' + scope.row.id">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0 1 12 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m0 0h7.5" />
+                                            </svg>
+                                            Reporte de entregas</el-dropdown-item>
                                         <el-dropdown-item class="!text-xs"
                                             v-if="$page.props.auth.user.permissions.includes('Eliminar producciones')"
                                             :command="'delete-' + scope.row.id">
@@ -215,11 +222,14 @@
                     </span>
                 </p>
                 <ul class="ml-5 list-disc">
-                    <li>Si una producción contiene un producto y/o máquina que no existen en el sistema, se registrarán como "POR DEFINIR"</li>
+                    <li>Si una producción contiene un producto y/o máquina que no existen en el sistema, se registrarán
+                        como "POR DEFINIR"</li>
                     <li>Si una producción no contiene producto y/o máquina, se registrarán como "POR DEFINIR"</li>
                     <li>Si una producción no contiene progreso se registrará como "NO ESPECIFICADO"</li>
-                    <li>El progreso "Producto Terminado" se cambiará automáticamente a "Terminadas" por estándares del sistema</li>
-                    <li>El progreso "X Material" se cambiará automáticamente a "Material pendiente" por estándares del sistema</li>
+                    <li>El progreso "Producto Terminado" se cambiará automáticamente a "Terminadas" por estándares del
+                        sistema</li>
+                    <li>El progreso "X Material" se cambiará automáticamente a "Material pendiente" por estándares del
+                        sistema</li>
                 </ul>
             </ul>
             <h2 class="font-bold mt-3">Proceso de importación:</h2>
@@ -258,46 +268,164 @@
             </div>
         </template>
     </DialogModal>
-    <DialogModal :show="showCloseProduction" @close="showCloseProduction = false">
+    <DialogModal :show="showDetails" @close="showDetails = false">
         <template #title>
-            <h1 class="font-semibold">Cerrar producción</h1>
+            <h1 class="font-semibold">Orden de producción</h1>
         </template>
         <template #content>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <InputLabel value="Typo de entrega:" />
-                    <el-select v-model="form.production_close_type">
-                        <el-option v-for="item in ['Única', 'Parcialidades']" :key="item" :label="item" :value="item" />
-                    </el-select>
-                    <InputError :message="form.errors.production_close_type" />
-                </div>
-                <div v-if="form.production_close_type == 'Parcialidades'"
-                    class="mt-3 bg-[#E9E9E9] py-2 px-4 rounded-full col-span-full">
-                    Parcialidad 1
-                </div>
-                <div>
-                    <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.close_quantity" @change="handleSheet"
-                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
-                    <InputError :message="form.errors.close_quantity" />
-                </div>
-                <div>
-                    <InputLabel value="Fecha de cierre:" />
-                    <el-date-picker class="!w-full" v-model="form.close_production_date" type="date"
-                        placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
-                    <InputError :message="form.errors.close_production_date" />
-                </div>
+            <div v-if="updatingDetails" class="my-60">
+                <Loading />
             </div>
-        </template>
-        <template #footer>
-            <div class="flex justify-end space-x-2">
-                <CancelButton @click="showCloseProduction = false" :disabled="form.processing">
-                    Cancelar
-                </CancelButton>
-                <PrimaryButton @click="closeProduction" :disabled="form.processing">
-                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                    Continuar
-                </PrimaryButton>
+            <div v-else>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-[#666666] font-bold">Información de la orden</h2>
+                    <div class="flex items-center space-x-2">
+                        <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                            @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
+                            class="text-secondary border border-secondary rounded-md px-2 py-1">
+                            Hoja viajera
+                        </button>
+                        <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                            @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
+                            class="text-primary border border-primary rounded-md px-2 py-1">
+                            Editar
+                        </button>
+                    </div>
+                </div>
+                <div class="text-sm grid grid-cols-3 gap-2 mt-3">
+                    <p class="text-[#464646]">N° de Orden:</p>
+                    <p class="col-span-2">{{ selectedProduction.folio }}</p>
+                    <p class="text-[#464646]">Fecha de inicio:</p>
+                    <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
+                    <p class="text-[#464646]">Fecha estimada de entrega:</p>
+                    <p class="col-span-2">{{ formatDate(selectedProduction.estimated_date) }}</p>
+                    <p class="text-[#464646]">Cliente:</p>
+                    <p class="col-span-2">{{ selectedProduction.client }}</p>
+                </div>
+                <h2 class="text-[#666666] font-bold mt-5">Información del producto</h2>
+                <div class="text-sm grid grid-cols-3 gap-2 mt-3">
+                    <p class="text-[#464646]">Código del producto</p>
+                    <p class="col-span-2">{{ selectedProduction.product.code }}</p>
+                    <p class="text-[#464646]">Nombre del producto:</p>
+                    <p class="col-span-2">{{ selectedProduction.product.name }}</p>
+                    <p class="text-[#464646]">Temporada:</p>
+                    <p class="col-span-2">{{ selectedProduction.product.season }}</p>
+                    <p class="text-[#464646]">Descripción:</p>
+                    <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
+                    <p class="text-[#464646]">Cantidad solicitada:</p>
+                    <p class="col-span-2 font-bold">
+                        {{ selectedProduction.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                    </p>
+                    <p class="text-[#464646]">Lista de material:</p>
+                    <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
+                </div>
+                <h2 class="text-[#666666] font-bold mt-5">Proceso de producción</h2>
+                <div class="text-sm grid grid-cols-3 gap-2 mt-3">
+                    <p class="text-[#464646]">Progreso:</p>
+                    <div class="col-span-2 relative">
+                        <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
+                            :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
+                            v-html="stations.find(s => s.name === tempStation)?.icon"></div>
+                        <el-select @change="updateStation" v-model="tempStation" class="!w-2/3"
+                            :disabled="tempStation === 'Terminadas'">
+                            <el-option v-for="station in filteredStations" :key="station.name" :label="station.name"
+                                :value="station.name" />
+                        </el-select>
+                    </div>
+                    <p class="text-[#464646]">Máquina:</p>
+                    <el-select @change="updateMachine" v-model="selectedProduction.machine.id"
+                        class="col-span-2 !w-2/3">
+                        <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                            :value="machine.id" />
+                    </el-select>
+                    <p class="text-[#464646]">Cantidad actual:</p>
+                    <p class="col-span-2">{{ selectedProduction.current_quantity }}</p>
+                    <p class="text-[#464646]">Notas:</p>
+                    <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
+                </div>
+                <div v-if="selectedProduction.quality_released_date"
+                    class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
+                    <h2 class="font-bold col-span-full">Liberado por calidad</h2>
+                    <p>Fecha de liberación:</p>
+                    <p>{{ formatDate(selectedProduction.quality_released_date) }}</p>
+                    <p>Cantidad entregada:</p>
+                    <p>{{ selectedProduction.quality_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                </div>
+                <div v-if="selectedProduction.station == 'Inspección' || selectedProduction.production_close_type"
+                    class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] mt-3">
+                    <div class="flex items-center justify-between ">
+                        <h2 class="font-bold">Inspección</h2>
+                        <PrimaryButton v-if="!selectedProduction.production_close_type"
+                            @click="showInspectionRelease = true">
+                            Registrar entrega
+                        </PrimaryButton>
+                        <PrimaryButton v-else-if="selectedProduction.production_close_type == 'Parcialidades'"
+                            @click="showAddPartial = true">
+                            Registrar parcialidad
+                        </PrimaryButton>
+                    </div>
+                    <div v-if="selectedProduction.production_close_type" class="grid grid-cols-2 gap-y-1 mt-3">
+                        <p>Tipo de entrega:</p>
+                        <p>{{ selectedProduction.production_close_type }}</p>
+                        <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
+                        <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{
+                            formatDate(selectedProduction.close_production_date) }}</p>
+                        <p class="font-semibold">Cantidad total entregada:</p>
+                        <p class="font-semibold">{{
+                            selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                        <p class="font-semibold">Cantidad restante:</p>
+                        <p class="font-semibold">{{
+                            (selectedProduction.quantity -
+                                selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                    </div>
+                    <section v-for="(partial, index) in selectedProduction.partials" :key="index" class="">
+                        <div v-if="selectedProduction.production_close_type == 'Parcialidades'"
+                            class="bg-white py-1 px-3 rounded-full mt-3">Parcialidad {{ index + 1 }}</div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <p>Fecha de entrega:</p>
+                            <p>{{ formatDate(partial.date) }}</p>
+                            <p>Cantidad entregada:</p>
+                            <p>{{ partial.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                        </div>
+                    </section>
+                </div>
+                <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
+                <div class="text-sm grid grid-cols-3 gap-2 mt-3">
+                    <p class="text-[#464646]">Material:</p>
+                    <p class="col-span-2">{{ selectedProduction.material ?? '-' }}</p>
+                    <p class="text-[#464646]">Calibre:</p>
+                    <p class="col-span-2">{{ selectedProduction.gauge ?? '-' }}</p>
+                    <p class="text-[#464646]">Con barníz:</p>
+                    <p class="col-span-2">
+                        <i v-if="selectedProduction.varnish_type" class="fa-solid fa-check text-[#059A05]"></i>
+                        <i v-else class="fa-solid fa-xmark text-red-600"></i>
+                    </p>
+                    <p class="text-[#464646]">Tipo de barníz:</p>
+                    <p class="col-span-2">{{ selectedProduction.varnish_type ?? '-' }}</p>
+                    <p class="text-[#464646]">Dimensiones de la hoja:</p>
+                    <p class="col-span-2">{{ selectedProduction.width ?? '-' }} x {{ selectedProduction.large ?? '-' }}
+                    </p>
+                    <p class="text-[#464646]">Dimensiones de impresión:</p>
+                    <p class="col-span-2">{{ selectedProduction.dfi ?? '-' }}</p>
+                    <p class="text-[#464646]">Caras:</p>
+                    <p class="col-span-2">{{ selectedProduction.faces }}</p>
+                    <p class="text-[#464646]">Pz/H:</p>
+                    <p class="col-span-2">{{ selectedProduction.pps }}</p>
+                    <p class="text-[#464646]">Hojas:</p>
+                    <p class="col-span-2">{{ selectedProduction.sheets }}</p>
+                    <p class="text-[#464646]">Ajuste:</p>
+                    <p class="col-span-2">{{ selectedProduction.adjust }}</p>
+                    <p class="text-[#464646]">H/A:</p>
+                    <p class="col-span-2">{{ selectedProduction.ha }}</p>
+                    <p class="text-[#464646]">P/F:</p>
+                    <p class="col-span-2">{{ selectedProduction.pf }}</p>
+                    <p class="text-[#464646]">Total de hojas:</p>
+                    <p class="col-span-2">{{ selectedProduction.ts }}</p>
+                    <p class="text-[#464646]">Ta/Im:</p>
+                    <p class="col-span-2">{{ selectedProduction.ps }}</p>
+                    <p class="text-[#464646]">Total Ta/Im:</p>
+                    <p class="col-span-2">{{ selectedProduction.tps }}</p>
+                </div>
             </div>
         </template>
     </DialogModal>
@@ -333,149 +461,46 @@
             </div>
         </template>
     </DialogModal>
-    <DialogModal :show="showDetails" @close="showDetails = false">
+    <DialogModal :show="showInspectionRelease" @close="showInspectionRelease = false">
         <template #title>
-            <h1 class="font-semibold">Orden de producción</h1>
+            <h1 class="font-semibold">Inspección</h1>
         </template>
         <template #content>
-            <div class="flex items-center justify-between">
-                <h2 class="text-[#666666] font-bold">Información de la orden</h2>
-                <div class="flex items-center space-x-2">
-                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
-                        @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
-                        class="text-secondary border border-secondary rounded-md px-2 py-1">
-                        Hoja viajera
-                    </button>
-                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
-                        @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
-                        class="text-primary border border-primary rounded-md px-2 py-1">
-                        Editar
-                    </button>
-                </div>
-            </div>
-            <div class="text-sm grid grid-cols-3 gap-2 mt-3">
-                <p class="text-[#464646]">N° de Orden:</p>
-                <p class="col-span-2">{{ selectedProduction.folio }}</p>
-                <p class="text-[#464646]">Fecha de inicio:</p>
-                <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
-                <p class="text-[#464646]">Fecha estimada de entrega:</p>
-                <p class="col-span-2">{{ formatDate(selectedProduction.estimated_date) }}</p>
-                <p class="text-[#464646]">Cliente:</p>
-                <p class="col-span-2">{{ selectedProduction.client }}</p>
-            </div>
-            <h2 class="text-[#666666] font-bold mt-5">Información del producto</h2>
-            <div class="text-sm grid grid-cols-3 gap-2 mt-3">
-                <p class="text-[#464646]">Código del producto</p>
-                <p class="col-span-2">{{ selectedProduction.product.code }}</p>
-                <p class="text-[#464646]">Nombre del producto:</p>
-                <p class="col-span-2">{{ selectedProduction.product.name }}</p>
-                <p class="text-[#464646]">Temporada:</p>
-                <p class="col-span-2">{{ selectedProduction.product.season }}</p>
-                <p class="text-[#464646]">Descripción:</p>
-                <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
-                <p class="text-[#464646]">Cantidad solicitada:</p>
-                <p class="col-span-2 font-bold">
-                    {{ selectedProduction.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
-                </p>
-                <p class="text-[#464646]">Lista de material:</p>
-                <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
-            </div>
-            <h2 class="text-[#666666] font-bold mt-5">Proceso de producción</h2>
-            <div class="text-sm grid grid-cols-3 gap-2 mt-3">
-                <p class="text-[#464646]">Progreso:</p>
-                <div class="col-span-2 relative">
-                    <div class="absolute top-1 -left-8 rounded-full size-6 flex items-center justify-center"
-                        :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
-                        v-html="stations.find(s => s.name === tempStation)?.icon"></div>
-                    <el-select @change="updateStation" v-model="tempStation" class="!w-2/3">
-                        <el-option v-for="station in stations" :key="station" :label="station.name"
-                            :value="station.name" />
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Tipo de entrega:" />
+                    <el-select v-model="form.production_close_type" @change="handleInspectionReleaseTypeChange">
+                        <el-option v-for="item in ['Única', 'Parcialidades']" :key="item" :label="item" :value="item" />
                     </el-select>
+                    <InputError :message="form.errors.production_close_type" />
                 </div>
-                <p class="text-[#464646]">Máquina:</p>
-                <el-select @change="updateMachine" v-model="selectedProduction.machine.id" class="col-span-2 !w-2/3">
-                    <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
-                        :value="machine.id" />
-                </el-select>
-                <p class="text-[#464646]">Cantidad actual:</p>
-                <p class="col-span-2">{{ selectedProduction.current_quantity }}</p>
-                <p class="text-[#464646]">Notas:</p>
-                <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
-            </div>
-            <div v-if="selectedProduction.quality_released_date"
-                class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
-                <h2 class="font-bold col-span-full">Liberado por calidad</h2>
-                <p>Fecha de liberación:</p>
-                <p>{{ formatDate(selectedProduction.quality_released_date) }}</p>
-                <p>Cantidad entregada:</p>
-                <p>{{ selectedProduction.quality_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
-            </div>
-            <div v-if="selectedProduction.close_production_date"
-                class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
-                <div class="flex items-center justify-between col-span-full">
-                    <h2 class="font-bold">Inspección</h2>
-                    <PrimaryButton
-                        v-if="selectedProduction.station == 'Inspección'"
-                        @click="showAddPartial = true">
-                        Registrar parcialidad
-                    </PrimaryButton>
+                <div v-if="form.production_close_type == 'Parcialidades'"
+                    class="mt-3 bg-[#E9E9E9] py-2 px-4 rounded-full col-span-full">
+                    Parcialidad 1
                 </div>
-                <p>Tipo de entrega:</p>
-                <p>{{ selectedProduction.production_close_type }}</p>
-                <section v-for="(partial, index) in selectedProduction.partials" :key="index" class="col-span-full">
-                    <div class="bg-white py-1 px-3 rounded-full mt-3">Parcialidad {{ index + 1 }}</div>
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        <p>Fecha de entrega:</p>
-                        <p>{{ formatDate(partial.date) }}</p>
-                        <p>Cantidad entregada:</p>
-                        <p>{{ partial.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
-                    </div>
-                </section>
-                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
-                <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{
-                    formatDate(selectedProduction.close_production_date) }}</p>
-                <p class="pt-3 font-semibold">Cantidad total entregada:</p>
-                <p class="pt-3 font-semibold">{{
-                    selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
-                <p class="pt-3 font-semibold">Cantidad restante:</p>
-                <p class="pt-3 font-semibold">{{
-                    (selectedProduction.quantity - selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                <div>
+                    <InputLabel value="Cantidad entregada:" />
+                    <el-input-number v-model="form.close_quantity" @change="handleSheet"
+                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <InputError :message="form.errors.close_quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de entrega:" />
+                    <el-date-picker class="!w-full" v-model="form.close_production_date" type="date"
+                        placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                    <InputError :message="form.errors.close_production_date" />
+                </div>
             </div>
-            <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
-            <div class="text-sm grid grid-cols-3 gap-2 mt-3">
-                <p class="text-[#464646]">Material:</p>
-                <p class="col-span-2">{{ selectedProduction.material ?? '-' }}</p>
-                <p class="text-[#464646]">Calibre:</p>
-                <p class="col-span-2">{{ selectedProduction.gauge ?? '-' }}</p>
-                <p class="text-[#464646]">Con barníz:</p>
-                <p class="col-span-2">
-                    <i v-if="selectedProduction.varnish_type" class="fa-solid fa-check text-[#059A05]"></i>
-                    <i v-else class="fa-solid fa-xmark text-red-600"></i>
-                </p>
-                <p class="text-[#464646]">Tipo de barníz:</p>
-                <p class="col-span-2">{{ selectedProduction.varnish_type ?? '-' }}</p>
-                <p class="text-[#464646]">Dimensiones de la hoja:</p>
-                <p class="col-span-2">{{ selectedProduction.width ?? '-' }} x {{ selectedProduction.large ?? '-' }}</p>
-                <p class="text-[#464646]">Dimensiones de impresión:</p>
-                <p class="col-span-2">{{ selectedProduction.dfi ?? '-' }}</p>
-                <p class="text-[#464646]">Caras:</p>
-                <p class="col-span-2">{{ selectedProduction.faces }}</p>
-                <p class="text-[#464646]">Pz/H:</p>
-                <p class="col-span-2">{{ selectedProduction.pps }}</p>
-                <p class="text-[#464646]">Hojas:</p>
-                <p class="col-span-2">{{ selectedProduction.sheets }}</p>
-                <p class="text-[#464646]">Ajuste:</p>
-                <p class="col-span-2">{{ selectedProduction.adjust }}</p>
-                <p class="text-[#464646]">H/A:</p>
-                <p class="col-span-2">{{ selectedProduction.ha }}</p>
-                <p class="text-[#464646]">P/F:</p>
-                <p class="col-span-2">{{ selectedProduction.pf }}</p>
-                <p class="text-[#464646]">Total de hojas:</p>
-                <p class="col-span-2">{{ selectedProduction.ts }}</p>
-                <p class="text-[#464646]">Ta/Im:</p>
-                <p class="col-span-2">{{ selectedProduction.ps }}</p>
-                <p class="text-[#464646]">Total Ta/Im:</p>
-                <p class="col-span-2">{{ selectedProduction.tps }}</p>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showInspectionRelease = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="inspectionRelease" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
+                </PrimaryButton>
             </div>
         </template>
     </DialogModal>
@@ -486,7 +511,7 @@
         <template #content>
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-full bg-[#E9E9E9] py-2 px-4 rounded-full">
-                    Parcialidad {{ selectedProduction.partials.length + 1 }}
+                    Parcialidad {{ selectedProduction.partials?.length ? selectedProduction.partials?.length + 1 : 1 }}
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Cantidad entregada:" />
@@ -514,6 +539,30 @@
             </div>
         </template>
     </DialogModal>
+    <ConfirmationModal :show="showFinishedConfirmation"
+        @close="showFinishedConfirmation = false; tempStation = currentStation">
+        <template #title>
+            <h1 class="font-semibold">Terminar orden de producción</h1>
+        </template>
+        <template #content>
+            <p class="text-sm">
+                Al marcar como terminada una orden de producción, se actualizará su estado y no podrá ser editada. <br>
+                ¿Estás seguro de que deseas finalizar esta orden de producción?
+            </p>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <PrimaryButton @click="finishProduction" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Si, continuar
+                </PrimaryButton>
+                <CancelButton @click="showFinishedConfirmation = false; tempStation = currentStation"
+                    :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+            </div>
+        </template>
+    </ConfirmationModal>
     <ConfirmationModal :show="showConfirmation" @close="showConfirmation = false">
         <template #title>
             <h1 class="font-semibold">Eliminar orden de producción</h1>
@@ -553,7 +602,7 @@ export default {
     name: 'ProductionList',
     data() {
         const form = useForm({
-            production_close_type: 'Única',
+            production_close_type: 'Parcialidades',
             close_production_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             close_quantity: 0,
             quality_released_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
@@ -570,13 +619,15 @@ export default {
             fetching: false,
             showDetails: false,
             showConfirmation: false,
-            showCloseProduction: false,
+            showInspectionRelease: false,
             showQualityModal: false,
             showExportFilters: false,
             showImportModal: false,
             showAddPartial: false,
+            showFinishedConfirmation: false,
             selectedProduction: null,
             tempStation: null,
+            currentStation: null,
             searchTemp: null,
             search: null,
             sheets: null,
@@ -584,6 +635,7 @@ export default {
             ts: null,
             ps: null,
             tps: null,
+            updatingDetails: false,
             //exportación
             dateRange: null,
             season: 'Todas',
@@ -736,6 +788,31 @@ export default {
     },
     props: {
     },
+    computed: {
+        filteredStations() {
+            // Si la estación actual es 'Terminadas', no mostramos opciones
+            if (this.currentStation === 'Terminadas') {
+                return [];
+            }
+
+            // Si la estación actual es 'Inspección', solo mostramos 'Maquila' y 'Terminadas'
+            if (this.currentStation === 'Inspección') {
+                return this.stations.filter(station =>
+                    station.name === 'Maquila' || station.name === 'Terminadas'
+                );
+            }
+            
+            // Si la estación actual es 'Inspección', solo mostramos 'Maquila' y 'Terminadas'
+            if (this.currentStation === 'Liberado por calidad') {
+                return this.stations.filter(station =>
+                    station.name === 'Inspección'
+                );
+            }
+
+            // Para otros casos, mostramos todas las estaciones excepto 'Terminadas' si no viene de 'Inspección'
+            return this.stations.filter(station => station.name !== 'Terminadas' && station.name !== 'Inspección');
+        }
+    },
     methods: {
         exportExcel() {
             const url = route('productions.export-excel', {
@@ -745,6 +822,10 @@ export default {
                 season: this.season,
             });
 
+            window.open(url, '_blank');
+        },
+        exportReportExcel(folio) {
+            const url = route('productions.export-report-excel', { folio });
             window.open(url, '_blank');
         },
         importExcel() {
@@ -809,6 +890,7 @@ export default {
             this.showDetails = true;
             this.selectedProduction = row;
             this.tempStation = row.station;
+            this.currentStation = row.station;
         },
         tableRowClassName({ row, rowIndex }) {
             return 'cursor-pointer text-xs';
@@ -826,6 +908,9 @@ export default {
                 const url = this.route('productions.hoja-viajera', rowId);
                 window.open(url, '_blank');
                 // this.$inertia.get(route('productions.hoja-viajera', rowId));
+            } else if (commandName == 'report') {
+                this.selectedProduction = this.productions.find(p => p.id == rowId);
+                this.exportReportExcel(this.selectedProduction.folio);
             } else {
                 this.$inertia.get(route('productions.' + commandName, rowId));
             }
@@ -886,9 +971,7 @@ export default {
                         title: "Parcialidad registrada",
                         type: "success",
                     });
-                    // ageregar date y quantity nueva parcialidad
-                    this.selectedProduction.partials.push({ date: this.form.date, quantity: this.form.quantity });
-                    this.selectedProduction.close_quantity += this.form.quantity;
+                    this.updateDetails();
                     this.form.reset();
                 },
                 onError: () => {
@@ -899,20 +982,26 @@ export default {
                 },
             });
         },
-        closeProduction() {
+        handleInspectionReleaseTypeChange() {
+            if (this.form.production_close_type === 'Única') {
+                this.form.close_quantity = this.selectedProduction.quantity;
+            } else {
+                this.form.close_quantity = 0;
+            }
+        },
+        inspectionRelease() {
             this.form.post(route('productions.close', this.selectedProduction.id), {
-                onSuccess: () => {
-                    this.showCloseProduction = false;
+                onSuccess: async () => {
+                    this.showInspectionRelease = false;
                     this.$notify({
-                        title: "Orden de producción cerrada",
+                        title: "Entrega registrada",
                         type: "success",
                     });
-                    this.selectedProduction.station = this.tempStation;
-                    this.selectedProduction.close_production_date = new Date().toISOString();
+                    this.updateDetails();
                 },
                 onError: () => {
                     this.$notify({
-                        title: "Error al cerrar la orden de producción",
+                        title: "Error al registrar entrega",
                         type: "error",
                     });
                 },
@@ -926,8 +1015,7 @@ export default {
                         title: "Orden de producción liberada por calidad",
                         type: "success",
                     });
-                    this.selectedProduction.station = this.tempStation;
-                    this.selectedProduction.close_production_date = new Date().toISOString();
+                    this.updateDetails();
                 },
                 onError: () => {
                     this.$notify({
@@ -937,13 +1025,40 @@ export default {
                 },
             });
         },
+        finishProduction() {
+            this.form.post(route('productions.finish-production', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showQualityModal = false;
+                    this.$notify({
+                        title: "Orden de producción Terminada",
+                        type: "success",
+                    });
+                    this.updateDetails();
+                    this.showFinishedConfirmation = false
+                    this.showDetails = false;
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al liberar la orden de producción",
+                        type: "error",
+                    });
+                },
+            });
+        },
+        async updateDetails() {
+            this.updatingDetails = true;
+            await this.fetchProductions();
+            this.selectedProduction = this.productions.find(p => p.id == this.selectedProduction.id);
+            this.tempStation = this.selectedProduction.station;
+            this.currentStation = this.selectedProduction.station;
+            this.updatingDetails = false;
+        },
         async updateStation() {
             if (this.tempStation == 'Inspección') {
-                this.showCloseProduction = true;
-                this.showDetails = false;
-            } else if (this.tempStation == 'Liberado por calidad') {
                 this.showQualityModal = true;
                 this.showDetails = false;
+            } else if (this.tempStation == 'Terminadas') {
+                this.showFinishedConfirmation = true;
             } else {
                 try {
                     const response = await axios.put(route('productions.update-station', this.selectedProduction.id),

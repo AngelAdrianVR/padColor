@@ -59,7 +59,7 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             'Parcial 1°',
             'Parcial N°',
             'Cantidad final',
-            'Calibre',
+            'Restante',
             'Dimensión del formato de impresión',
             'Piezas por hoja',
             'Ajuste',
@@ -72,7 +72,6 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             'Total de hojas',
             'Tamaño de impresión',
             'Total tamaño de impresión',
-            'Tipo de barniz',
             'Última modificación',
             'Modificado por'
         ];
@@ -94,7 +93,7 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $production->materials[0] ?? '',
             $production->machine->name ?? '',
             $production->quantity ?? 0,
-            $production->material,
+            $production->material . ' ' . $production->gauge . ' ' . $production->varnish_type,
             $production->width . ' x ' . $production->large,
             $production->ts,
             $production->start_date?->isoFormat('YYYY/DD/MM'),
@@ -106,7 +105,7 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $partial1,
             $partialN,
             $production->current_quantity,
-            $production->gauge,
+            $production->quantity - $production->current_quantity,
             $production->dfi,
             $production->pps,
             $production->adjust,
@@ -119,7 +118,6 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $production->ts,
             $production->ps,
             $production->tps,
-            $production->varnish_type,
             $production->updated_at?->toDateTimeString(),
             $production->modifiedUser->name ?? ''
         ];

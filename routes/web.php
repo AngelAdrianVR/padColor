@@ -114,6 +114,7 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
 Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
+Route::get('productions-export-report-excel', [ProductionController::class, 'exportExcelReport'])->name('productions.export-report-excel')->middleware('auth');
 Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');
 Route::post('productions-import-excel', [ProductionController::class, 'importExcel'])->name('productions.import-excel')->middleware('auth');
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
@@ -121,6 +122,7 @@ Route::put('productions-update-station/{production}', [ProductionController::cla
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
 Route::post('productions-close/{production}', [ProductionController::class, 'close'])->name('productions.close')->middleware('auth');
 Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
+Route::post('productions-finish-production/{production}', [ProductionController::class, 'finishProduction'])->name('productions.finish-production')->middleware('auth');
 Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
 
