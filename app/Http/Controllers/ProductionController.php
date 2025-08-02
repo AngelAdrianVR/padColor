@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductionReportExport;
 use App\Models\Production;
 use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
@@ -154,6 +155,22 @@ class ProductionController extends Controller
 
         $query = Production::with(['user', 'product', 'machine'])->latest('id');
 
+        // Obtener los estacion permitidos para el usuario
+        $user = auth()->user();
+        $permissions = $user->getAllPermissions()
+            ->filter(function ($permission) {
+                return str_starts_with($permission->name, 'Ver en estacion');
+            })
+            ->map(function ($permission) {
+                return str_replace('Ver en estacion ', '', $permission->name);
+            })
+            ->toArray();
+
+        // Si el usuario tiene permisos específicos, filtrar por esos estación
+        if (!empty($permissions)) {
+            $query->whereIn('station', $permissions);
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('folio', 'like', "%{$search}%")
@@ -170,7 +187,7 @@ class ProductionController extends Controller
             ->limit($perPage)
             ->get();
 
-        $total = $search ? $query->count() : Production::count();
+        $total = $query->count();
 
         return response()->json(compact('items', 'total'));
     }
@@ -200,37 +217,43 @@ class ProductionController extends Controller
 
     public function close(Request $request, Production $production)
     {
+        $production->production_close_type = $request->production_close_type;
+        $production->close_quantity = $request->close_quantity;
+        $production->close_production_date = $request->close_production_date;
+        $production->modified_user_id = auth()->id();
+        $production->current_quantity += $request->close_quantity;
+
         if ($request->production_close_type === 'Parcialidades') {
             $partials = $production->partilas;
             $partials[] = [
                 'quantity' => $request->close_quantity,
                 'date' => $request->close_production_date,
             ];
-            $production->update([
-                'station' => 'Inspección',
-                'production_close_type' => $request->production_close_type,
-                'close_quantity' => $request->close_quantity,
-                'close_production_date' => $request->close_production_date,
-                'partials' => $partials,
-                'modified_user_id' => auth()->id(),
-            ]);
-        } else {
-            $production->update([
-                'station' => 'Inspección',
-                'production_close_type' => $request->production_close_type,
-                'close_quantity' => $request->close_quantity,
-                'close_production_date' => $request->close_production_date,
-                'modified_user_id' => auth()->id(),
-            ]);
+
+            $production->partials = $partials;
         }
+
+        if ($production->current_quantity >= $production->quantity) {
+            $production->station = 'Terminadas';
+        }
+
+        $production->save();
     }
 
     public function qualityRelease(Request $request, Production $production)
     {
         $production->update([
-            'station' => 'Liberado por calidad',
+            'station' => 'Inspección',
             'quality_quantity' => $request->quality_quantity,
             'quality_released_date' => $request->quality_released_date,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+
+    public function finishProduction(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Terminadas',
             'modified_user_id' => auth()->id(),
         ]);
     }
@@ -243,11 +266,17 @@ class ProductionController extends Controller
             'date' => $request->date,
         ];
 
-        $production->update([
-            'partials' => $partials,
-            'modified_user_id' => auth()->id(),
-            'close_quantity' => $production->close_quantity + $request->quantity,
-        ]);
+        $production->partials = $partials;
+        $production->close_quantity += $request->quantity;
+        $production->modified_user_id = auth()->id();
+        $production->current_quantity += $request->quantity;
+        
+        // revisar si la cantidad actual entregada es mayor o igual a la cantidad total para cambiar la estación a 'Terminadas'
+        if ($production->current_quantity >= $production->quantity) {
+            $production->station = 'Terminadas';
+        }
+
+        $production->save();
     }
 
     public function exportExcel()
@@ -271,6 +300,17 @@ class ProductionController extends Controller
             ->get();
 
         return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
+    }
+    
+    public function exportExcelReport()
+    {
+        $folio = request('folio');
+
+        $productions = Production::with(['user', 'product', 'machine', 'modifiedUser'])
+            ->where('folio', $folio)
+            ->get();
+
+        return Excel::download(new ProductionReportExport($productions), 'reporte_produccion.xlsx');
     }
 
     public function importExcel(Request $request)

@@ -35,7 +35,7 @@
             </template>
             <template #content>
                 <div>
-                    <form @submit.prevent="editFlag ? updateRole() : storeRole()" ref="myform" class="grid grid-cols-3">
+                    <form @submit.prevent="editFlag ? updateRole() : storeRole()" ref="myform" class="grid grid-cols-2 lg:grid-cols-3">
                         <div class="col-span-full mb-4">
                             <InputLabel value="Nombre de rol *" class="ml-2" />
                             <input v-model="form.name" class="input" type="text">
