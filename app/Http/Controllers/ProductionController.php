@@ -215,11 +215,31 @@ class ProductionController extends Controller
         return to_route('productions.edit', ['production' => $newProduction->id]);
     }
 
-    public function close(Request $request, Production $production)
+    public function productionRelease(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Calidad',
+            'close_quantity' => $request->close_quantity,
+            'close_production_date' => $request->close_production_date,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+
+    public function qualityRelease(Request $request, Production $production)
+    {
+        $production->update([
+            'station' => 'Inspección',
+            'quality_quantity' => $request->quality_quantity,
+            'quality_released_date' => $request->quality_released_date,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+
+    public function inspectionRelease(Request $request, Production $production)
     {
         $production->production_close_type = $request->production_close_type;
-        $production->close_quantity = $request->close_quantity;
-        $production->close_production_date = $request->close_production_date;
+        // $production->close_quantity = $request->close_quantity;
+        // $production->close_production_date = $request->close_production_date;
         $production->modified_user_id = auth()->id();
         $production->current_quantity += $request->close_quantity;
 
@@ -238,16 +258,6 @@ class ProductionController extends Controller
         }
 
         $production->save();
-    }
-
-    public function qualityRelease(Request $request, Production $production)
-    {
-        $production->update([
-            'station' => 'Inspección',
-            'quality_quantity' => $request->quality_quantity,
-            'quality_released_date' => $request->quality_released_date,
-            'modified_user_id' => auth()->id(),
-        ]);
     }
 
     public function finishProduction(Request $request, Production $production)
