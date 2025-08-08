@@ -11,6 +11,7 @@ class Production extends Model
 
     protected $fillable = [
         'folio',
+        'type',
         'client',
         'season',
         'station',
@@ -39,6 +40,8 @@ class Production extends Model
         'close_quantity',
         'quality_quantity',
         'current_quantity',
+        'scrap_quantity',
+        'returns',
         'look',
         'changes',
         'sheets',
@@ -56,6 +59,7 @@ class Production extends Model
     protected $casts = [
         'materials' => 'array',
         'partials' => 'array',
+        'returns' => 'array',
         'estimated_date' => 'date',
         'estimated_package_date' => 'date',
         'start_date' => 'date',

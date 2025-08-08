@@ -295,6 +295,8 @@
                 <div class="text-sm grid grid-cols-3 gap-2 mt-3">
                     <p class="text-[#464646]">N° de Orden:</p>
                     <p class="col-span-2">{{ selectedProduction.folio }}</p>
+                    <p class="text-[#464646]">Tipo:</p>
+                    <p class="col-span-2">{{ selectedProduction.type }}</p>
                     <p class="text-[#464646]">Fecha de inicio:</p>
                     <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
                     <p class="text-[#464646]">Fecha estimada de entrega:</p>
@@ -340,6 +342,8 @@
                     </el-select>
                     <p class="text-[#464646]">Cantidad actual:</p>
                     <p class="col-span-2">{{ selectedProduction.current_quantity }}</p>
+                    <p class="text-[#464646]">Merma:</p>
+                    <p class="col-span-2">{{ selectedProduction.scrap_quantity }}</p>
                     <p class="text-[#464646]">Notas:</p>
                     <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
                 </div>
@@ -445,8 +449,8 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.close_quantity"
-                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <el-input-number v-model="form.close_quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
                     <InputError :message="form.errors.close_quantity" />
                 </div>
                 <div>
@@ -469,7 +473,7 @@
             </div>
         </template>
     </DialogModal>
-    <DialogModal :show="showQualityModal" @close="showQualityModal = false">
+    <DialogModal :show="showQualityRelease" @close="showQualityRelease = false">
         <template #title>
             <h1 class="font-semibold">Calidad</h1>
         </template>
@@ -477,8 +481,8 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.quality_quantity"
-                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <el-input-number v-model="form.quality_quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
                     <InputError :message="form.errors.quality_quantity" />
                 </div>
                 <div>
@@ -491,7 +495,7 @@
         </template>
         <template #footer>
             <div class="flex justify-end space-x-2">
-                <CancelButton @click="showQualityModal = false" :disabled="form.processing">
+                <CancelButton @click="showQualityRelease = false" :disabled="form.processing">
                     Cancelar
                 </CancelButton>
                 <PrimaryButton @click="qualityReleased" :disabled="form.processing">
@@ -520,8 +524,8 @@
                 </div>
                 <div>
                     <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.close_quantity"
-                        placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                    <el-input-number v-model="form.close_quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
                     <InputError :message="form.errors.close_quantity" />
                 </div>
                 <div>
@@ -555,8 +559,8 @@
                 </div>
                 <div class="mt-3">
                     <InputLabel value="Cantidad entregada:" />
-                    <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad"
-                        :min="0" class="!w-full" />
+                    <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
                 <div class="mt-3">
@@ -575,6 +579,36 @@
                 <PrimaryButton @click="addPartial" :disabled="form.processing">
                     <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     Registrar
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
+    <DialogModal :show="showReturnModal" @close="showReturnModal = false">
+        <template #title>
+            <h1 class="font-semibold">Regresar de estación</h1>
+        </template>
+        <template #content>
+            <div>
+                <InputLabel value="Cantidad a regresar:" />
+                <el-input-number v-model="returnForm.quantity" placeholder="Ingresa la cantidad" :min="0"
+                    class="!w-full" />
+                <InputError :message="returnForm.errors.quantity" />
+            </div>
+            <div class="col-span-full">
+                <InputLabel value="Motivo de regreso:" />
+                <el-input v-model="returnForm.reason" :rows="3" type="textarea"
+                    placeholder="Escribe el motivo del regreso" />
+                <InputError :message="returnForm.errors.reason" />
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showReturnModal = false" :disabled="returnForm.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="returnStation" :disabled="returnForm.processing">
+                    <i v-if="returnForm.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Continuar
                 </PrimaryButton>
             </div>
         </template>
@@ -653,15 +687,22 @@ export default {
             date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto,
         });
 
+        const returnForm = useForm({
+            reason: '', // Razón de regreso de estación
+            quantity: '', // cantidad de regreso de estación
+        });
+
         return {
             form,
+            returnForm,
             productions: [],
             fetching: false,
             showDetails: false,
             showConfirmation: false,
+            showReturnModal: false,
             showProductionRelease: false,
             showInspectionRelease: false,
-            showQualityModal: false,
+            showQualityRelease: false,
             showExportFilters: false,
             showImportModal: false,
             showAddPartial: false,
@@ -836,17 +877,17 @@ export default {
                 return [];
             }
 
-            // Si la estación actual es 'Inspección', solo mostramos 'Maquila' y 'Terminadas'
+            // Si la estación actual es 'Inspección', solo mostramos 'Calidad' y 'Terminadas'
             if (this.currentStation === 'Inspección') {
                 return this.stations.filter(station =>
-                    station.name === 'Maquila' || station.name === 'Terminadas'
+                    station.name === 'Calidad' || station.name === 'Terminadas'
                 );
             }
 
             // Si la estación actual es 'Inspección', solo mostramos 'Maquila' y 'Terminadas'
             if (this.currentStation === 'Calidad') {
                 return this.stations.filter(station =>
-                    station.name === 'Inspección'
+                    station.name === 'X Offset' || station.name === 'Inspección'
                 );
             }
 
@@ -1030,6 +1071,25 @@ export default {
                 this.form.close_quantity = 0;
             }
         },
+        returnStation() {
+            this.returnForm.post(route('productions.return-station', this.selectedProduction.id), {
+                onSuccess: async () => {
+                    this.showReturnModal = false;
+                    this.$notify({
+                        title: "Regreso a estación anterior",
+                        type: "success",
+                    });
+                    this.updateDetails();
+                    this.returnForm.reset();
+                },
+                onError: () => {
+                    this.$notify({
+                        title: "Error al regresar a estación anterior",
+                        type: "error",
+                    });
+                },
+            });
+        },
         productionRelease() {
             this.form.post(route('productions.production-release', this.selectedProduction.id), {
                 onSuccess: async () => {
@@ -1051,7 +1111,7 @@ export default {
         qualityReleased() {
             this.form.post(route('productions.quality-release', this.selectedProduction.id), {
                 onSuccess: () => {
-                    this.showQualityModal = false;
+                    this.showQualityRelease = false;
                     this.$notify({
                         title: "Entrega de calidad a inspeccíón",
                         type: "success",
@@ -1087,7 +1147,7 @@ export default {
         finishProduction() {
             this.form.post(route('productions.finish-production', this.selectedProduction.id), {
                 onSuccess: () => {
-                    this.showQualityModal = false;
+                    this.showQualityRelease = false;
                     this.$notify({
                         title: "Orden de producción Terminada",
                         type: "success",
@@ -1113,28 +1173,43 @@ export default {
             this.updatingDetails = false;
         },
         async updateStation() {
-            if (this.tempStation == 'Calidad') {
-                this.showProductionRelease = true;
-                this.showDetails = false;
-            } else if (this.tempStation == 'Inspección') {
-                this.showQualityModal = true;
-                this.showDetails = false;
-            } else if (this.tempStation == 'Terminadas') {
-                this.showFinishedConfirmation = true;
-            } else {
-                try {
-                    const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
-                        { station: this.tempStation });
-                    if (response.status === 200) {
-                        this.$notify({
-                            title: "Progreso actualizado",
-                            type: "success",
-                        });
-                        this.selectedProduction.station = this.tempStation;
+            if (this.currentStation !== 'Inspección') {
+                if (this.tempStation == 'Calidad') {
+                    this.showProductionRelease = true;
+                    this.form.close_quantity = this.selectedProduction.quantity;
+                } else {
+                    try {
+                        const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
+                            { station: this.tempStation });
+                        if (response.status === 200) {
+                            this.$notify({
+                                title: "Progreso actualizado",
+                                type: "success",
+                            });
+                            this.selectedProduction.station = this.tempStation;
+                        }
+                    } catch (error) {
+                        console.error('Error updating station:', error);
                     }
-                } catch (error) {
-                    console.error('Error updating station:', error);
                 }
+                this.showDetails = false;
+            } else if (this.currentStation == 'Calidad') {
+                if (this.tempStation == 'X Offset') {
+                    // Regresar
+                    this.showReturnModal = true;
+                } else {
+                    this.form.quality_quantity = this.selectedProduction.close_quantity;
+                    this.showQualityRelease = true;
+                }
+                this.showDetails = false;
+            } else if (this.currentStation == 'Inspección') {
+                if (this.tempStation == 'Calidad') {
+                    // Regresar
+                    this.showReturnModal = true;
+                } else {
+                    this.showFinishedConfirmation = true;
+                }
+                this.showDetails = false;
             }
         },
         async updateMachine() {
@@ -1161,7 +1236,9 @@ export default {
 
                 if (response.status === 200) {
                     this.productions = response.data.items;
-                    this.total = response.data.total;
+                    if (this.search || this.currentPage == 1) {
+                        this.total = response.data.total;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching productions:', error);

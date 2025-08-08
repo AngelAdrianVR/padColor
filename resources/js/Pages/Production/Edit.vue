@@ -11,8 +11,8 @@
                     <el-input v-model="form.folio" placeholder="">
                         <template #prepend>
                             <el-select v-model="form.type" placeholder="Tipo" class="!w-28">
-                                <el-option label="Nuevo" value="N" />
-                                <el-option label="Repetido" value="R" />
+                                <el-option label="Nuevo" value="Nuevo" />
+                                <el-option label="Repetido" value="Repetido" />
                             </el-select>
                         </template>
                     </el-input>
@@ -252,8 +252,8 @@ export default {
     data() {
         const form = useForm({
             // tomar la primera letra de this.production.folio
-            type: this.production.folio.split('-')[0],
-            folio: this.production.folio.split('-')[1],
+            folio: this.production.folio,
+            type: this.production.type,
             client: this.production.client,
             changes: this.production.changes,
             season: this.production.season,
@@ -556,20 +556,6 @@ export default {
                 this.fetchingProducts = false;
             }
         },
-        // async fetchProducts() {
-        //     this.fetchingProducts = true;
-        //     try {
-        //         const response = await axios.get(route('products.get-all'));
-
-        //         if (response.status === 200) {
-        //             this.products = response.data.items;
-        //         }
-        //     } catch (error) {
-        //         console.error('Error fetching products:', error);
-        //     } finally {
-        //         this.fetchingProducts = false;
-        //     }
-        // },
         async fetchMachines() {
             this.fetchingMachines = true;
             try {
@@ -600,7 +586,6 @@ export default {
         },
     },
     mounted() {
-        // this.fetchProducts();
         this.fetchMachines();
         this.fetchClients();
     },

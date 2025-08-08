@@ -30,6 +30,7 @@ class ProductionController extends Controller
     {
         $validated = $request->validate([
             'folio' => 'required|unique:productions,id',
+            'type' => 'required|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
@@ -60,10 +61,6 @@ class ProductionController extends Controller
             'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
         ]);
 
-        // cambiar un poco el folio
-        // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
-        // $validated['folio'] = $request->type . $lastProductionId + 1;
-        $validated['folio'] = $request->type . '-' . $validated['folio'];
         $validated['user_id'] = auth()->id();
         $validated['materials'] = [$validated['materials']];
 
@@ -85,6 +82,7 @@ class ProductionController extends Controller
     {
         $validated = $request->validate([
             'folio' => 'required|unique:productions,id,' . $production->id,
+            'type' => 'required|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
@@ -115,10 +113,6 @@ class ProductionController extends Controller
             'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
         ]);
 
-        // cambiar un poco el folio
-        // $lastProductionId = Production::latest('id')->first()?->id ?? 0;
-        // $validated['folio'] = $request->type . $lastProductionId + 1;
-        $validated['folio'] = $request->type . '-' . $validated['folio'];
         $validated['materials'] = [$validated['materials']];
 
         $production->update($validated + ['modified_user_id' => auth()->id()]);
@@ -149,12 +143,12 @@ class ProductionController extends Controller
     {
         $page = request('page', 1);
         $search = request('search', null);
-
+        
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
         $query = Production::with(['user', 'product', 'machine'])->latest('id');
-
+        
         // Obtener los estacion permitidos para el usuario
         $user = auth()->user();
         $permissions = $user->getAllPermissions()
@@ -204,10 +198,12 @@ class ProductionController extends Controller
             'production_close_type',
             'quality_quantity',
             'current_quantity',
+            'scrap_quantity',
             'partials',
             'start_date',
         ]);
-        $newProduction->folio = 'R-' . $lastProductionId + 1;
+        $newProduction->folio = $lastProductionId + 1;
+        $newProduction->type = 'Repetido';
         $newProduction->station = 'Solicitado';
         $newProduction->start_date = now();
         $newProduction->save();
@@ -215,11 +211,37 @@ class ProductionController extends Controller
         return to_route('productions.edit', ['production' => $newProduction->id]);
     }
 
+    public function returnStation(Request $request, Production $production)
+    {
+        if ($production->station === 'Calidad') {
+            $newStation = 'X Offset';
+        } else if ($production->station === 'Inspección') {
+            $newStation = 'Calidad';
+        }
+
+        $returns = $production->returns ?? [];
+        $returns[] = [
+            'old_station' => $production->station,
+            'new_station' => $newStation,
+            'date' => now(),
+            'quantity' => $request->quantity,
+            'reason' => $request->reason,
+            'user' => auth()->user()->name,
+        ];
+
+        $production->update([
+            'station' => $newStation,
+            'returns' => $returns,
+            'modified_user_id' => auth()->id(),
+        ]);
+    }
+    
     public function productionRelease(Request $request, Production $production)
     {
         $production->update([
             'station' => 'Calidad',
             'close_quantity' => $request->close_quantity,
+            'scrap_quantity' => $production->quantity - $request->close_quantity,
             'close_production_date' => $request->close_production_date,
             'modified_user_id' => auth()->id(),
         ]);
@@ -230,6 +252,7 @@ class ProductionController extends Controller
         $production->update([
             'station' => 'Inspección',
             'quality_quantity' => $request->quality_quantity,
+            'scrap_quantity' => $production->close_quantity - $request->quality_quantity,
             'quality_released_date' => $request->quality_released_date,
             'modified_user_id' => auth()->id(),
         ]);
@@ -238,8 +261,6 @@ class ProductionController extends Controller
     public function inspectionRelease(Request $request, Production $production)
     {
         $production->production_close_type = $request->production_close_type;
-        // $production->close_quantity = $request->close_quantity;
-        // $production->close_production_date = $request->close_production_date;
         $production->modified_user_id = auth()->id();
         $production->current_quantity += $request->close_quantity;
 
@@ -259,7 +280,7 @@ class ProductionController extends Controller
 
         $production->save();
     }
-
+    
     public function finishProduction(Request $request, Production $production)
     {
         $production->update([
