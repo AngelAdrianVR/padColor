@@ -215,8 +215,10 @@ class ProductionController extends Controller
     {
         if ($production->station === 'Calidad') {
             $newStation = 'X Offset';
+            $scrap = 0;
         } else if ($production->station === 'Inspección') {
             $newStation = 'Calidad';
+            $scrap = $production->scrap_quantity;
         }
 
         $returns = $production->returns ?? [];
@@ -231,6 +233,7 @@ class ProductionController extends Controller
 
         $production->update([
             'station' => $newStation,
+            'scrap_quantity' => $scrap,
             'returns' => $returns,
             'modified_user_id' => auth()->id(),
         ]);
@@ -249,10 +252,12 @@ class ProductionController extends Controller
 
     public function qualityRelease(Request $request, Production $production)
     {
+        $scrap = $production->close_quantity - $request->quality_quantity;
+
         $production->update([
             'station' => 'Inspección',
             'quality_quantity' => $request->quality_quantity,
-            'scrap_quantity' => $production->close_quantity - $request->quality_quantity,
+            'scrap_quantity' => $production->scrap_quantity + $scrap,
             'quality_released_date' => $request->quality_released_date,
             'modified_user_id' => auth()->id(),
         ]);

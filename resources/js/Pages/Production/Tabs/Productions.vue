@@ -347,6 +347,25 @@
                     <p class="text-[#464646]">Notas:</p>
                     <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
                 </div>
+                <div v-if="selectedProduction.returns"
+                    class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] mt-3">
+                    <h2 class="font-bold">Devoluciones</h2>
+                    <div v-for="(item, index) in selectedProduction.returns" :key="index" class="grid grid-cols-2 gap-2 mt-2">
+                        <p>Cambio de estacion:</p>
+                        <p>
+                            {{ item.old_station }} <i class="fa-solid fa-arrow-right mx-1"></i> {{ item.new_station }}
+                        </p>
+                        <p>Fecha:</p>
+                        <p>{{ formatDateTime(item.date) }}</p>
+                        <p>Cantidad:</p>
+                        <p>{{ item.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                        <p>Motivo:</p>
+                        <p style="white-space: pre-line;">{{ item.reason }}</p>
+                        <p>Usuario:</p>
+                        <p>{{ item.user }}</p>
+                        <hr v-if="index < selectedProduction.returns.length - 1" class="col-span-full my-px" />
+                    </div>
+                </div>
                 <div v-if="selectedProduction.close_production_date"
                     class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
                     <h2 class="font-bold col-span-full">Producción</h2>
@@ -1173,8 +1192,28 @@ export default {
             this.updatingDetails = false;
         },
         async updateStation() {
-            if (this.currentStation !== 'Inspección') {
-                if (this.tempStation == 'Calidad') {
+            if (this.currentStation === 'Calidad') {
+                if (this.tempStation === 'X Offset') {
+                    // Regresar
+                    this.returnForm.quantity = this.selectedProduction.close_quantity;
+                    this.showReturnModal = true;
+                } else {
+                    this.form.quality_quantity = this.selectedProduction.close_quantity;
+                    this.showQualityRelease = true;
+                }
+                this.showDetails = false;
+            } else if (this.currentStation === 'Inspección') {
+                if (this.tempStation === 'Calidad') {
+                    // Regresar
+                    this.returnForm.quantity = this.selectedProduction.quality_quantity;
+                    this.showReturnModal = true;
+                } else {
+                    this.showFinishedConfirmation = true;
+                }
+                this.showDetails = false;
+            } else {
+                // Para todas las demás estaciones
+                if (this.tempStation === 'Calidad') {
                     this.showProductionRelease = true;
                     this.form.close_quantity = this.selectedProduction.quantity;
                 } else {
@@ -1191,23 +1230,6 @@ export default {
                     } catch (error) {
                         console.error('Error updating station:', error);
                     }
-                }
-                this.showDetails = false;
-            } else if (this.currentStation == 'Calidad') {
-                if (this.tempStation == 'X Offset') {
-                    // Regresar
-                    this.showReturnModal = true;
-                } else {
-                    this.form.quality_quantity = this.selectedProduction.close_quantity;
-                    this.showQualityRelease = true;
-                }
-                this.showDetails = false;
-            } else if (this.currentStation == 'Inspección') {
-                if (this.tempStation == 'Calidad') {
-                    // Regresar
-                    this.showReturnModal = true;
-                } else {
-                    this.showFinishedConfirmation = true;
                 }
                 this.showDetails = false;
             }
