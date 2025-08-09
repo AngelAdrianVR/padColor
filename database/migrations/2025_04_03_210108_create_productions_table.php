@@ -21,8 +21,10 @@ return new class extends Migration
             $table->unsignedFloat('changes', 8, 2)->nullable();
             $table->unsignedFloat('quantity', 11, 2);
             $table->unsignedFloat('current_quantity', 11, 2)->default(0);
+            $table->unsignedFloat('scrap_quantity', 11, 2)->default(0);
             $table->unsignedFloat('close_quantity', 11, 2)->default(0);
             $table->unsignedFloat('quality_quantity', 11, 2)->default(0);
+            $table->json('returns')->nullable();
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
             $table->unsignedFloat('pps', 8, 2)->nullable();

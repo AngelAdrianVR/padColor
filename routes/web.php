@@ -120,6 +120,7 @@ Route::post('productions-import-excel', [ProductionController::class, 'importExc
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
 Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
+Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
 Route::post('productions-production-release/{production}', [ProductionController::class, 'productionRelease'])->name('productions.production-release')->middleware('auth');
 Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
 Route::post('productions-inspection-release/{production}', [ProductionController::class, 'inspectionRelease'])->name('productions.inspection-release')->middleware('auth');
