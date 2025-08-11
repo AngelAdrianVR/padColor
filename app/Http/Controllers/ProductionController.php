@@ -241,10 +241,12 @@ class ProductionController extends Controller
     
     public function productionRelease(Request $request, Production $production)
     {
+        $scrap = $production->quantity - $request->close_quantity;
+
         $production->update([
             'station' => 'Calidad',
             'close_quantity' => $request->close_quantity,
-            'scrap_quantity' => $production->quantity - $request->close_quantity,
+            'scrap_quantity' => $scrap > 0 ? $scrap : 0,
             'close_production_date' => $request->close_production_date,
             'modified_user_id' => auth()->id(),
         ]);
@@ -257,7 +259,7 @@ class ProductionController extends Controller
         $production->update([
             'station' => 'Inspección',
             'quality_quantity' => $request->quality_quantity,
-            'scrap_quantity' => $production->scrap_quantity + $scrap,
+            'scrap_quantity' => $production->scrap_quantity + ($scrap > 0 ? $scrap : 0),
             'quality_released_date' => $request->quality_released_date,
             'modified_user_id' => auth()->id(),
         ]);
