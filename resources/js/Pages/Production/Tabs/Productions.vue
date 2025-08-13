@@ -374,7 +374,7 @@
                     <p>Cantidad entregada:</p>
                     <p>{{ selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                 </div>
-                <div v-if="selectedProduction.close_production_date"
+                <div v-if="selectedProduction.quality_date"
                     class="bg-[#E9E9E9] py-3 px-3 rounded-[15px] grid grid-cols-2 gap-2 mt-3">
                     <h2 class="font-bold col-span-full">Calidad</h2>
                     <p>Fecha de liberación:</p>
@@ -400,14 +400,14 @@
                         <p>{{ selectedProduction.production_close_type }}</p>
                         <p v-if="selectedProduction.production_close_type != 'Parcialidades'">Fecha de entrega:</p>
                         <p v-if="selectedProduction.production_close_type != 'Parcialidades'">{{
-                            formatDate(selectedProduction.close_production_date) }}</p>
+                            formatDate(selectedProduction.finish_date) }}</p>
                         <p class="font-semibold">Cantidad total entregada:</p>
                         <p class="font-semibold">{{
-                            selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                            selectedProduction.current_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                         <p class="font-semibold">Cantidad restante:</p>
                         <p class="font-semibold">{{
                             (selectedProduction.quantity -
-                                selectedProduction.close_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                                selectedProduction.current_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
                     </div>
                     <section v-for="(partial, index) in selectedProduction.partials" :key="index" class="">
                         <div v-if="selectedProduction.production_close_type == 'Parcialidades'"

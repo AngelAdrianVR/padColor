@@ -283,6 +283,7 @@ class ProductionController extends Controller
 
         if ($production->current_quantity >= $production->quantity) {
             $production->station = 'Terminadas';
+            $production->finish_date = $request->close_production_date;
         }
 
         $production->save();
@@ -292,6 +293,7 @@ class ProductionController extends Controller
     {
         $production->update([
             'station' => 'Terminadas',
+            'finish_date' => today(),
             'modified_user_id' => auth()->id(),
         ]);
     }
@@ -305,13 +307,13 @@ class ProductionController extends Controller
         ];
 
         $production->partials = $partials;
-        $production->close_quantity += $request->quantity;
         $production->modified_user_id = auth()->id();
         $production->current_quantity += $request->quantity;
         
         // revisar si la cantidad actual entregada es mayor o igual a la cantidad total para cambiar la estación a 'Terminadas'
         if ($production->current_quantity >= $production->quantity) {
             $production->station = 'Terminadas';
+            $production->finish_date = $request->date;
         }
 
         $production->save();
