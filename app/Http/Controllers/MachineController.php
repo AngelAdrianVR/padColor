@@ -86,9 +86,13 @@ class MachineController extends Controller
         $machine->delete();    
     }
 
-    public function getAll()
+    public function getAll($full = false)
     {
-        $items = Machine::latest('id')->get(['name', 'id']);
+        if ($full) {
+            $items = Machine::with('media')->latest('id')->get();
+        } else {
+            $items = Machine::latest('id')->get(['name', 'id']);
+        }
 
         return response()->json(compact('items'));
     }

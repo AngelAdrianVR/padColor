@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('productions', function (Blueprint $table) {
             $table->id();
-            $table->string('folio');
+            $table->unsignedBigInteger('folio');
             $table->string('client');
             $table->string('season')->nullable();
             $table->string('station');

@@ -7,6 +7,7 @@ use App\Models\Production;
 use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
 use App\Imports\ProductionsImport;
+use App\Models\Machine;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -14,9 +15,9 @@ class ProductionController extends Controller
 {
     public function index()
     {
-        $productions = Production::latest('id')->get(['id', 'station']);
-        $next_production = Production::latest('id')->first();
-        $next_production = $next_production ? $next_production->id + 1 : 1;
+        $productions = Production::latest('folio')->get(['folio', 'station']);
+        $next_production = Production::latest('folio')->first();
+        $next_production = $next_production ? $next_production->folio + 1 : 1;
 
         return inertia('Production/Index', compact('productions', 'next_production'));
     }
@@ -29,7 +30,7 @@ class ProductionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'folio' => 'required|unique:productions,id',
+            'folio' => 'required|numeric|unique:productions',
             'type' => 'required|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
@@ -81,7 +82,7 @@ class ProductionController extends Controller
     public function update(Request $request, Production $production)
     {
         $validated = $request->validate([
-            'folio' => 'required|unique:productions,id,' . $production->id,
+            'folio' => 'required|numeric|unique:productions,folio,' . $production->id,
             'type' => 'required|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
@@ -188,7 +189,7 @@ class ProductionController extends Controller
 
     public function clone(Production $production)
     {
-        $lastProductionId = Production::latest('id')->first()?->id;
+        $lastProductionFolio = Production::latest('folio')->first()?->folio;
         $newProduction = $production->replicate([
             'finish_date',
             'close_production_date',
@@ -198,17 +199,18 @@ class ProductionController extends Controller
             'production_close_type',
             'quality_quantity',
             'current_quantity',
+            'close_quantity',
             'scrap_quantity',
             'partials',
             'start_date',
         ]);
-        $newProduction->folio = $lastProductionId + 1;
+        $newProduction->folio = $lastProductionFolio + 1;
         $newProduction->type = 'Repetido';
         $newProduction->station = 'Solicitado';
         $newProduction->start_date = now();
         $newProduction->save();
 
-        return to_route('productions.edit', ['production' => $newProduction->id]);
+        return to_route('productions.edit', ['production' => $newProduction->folio]);
     }
 
     public function returnStation(Request $request, Production $production)
