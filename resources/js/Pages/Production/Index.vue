@@ -27,6 +27,14 @@
                         </template>
                         <Create :nextProduction="next_production" @created="refreshProductionsList" />
                     </el-tab-pane>
+                    <el-tab-pane name="4">
+                        <template #label>
+                            <div class="flex items-center">
+                                <span>Máquinas</span>
+                            </div>
+                        </template>
+                        <Machines />
+                    </el-tab-pane>
                 </el-tabs>
             </main>
         </AppLayout>
@@ -38,6 +46,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Create from './Tabs/Create.vue';
 import Productions from './Tabs/Productions.vue';
 import Home from './Tabs/Home.vue';
+import Machines from './Tabs/Machines.vue';
 
 export default {
     data() {
@@ -50,9 +59,11 @@ export default {
         Home,
         Productions,
         Create,
+        Machines,
     },
     props: {
         productions: Array,
+        machines: Object,
         next_production: Number,
     },
     methods: {

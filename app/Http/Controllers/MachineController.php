@@ -88,7 +88,12 @@ class MachineController extends Controller
 
     public function getAll()
     {
-        $items = Machine::latest('id')->get(['name', 'id']);
+        $full = request('full', false);
+        if ($full) {
+            $items = Machine::with('media')->latest('id')->get();
+        } else {
+            $items = Machine::latest('id')->get(['name', 'id']);
+        }
 
         return response()->json(compact('items'));
     }
@@ -102,9 +107,9 @@ class MachineController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                 ->orWhere('description', 'like', "%{$query}%");
             })
-            ->paginate(200);
+            ->get();
 
         // Devuelve los items encontrados
-        return response()->json(['items' => $machines], 200);
+        return response()->json(['items' => $machines]);
     }
 }
