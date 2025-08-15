@@ -27,14 +27,14 @@
                         </template>
                         <Create :nextProduction="next_production" @created="refreshProductionsList" />
                     </el-tab-pane>
-                    <!-- <el-tab-pane name="4">
+                    <el-tab-pane name="4">
                         <template #label>
                             <div class="flex items-center">
                                 <span>Máquinas</span>
                             </div>
                         </template>
                         <Machines />
-                    </el-tab-pane> -->
+                    </el-tab-pane>
                 </el-tabs>
             </main>
         </AppLayout>

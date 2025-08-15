@@ -144,7 +144,7 @@ Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'delete
 //machines routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('machines', MachineController::class)->middleware('auth');
-Route::get('machines-get-all/{full}', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
+Route::get('machines-get-all', [MachineController::class, 'getAll'])->name('machines.get-all')->middleware('auth');
 Route::post('machines/update-with-media/{machine}', [MachineController::class, 'updateWithMedia'])->name('machines.update-with-media')->middleware('auth');
 Route::post('machines/get-matches', [MachineController::class, 'getMatches'])->name('machines.get-matches');
 

@@ -86,8 +86,9 @@ class MachineController extends Controller
         $machine->delete();    
     }
 
-    public function getAll($full = false)
+    public function getAll()
     {
+        $full = request('full', false);
         if ($full) {
             $items = Machine::with('media')->latest('id')->get();
         } else {
@@ -106,9 +107,9 @@ class MachineController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                 ->orWhere('description', 'like', "%{$query}%");
             })
-            ->paginate(200);
+            ->get();
 
         // Devuelve los items encontrados
-        return response()->json(['items' => $machines], 200);
+        return response()->json(['items' => $machines]);
     }
 }

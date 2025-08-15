@@ -55,18 +55,18 @@ export default {
                     show: this.$page.props.auth.user.permissions.includes('Ver en estacion Maquila'),
                 },
                 {
-                    name: 'Cuarentena',
-                    dark: '#482150',
-                    light: '#EBD7FF',
-                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
-                    show: this.$page.props.auth.user.permissions.includes('Ver en estacion Cuarentena'),
-                },
-                {
                     name: 'Empaques',
                     dark: '#98350F',
                     light: '#F9E0D2',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-seam size-6" viewBox="0 0 16 16" id="Box-Seam--Streamline-Bootstrap" height="16" width="16"><desc>Box Seam Streamline Icon: https://streamlinehq.com</desc><path d="M8.186 1.113a0.5 0.5 0 0 0 -0.372 0L1.846 3.5l2.404 0.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7 -6.5 2.6v7.922l6.5 -2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443 0.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A0.5 0.5 0 0 1 16 3.5v8.662a1 1 0 0 1 -0.629 0.928l-7.185 2.874a0.5 0.5 0 0 1 -0.372 0L0.63 13.09a1 1 0 0 1 -0.63 -0.928V3.5a0.5 0.5 0 0 1 0.314 -0.464z" stroke-width="1"></path></svg>',
                     show: this.$page.props.auth.user.permissions.includes('Ver en estacion Empaques'),
+                },
+                {
+                    name: 'X Reproceso',
+                    dark: '#482150',
+                    light: '#EBD7FF',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
+                    show: this.$page.props.auth.user.permissions.includes('Ver en estacion X Reproceso'),
                 },
                 {
                     name: 'X Offset',

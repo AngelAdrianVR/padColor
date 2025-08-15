@@ -174,8 +174,8 @@
             </div>
             <div>
                 <InputLabel value="Pz/H" />
-                <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja" :step="0.01"
-                    class="!w-full" />
+                <el-input-number v-model="form.pps" @change="handleSheet" :min="1" placeholder="Piezas por hoja"
+                    :step="0.01" class="!w-full" />
                 <InputError :message="form.errors.pps" />
             </div>
             <div>
@@ -216,7 +216,8 @@
             </div>
             <div>
                 <InputLabel value="P/F" />
-                <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full" :step="0.01" />
+                <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full"
+                    :step="0.01" />
                 <InputError :message="form.errors.pf" />
             </div>
             <div>
@@ -352,17 +353,17 @@ export default {
                     light: '#ECECEC',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 6.75 6.75h2.018a5.25 5.25 0 0 0 3.712-1.538l1.732-1.732a5.25 5.25 0 0 0 1.538-3.712l.003-2.024a.668.668 0 0 1 .198-.471 1.575 1.575 0 1 0-2.228-2.228 3.818 3.818 0 0 0-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0 1 16.35 15m.002 0h-.002" /></svg>',
                 },
-                 {
-                    name: 'Cuarentena',
-                    dark: '#482150',
-                    light: '#EBD7FF',
-                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
-                },
                 {
                     name: 'Empaques',
                     dark: '#98350F',
                     light: '#F9E0D2',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-seam size-6" viewBox="0 0 16 16" id="Box-Seam--Streamline-Bootstrap" height="16" width="16"><desc>Box Seam Streamline Icon: https://streamlinehq.com</desc><path d="M8.186 1.113a0.5 0.5 0 0 0 -0.372 0L1.846 3.5l2.404 0.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7 -6.5 2.6v7.922l6.5 -2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443 0.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A0.5 0.5 0 0 1 16 3.5v8.662a1 1 0 0 1 -0.629 0.928l-7.185 2.874a0.5 0.5 0 0 1 -0.372 0L0.63 13.09a1 1 0 0 1 -0.63 -0.928V3.5a0.5 0.5 0 0 1 0.314 -0.464z" stroke-width="1"></path></svg>',
+                },
+                {
+                    name: 'X Reproceso',
+                    dark: '#482150',
+                    light: '#EBD7FF',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
                 },
                 {
                     name: 'X Offset',
@@ -436,7 +437,7 @@ export default {
                     light: '#D3DCF8',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>',
                 },
-                 {
+                {
                     name: 'Calidad',
                     dark: '#558233',
                     light: '#b1db92',

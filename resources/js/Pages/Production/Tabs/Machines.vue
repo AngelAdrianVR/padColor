@@ -1,5 +1,5 @@
 <template>
-    <main class="px-2 lg:px-14">
+    <div class="min-h-[80vh]">
         <div>
             <h1 class="font-bold">Máquinas</h1>
             <!-- Buscador -->
@@ -25,10 +25,8 @@
             </div> -->
 
             <Loading v-if="loading" />
-
-            <el-table v-else :data="filteredMachines.data" @row-click="handleRowClick" max-height="670"
-                style="width: 100%" class="mt-4" :row-class-name="tableRowClassName">
-                <!-- <el-table-column type="selection" width="45" /> -->
+            <el-table v-else :data="filteredMachines" @row-click="handleRowClick" max-height="670" style="width: 100%"
+                class="mt-4" :row-class-name="tableRowClassName">
                 <el-table-column prop="id" label="ID" />
                 <el-table-column prop="name" label="Nombre de la máquina" />
                 <el-table-column prop="created_at" label="Creado el">
@@ -73,7 +71,7 @@
                 </el-table-column>
             </el-table>
         </div>
-    </main>
+    </div>
 
     <DialogModal :show="showCreateModal" @close="showCreateModal = false">
         <template #title>
@@ -238,31 +236,6 @@ export default {
     props: {
     },
     methods: {
-        async store() {
-            try {
-                const response = await axios.post(route('machines.store'), this.form);
-
-                if (response.status === 200) {
-                    const newMachine = response.data.machine;
-                    this.filteredMachines.data.unshift(newMachine);
-
-                    this.form.reset();
-                    this.$notify({
-                        title: 'Máquina agregada correctamente',
-                        message: '',
-                        type: 'success',
-                    });
-                    this.showCreateModal = false;
-                }
-            } catch (error) {
-                console.log(error.response?.data?.errors || error);
-                this.$notify({
-                    title: 'Error al guardar',
-                    message: 'Verifica los campos requeridos e inténtalo de nuevo',
-                    type: 'error',
-                });
-            }
-        },
         update() {
             if (this.form.image) {
                 this.form.post(route("machines.update-with-media", this.selectedMachine.id), {
@@ -316,6 +289,64 @@ export default {
         formatDate2(dateString) {
             return format(parseISO(dateString), 'dd MMMM, yyyy', { locale: es });
         },
+        handleTagClose() {
+            this.search = null;
+            this.filteredMachines = this.machines;
+        },
+        handleRowClick(row) {
+            this.showDetailsModal = true;
+            this.selectedMachine = row;
+        },
+        tableRowClassName({ row, rowIndex }) {
+            return 'cursor-pointer text-xs';
+        },
+        handleCommand(command) {
+            const [commandName, rowId] = command.split('-');
+            const machineId = parseInt(rowId);
+
+            if (commandName == 'edit') {
+                const machine = this.filteredMachines.find(m => m.id === machineId);
+                if (machine) {
+                    this.selectedMachine = machine;
+                    this.showDetailsModal = true;
+                    this.startEditMode();
+                }
+            } else if (commandName == 'delete') {
+                this.delete(rowId);
+            }
+        },
+        delete(id) {
+            this.$confirm('¿Estás seguro de que deseas eliminar esta máquina?', 'Eliminar máquina', {
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Eliminar',
+            }).then(() => {
+                axios.delete(route('machines.destroy', id))
+                    .then(response => {
+                        const index = this.filteredMachines.findIndex(machine => machine.id == id);
+                        if (index !== -1) {
+                            this.filteredMachines.splice(index, 1);
+                        }
+
+                        this.$message({
+                            type: 'success',
+                            message: 'Máquina eliminado correctamente',
+                        });
+                    })
+                    .catch(error => {
+                        this.$message.error(error.response.data.message);
+                    });
+            }).catch(() => { });
+        },
+        saveImage(image) {
+            this.form.image = image;
+            this.form.imageCleared = false;
+        },
+        clearImage() {
+            this.form.image = null;
+            this.form.imageCleared = true;
+        },
         async handleSearch() {
             this.loading = true;
             this.search = this.searchTemp;
@@ -340,64 +371,49 @@ export default {
                 this.loading = false;
             }
         },
-        handleTagClose() {
-            this.search = null;
-            this.filteredMachines = this.machines;
-        },
-        handleRowClick(row) {
-            this.showDetailsModal = true;
-            this.selectedMachine = row;
-        },
-        tableRowClassName({ row, rowIndex }) {
-            return 'cursor-pointer text-xs';
-        },
-        handleCommand(command) {
-            const [commandName, rowId] = command.split('-');
-            const machineId = parseInt(rowId);
+        async store() {
+            try {
+                const response = await axios.post(route('machines.store'), this.form);
 
-            if (commandName == 'edit') {
-                const machine = this.filteredMachines.data.find(m => m.id === machineId);
-                if (machine) {
-                    this.selectedMachine = machine;
-                    this.showDetailsModal = true;
-                    this.startEditMode();
+                if (response.status === 200) {
+                    const newMachine = response.data.machine;
+                    this.filteredMachines.unshift(newMachine);
+
+                    this.form.reset();
+                    this.$notify({
+                        title: 'Máquina agregada correctamente',
+                        message: '',
+                        type: 'success',
+                    });
+                    this.showCreateModal = false;
                 }
-            } else if (commandName == 'delete') {
-                this.delete(rowId);
+            } catch (error) {
+                console.log(error.response?.data?.errors || error);
+                this.$notify({
+                    title: 'Error al guardar',
+                    message: 'Verifica los campos requeridos e inténtalo de nuevo',
+                    type: 'error',
+                });
             }
         },
-        delete(id) {
-            this.$confirm('¿Estás seguro de que deseas eliminar esta máquina?', 'Eliminar máquina', {
-                type: 'warning',
-                showCancelButton: true,
-                cancelButtonText: 'Cancelar',
-                confirmButtonText: 'Eliminar',
-            }).then(() => {
-                axios.delete(route('machines.destroy', id))
-                    .then(response => {
-                        const index = this.filteredMachines.data.findIndex(machine => machine.id == id);
-                        if (index !== -1) {
-                            this.filteredMachines.data.splice(index, 1);
-                        }
-
-                        this.$message({
-                            type: 'success',
-                            message: 'Máquina eliminado correctamente',
-                        });
-                    })
-                    .catch(error => {
-                        this.$message.error(error.response.data.message);
-                    });
-            }).catch(() => { });
+        async fetchMachines() {
+            try {
+                this.loading = true;
+                const response = await axios.get(route('machines.get-all', { full: true }));
+                
+                if (response.status === 200) {
+                    this.machines = response.data.items;
+                    this.filteredMachines = this.machines;
+                }
+            } catch (error) {
+                console.error('Error fetching machines:', error);
+            } finally {
+                this.loading = false;
+            }
         },
-        saveImage(image) {
-            this.form.image = image;
-            this.form.imageCleared = false;
-        },
-        clearImage() {
-            this.form.image = null;
-            this.form.imageCleared = true;
-        },
+    },
+    mounted() {
+        this.fetchMachines();
     }
 }
 </script>
