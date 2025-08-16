@@ -15,55 +15,54 @@ use Spatie\Permission\Models\Role;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request)
-    {
-        $request->validate([
-            // 'event_id' => 'nullable|integer|exists:notification_events,id',
-            'event_id' => 'nullable|integer',
-        ]);
+    // public function index(Request $request)
+    // {
+    //     $request->validate([
+    //         'event_id' => 'nullable|integer|exists:notification_events,id',
+    //     ]);
 
-        $roles = RoleResource::collection(Role::all());
-        $permissions = PermissionResource::collection(Permission::all()->groupBy(function ($data) {
-            return $data->category;
-        }));
+    //     $roles = RoleResource::collection(Role::all());
+    //     $permissions = PermissionResource::collection(Permission::all()->groupBy(function ($data) {
+    //         return $data->category;
+    //     }));
 
-        $allEvents = NotificationEvent::orderBy('name')->get();
-        $selectedEventId = $request->input('event_id', $allEvents->first()?->id);
+    //     $allEvents = NotificationEvent::orderBy('name')->get();
+    //     $selectedEventId = $request->input('event_id', $allEvents->first()?->id);
 
-        $userSubscriptions = [];
-        $externalSubscriptions = [];
+    //     $userSubscriptions = [];
+    //     $externalSubscriptions = [];
 
-        if ($selectedEventId) {
-            $userSubscriptions = NotificationSubscription::where('notification_event_id', $selectedEventId)
-                ->where('notifiable_type', User::class)
-                ->pluck('notifiable_id')
-                ->toArray();
+    //     if ($selectedEventId) {
+    //         $userSubscriptions = NotificationSubscription::where('notification_event_id', $selectedEventId)
+    //             ->where('notifiable_type', User::class)
+    //             ->pluck('notifiable_id')
+    //             ->toArray();
 
-            $externalSubscriptions = NotificationSubscription::where('notification_event_id', $selectedEventId)
-                ->where('notifiable_type', 'external')
-                ->pluck('notifiable_id')
-                ->toArray();
-        }
+    //         $externalSubscriptions = NotificationSubscription::where('notification_event_id', $selectedEventId)
+    //             ->where('notifiable_type', 'external')
+    //             ->pluck('notifiable_id')
+    //             ->toArray();
+    //     }
 
-        $usersQuery = User::query()
-            ->when($request->input('search'), function ($query, $search) {
-                $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
-            })
-            ->when($request->input('department'), fn($q, $d) => $q->where('employee_properties->department', 'like', "%{$d}%"))
-            ->when($request->input('company'), fn($q, $c) => $q->where('employee_properties->company', 'like', "%{$c}%"));
+    //     $usersQuery = User::query()
+    //         ->when($request->input('search'), function ($query, $search) {
+    //             $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+    //         })
+    //         ->when($request->input('department'), fn($q, $d) => $q->where('employee_properties->department', 'like', "%{$d}%"))
+    //         ->when($request->input('company'), fn($q, $c) => $q->where('employee_properties->company', 'like', "%{$c}%"));
 
-        return inertia('Setting/Index', [
-            'notificationEvents' => $allEvents,
-            'users' => $usersQuery->paginate(10)->withQueryString(),
-            'initialSubscriptions' => [
-                'users' => $userSubscriptions,
-                'external' => $externalSubscriptions,
-            ],
-            'filters' => $request->only(['search', 'department', 'company', 'event_id']),
-            'roles' => $roles,
-            'permissions' => $permissions,
-        ]);
-    }
+    //     return inertia('Setting/Index', [
+    //         'notificationEvents' => $allEvents,
+    //         'users' => $usersQuery->paginate(9)->withQueryString(),
+    //         'initialSubscriptions' => [
+    //             'users' => $userSubscriptions,
+    //             'external' => $externalSubscriptions,
+    //         ],
+    //         'filters' => $request->only(['search', 'department', 'company', 'event_id']),
+    //         'roles' => $roles,
+    //         'permissions' => $permissions,
+    //     ]);
+    // }
 
     public function toggleUserSubscription(Request $request)
     {

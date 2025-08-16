@@ -48,25 +48,42 @@
             <UserFilters v-model:search="searchFilters.search" v-model:department="searchFilters.department"
                 v-model:company="searchFilters.company" @add-external="isModalOpen = true" />
         </section>
+        <section class="mt-5">
+            <h2 class="rounded-md mt-3 bg-grayED py-1 px-2 font-bold">Usuarios externos</h2>
+            <ExternalEmails :emails="subscriptions.external" @remove="removeExternalEmail" />
+        </section>
+        <section class="mt-5">
+            <h2 class="rounded-md mt-3 bg-grayED py-1 px-2 font-bold">Usuarios internos</h2>
+            <UsersTable :users="users.data" :subscriptions="subscriptions.users" @toggle="toggleSubscription" />
+            <Pagination :links="users.links" />
+        </section>
 
-        <!-- Selector de Eventos -->
-        <!-- <div class="mt-3">
-            <InputLabel value="Selecciona un evento de Notificación" />
-            <el-select class="w-full" v-model="selectedEventId" placeholder="Selecciona el departamento"
-                no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                <el-option v-for="event in notificationEvents" :key="event.id" :label="event.name" :value="event.id" />
-            </el-select>
-        </div> -->
-
-        <!-- <h2 v-if="selectedEvent" class="text-xl font-semibold mt-6 mb-2">
-            Asignar usuarios a: <span class="text-blue-400">{{ selectedEvent.name }}</span>
-        </h2> -->
-
-        <ExternalEmails :emails="subscriptions.external" @remove="removeExternalEmail" />
-        <UsersTable :users="users.data" :subscriptions="subscriptions.users" @toggle="toggleSubscription" />
-        <Pagination :links="users.links" />
-        <AddExternalEmailModal :show="isModalOpen" @close="isModalOpen = false"
-            :event-name="selectedEvent ? selectedEvent.name : ''" @save="addExternalEmail" />
+        <DialogModal :show="isModalOpen" @close="isModalOpen = false" max-width="md">
+            <template #title>
+                <h1>Añadir correo externo</h1>
+            </template>
+            <template #content>
+                <div>
+                    <p class="text-gray99">
+                        Este correo recibirá notificaciones correspondientes a “Producción liberada por calidad”.
+                    </p>
+                    <div class="mt-2">
+                        <InputLabel value="Correo electrónico del destinatario" />
+                        <el-input v-model="email" @keyup.enter="saveEmail" type="email"
+                            placeholder="ejemplo@company.com" />
+                        <p v-if="error" class="text-red-500 text-xs h-4">{{ error }}</p>
+                    </div>
+                </div>
+            </template>
+            <template #footer>
+                <div class="flex justify-end gap-1">
+                    <CancelButton @click="isModalOpen = false" :disabled="addingExternal">Cancelar</CancelButton>
+                    <PrimaryButton @click="saveEmail" :disabled="addingExternal">Añadir y activar</PrimaryButton>
+                </div>
+            </template>
+        </DialogModal>
+        <!-- <AddExternalEmailModal :show="isModalOpen" @close="isModalOpen = false"
+            :event-name="selectedEvent ? selectedEvent.name : ''" @save="addExternalEmail" /> -->
 
         <!-- <div class="mt-8 p-4 bg-gray-700 rounded-lg">
             <h3 class="font-semibold text-lg mb-2">Estado Actual (para depuración):</h3>
@@ -82,7 +99,9 @@ import UserFilters from '@/Components/MyComponents/Setting/Notifications/UserFil
 import ExternalEmails from '@/Components/MyComponents/Setting/Notifications/ExternalEmails.vue';
 import UsersTable from '@/Components/MyComponents/Setting/Notifications/UsersTable.vue';
 import Pagination from '@/Components/MyComponents/Setting/Notifications/Pagination.vue';
-import AddExternalEmailModal from '@/Components/MyComponents/Setting/Notifications/AddExternalEmailModal.vue';
+import DialogModal from '@/Components/DialogModal.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 
 export default {
     data() {
@@ -95,6 +114,9 @@ export default {
                 company: this.filters.company,
             },
             isModalOpen: false,
+            email: '',
+            error: '',
+            addingExternal: false,
         };
     },
     components: {
@@ -102,8 +124,10 @@ export default {
         ExternalEmails,
         UsersTable,
         Pagination,
-        AddExternalEmailModal,
         InputLabel,
+        DialogModal,
+        PrimaryButton,
+        CancelButton,
     },
     props: {
         notificationEvents: {
@@ -143,8 +167,21 @@ export default {
         }
     },
     methods: {
+        saveEmail() {
+            this.error = '';
+            // Validación
+            if (!this.email) {
+                this.error = 'El correo no puede estar vacío.';
+                return;
+            }
+            if (!/^\S+@\S+\.\S+$/.test(this.email)) {
+                this.error = 'Por favor, introduce un correo válido.';
+                return;
+            }
+            this.addExternalEmail();
+        },
         fetchData() {
-            this.$inertia.get(route('notifications.management'), {
+            this.$inertia.get(route('settings.index'), {
                 event_id: this.selectedEventId,
                 ...this.searchFilters
             }, {
@@ -164,27 +201,33 @@ export default {
                 user_id: userId,
             }, {
                 preserveScroll: true,
-                // Inertia actualizará las props automáticamente al recibir la respuesta
                 onSuccess: () => {
+                    this.subscriptions = this.initialSubscriptions;
                 },
                 onError: (error) => {
                     console.error('Error al registrar suscripción:', error);
                 }
             });
         },
-        addExternalEmail(email) {
+        addExternalEmail() {
+            this.addingExternal = true;
             this.$inertia.post(route('subscriptions.external.add'), {
                 event_id: this.selectedEventId,
-                email: email,
+                email: this.email,
             }, {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.isModalOpen = false; // Cierra el modal solo si la petición fue exitosa
-                    this.subscriptions.external.push(email); // Actualiza la lista de correos externos
+                    this.subscriptions.external.push(this.email); // Actualiza la lista de correos externos
+                    this.email = '';
+                    this.error = '';
                 },
                 onError: (errors) => {
                     // Puedes manejar los errores aquí, por ejemplo, pasándolos al modal
                     console.error("Error al añadir correo:", errors);
+                },
+                onFinish: () => {
+                    this.addingExternal = false;
                 }
             });
         },

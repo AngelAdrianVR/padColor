@@ -170,9 +170,9 @@ Route::get('/clear-all', function () {
     return 'cleared.';
 });
 
-Route::get('/notifications-management', [NotificationController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('notifications.management');
+// Route::get('/notifications-management', [NotificationController::class, 'index'])
+//     ->middleware(['auth', 'verified'])
+//     ->name('notifications.management');
 
 // Rutas para manejar las acciones de suscripción
 Route::post('/subscriptions/toggle-user', [NotificationController::class, 'toggleUserSubscription'])
