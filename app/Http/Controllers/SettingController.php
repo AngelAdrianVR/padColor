@@ -15,41 +15,6 @@ use Spatie\Permission\Models\Role;
 
 class SettingController extends Controller
 {
-
-    // public function index()
-    // {
-    //     $roles = RoleResource::collection(Role::all());
-    //     $permissions = PermissionResource::collection(Permission::all()->groupBy(function ($data) {
-    //         return $data->category;
-    //     }));
-
-    //     // info de notificaciones
-    //     $notificationEvents = NotificationEvent::orderBy('name')->get();
-
-    //     $userSubscriptions = [];
-    //     $externalSubscriptions = [];
-
-    //     $userSubscriptions = NotificationSubscription::where('notification_event_id', 1)
-    //         ->where('notifiable_type', User::class)
-    //         ->pluck('notifiable_id')
-    //         ->toArray();
-
-    //     $externalSubscriptions = NotificationSubscription::where('notification_event_id', 1)
-    //         ->where('notifiable_type', 'external')
-    //         ->pluck('notifiable_id')
-    //         ->toArray();
-
-    //     $initialSubscriptions = [
-    //         'users' => $userSubscriptions,
-    //         'external' => $externalSubscriptions,
-    //     ];
-
-    //     $users = User::query()
-    //         ->paginate(10)
-    //         ->withQueryString();
-
-    //     return inertia('Setting/Index', compact('roles', 'permissions', 'notificationEvents', 'users', 'initialSubscriptions'));
-    // }
     public function index(Request $request)
     {
         $request->validate([
