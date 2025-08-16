@@ -1,20 +1,24 @@
 <script>
 export default {
     props: {
-        // Usamos modelValue para v-model por defecto. Aquí pasaremos un objeto.
-        // En Vue 3, podemos tener múltiples v-model nombrando las props.
         search: String,
         department: String,
         company: String,
     },
     emits: ['update:search', 'update:department', 'update:company', 'add-external'],
-    // No necesitamos 'data' aquí porque los props se enlazan directamente.
 }
 </script>
 
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-700/50 rounded-lg shadow-md">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-blue-100/50 rounded-lg shadow-md">
         <!-- Usamos :value y @input para crear un v-model bidireccional con el padre -->
+        <!-- <el-input :value="search" @input="$emit('update:search', $event.target.value)"
+            placeholder="Buscar por nombre o correo..." :maxlength="150" clearable />
+        <el-input :value="department" @input="$emit('update:department', $event.target.value)"
+            placeholder="Filtrar por departamento..." :maxlength="150" clearable />
+        <el-input :value="company" @input="$emit('update:company', $event.target.value)"
+            placeholder="Filtrar por compañía..." :maxlength="150" clearable /> -->
+
         <input :value="search" @input="$emit('update:search', $event.target.value)" type="text"
             placeholder="Buscar por nombre o correo..."
             class="col-span-1 md:col-span-1 bg-gray-800 border-gray-600 rounded-lg p-2 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500">

@@ -171,10 +171,19 @@ Route::get('/clear-all', function () {
 });
 
 Route::get('/notifications-management', [NotificationController::class, 'index'])
-    ->middleware(['auth', 'verified']) // ¡Asegúrate de proteger la ruta!
+    ->middleware(['auth', 'verified'])
     ->name('notifications.management');
 
-// Aquí también añadiremos las rutas para actualizar las suscripciones más adelante.
-// Route::post('/subscriptions', [NotificationController::class, 'toggleUserSubscription'])->name('subscriptions.user.toggle');
-// Route::post('/subscriptions/external', [NotificationController::class, 'addExternalSubscription'])->name('subscriptions.external.add');
-// Route::delete('/subscriptions/external/{subscription}', [NotificationController::class, 'removeExternalSubscription'])->name('subscriptions.external.remove');
+// Rutas para manejar las acciones de suscripción
+Route::post('/subscriptions/toggle-user', [NotificationController::class, 'toggleUserSubscription'])
+    ->middleware(['auth', 'verified'])
+    ->name('subscriptions.user.toggle');
+
+Route::post('/subscriptions/add-external', [NotificationController::class, 'addExternalSubscription'])
+    ->middleware(['auth', 'verified'])
+    ->name('subscriptions.external.add');
+
+Route::delete('/subscriptions/remove-external', [NotificationController::class, 'removeExternalSubscription'])
+    ->middleware(['auth', 'verified'])
+    ->name('subscriptions.external.remove');
+
