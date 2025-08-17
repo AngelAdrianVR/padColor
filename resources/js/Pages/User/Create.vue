@@ -7,13 +7,13 @@
                 class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 grid grid-cols-2 gap-x-3 gap-y-1">
                 <h1 class="font-bold ml-2 col-span-full mb-8">Agregar usuario</h1>
                 <div>
-                    <InputLabel value="Nombre de usuario*" class="ml-3 mb-1" />
+                    <InputLabel value="Nombre de usuario*" />
                     <el-input v-model="form.name" placeholder="Escribe el nombre del colaborador " :maxlength="100"
                         clearable />
                     <InputError :message="form.errors.name" />
                 </div>
                 <div>
-                    <InputLabel value="Departamento*" class="ml-3 mb-1" />
+                    <InputLabel value="Departamento*" />
                     <el-select class="w-full" v-model="form.employee_properties.department"
                         placeholder="Selecciona el departamento" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">
@@ -22,13 +22,13 @@
                     <InputError :message="form.errors['employee_properties.department']" />
                 </div>
                 <div>
-                    <InputLabel value="Puesto*" class="ml-3 mb-1" />
+                    <InputLabel value="Puesto*" />
                     <el-input v-model="form.employee_properties.job_position" placeholder="Menciona el puesto"
                         :maxlength="100" clearable />
                     <InputError :message="form.errors['employee_properties.job_position']" />
                 </div>
                 <div>
-                    <InputLabel value="Empresa*" class="ml-3 mb-1" />
+                    <InputLabel value="Empresa*" />
                     <el-select class="w-full" v-model="form.employee_properties.company" @change="handleChangeCompany"
                         clearable placeholder="Seleccione" no-data-text="No hay opciones registradas"
                         no-match-text="No se encontraron coincidencias">
@@ -37,7 +37,7 @@
                     <InputError :message="form.errors['employee_properties.company']" />
                 </div>
                 <div>
-                    <InputLabel value="Sucursal*" class="ml-3 mb-1" />
+                    <InputLabel value="Sucursal*" />
                     <el-select class="w-full" v-model="form.employee_properties.branch" clearable
                         placeholder="Seleccione" no-data-text="Primero selecciona la empresa"
                         no-match-text="No se encontraron coincidencias">
@@ -46,18 +46,18 @@
                     <InputError :message="form.errors['employee_properties.branch']" />
                 </div>
                 <div>
-                    <InputLabel value="Correo electrónico" class="ml-3 mb-1" />
+                    <InputLabel value="Correo electrónico" />
                     <el-input v-model="form.email" placeholder="Escribe el correo electrónico" maxlength="255"
                         type="email" clearable />
                     <InputError :message="form.errors.email" />
                 </div>
                 <div>
-                    <InputLabel value="Número de télefono*" class="ml-3 mb-1" />
+                    <InputLabel value="Número de télefono*" />
                     <el-input v-model="form.phone" placeholder="Escribe aqui tu número" clearable />
                     <InputError :message="form.errors.phone" />
                 </div>
                 <div class="col-span-full">
-                    <InputLabel value="Agregar foto " class="ml-3 mb-1" />
+                    <InputLabel value="Agregar foto " />
                     <InputFilePreview ref="petImage" @imagen="saveImage" @cleared="clearImage" />
                     <InputError :message="form.errors.image" />
                 </div>

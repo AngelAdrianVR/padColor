@@ -8,7 +8,12 @@ use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
 use App\Imports\ProductionsImport;
 use App\Models\Machine;
+use App\Models\NotificationEvent;
+use App\Models\User;
+use App\Notifications\ProductionForwardedNotification;
+use App\Notifications\ProductionReturnedNotification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
@@ -144,12 +149,12 @@ class ProductionController extends Controller
     {
         $page = request('page', 1);
         $search = request('search', null);
-        
+
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
         $query = Production::with(['user', 'product', 'machine'])->latest('id');
-        
+
         // Obtener los estacion permitidos para el usuario
         $user = auth()->user();
         $permissions = $user->getAllPermissions()
@@ -216,11 +221,13 @@ class ProductionController extends Controller
     public function returnStation(Request $request, Production $production)
     {
         if ($production->station === 'Calidad') {
-            $newStation = 'X Offset';
+            $newStation = 'X Reproceso';
             $scrap = 0;
+            $eventKey = 'production.returned.reprocess';
         } else if ($production->station === 'Inspección') {
             $newStation = 'Calidad';
             $scrap = $production->scrap_quantity;
+            $eventKey = 'production.returned.quality';
         }
 
         $returns = $production->returns ?? [];
@@ -239,8 +246,17 @@ class ProductionController extends Controller
             'returns' => $returns,
             'modified_user_id' => auth()->id(),
         ]);
+
+        $notificationInstance = new ProductionReturnedNotification(
+            $production,
+            $newStation,
+            $request->quantity,
+            $request->reason ?? 'No se especificó un motivo.'
+        );
+
+        $this->sendProductionNotification($eventKey, $notificationInstance);
     }
-    
+
     public function productionRelease(Request $request, Production $production)
     {
         $scrap = $production->quantity - $request->close_quantity;
@@ -252,6 +268,14 @@ class ProductionController extends Controller
             'close_production_date' => $request->close_production_date,
             'modified_user_id' => auth()->id(),
         ]);
+
+        $notificationInstance = new ProductionForwardedNotification(
+            $production,
+            'Calidad',
+            $request->close_quantity
+        );
+        $eventKey = 'production.forwarded.quality';
+        $this->sendProductionNotification($eventKey, $notificationInstance);
     }
 
     public function qualityRelease(Request $request, Production $production)
@@ -265,6 +289,14 @@ class ProductionController extends Controller
             'quality_released_date' => $request->quality_released_date,
             'modified_user_id' => auth()->id(),
         ]);
+
+        $notificationInstance = new ProductionForwardedNotification(
+            $production,
+            'Inspección',
+            $request->quality_quantity
+        );
+        $eventKey = 'production.forwarded.inspection';
+        $this->sendProductionNotification($eventKey, $notificationInstance);
     }
 
     public function inspectionRelease(Request $request, Production $production)
@@ -281,16 +313,16 @@ class ProductionController extends Controller
             ];
 
             $production->partials = $partials;
+            $production->save();
         }
 
         if ($production->current_quantity >= $production->quantity) {
-            $production->station = 'Terminadas';
-            $production->finish_date = $request->close_production_date;
+            // $production->station = 'Terminadas';
+            // $production->finish_date = $request->close_production_date;
+            $this->finishProduction($request, $production);
         }
-
-        $production->save();
     }
-    
+
     public function finishProduction(Request $request, Production $production)
     {
         $production->update([
@@ -298,6 +330,43 @@ class ProductionController extends Controller
             'finish_date' => today(),
             'modified_user_id' => auth()->id(),
         ]);
+
+        $notificationInstance = new ProductionForwardedNotification(
+            $production,
+            'Terminadas',
+            $production->current_quantity
+        );
+        $eventKey = 'production.forwarded.finished_product';
+        $this->sendProductionNotification($eventKey, $notificationInstance);
+    }
+
+    /**
+     * Método reutilizable para encontrar a los suscriptores y enviarles la notificación.
+     */
+    private function sendProductionNotification(string $eventKey, $notificationInstance): void
+    {
+        $event = NotificationEvent::where('event_key', $eventKey)->first();
+
+        if (!$event) {
+            return; // Si el evento no existe, no hacemos nada
+        }
+
+        // Obtener usuarios del sistema suscritos
+        $userIds = $event->subscriptions()->where('notifiable_type', User::class)->pluck('notifiable_id');
+        $users = User::findMany($userIds);
+
+        // Obtener correos externos suscritos
+        $externalEmails = $event->subscriptions()->where('notifiable_type', 'external')->pluck('notifiable_id');
+
+        // Enviar notificación a los usuarios del sistema
+        if ($users->isNotEmpty()) {
+            Notification::send($users, $notificationInstance);
+        }
+
+        // Enviar notificación a los correos externos
+        foreach ($externalEmails as $email) {
+            Notification::route('mail', $email)->notify($notificationInstance);
+        }
     }
 
     public function addPartial(Request $request, Production $production)
@@ -311,7 +380,7 @@ class ProductionController extends Controller
         $production->partials = $partials;
         $production->modified_user_id = auth()->id();
         $production->current_quantity += $request->quantity;
-        
+
         // revisar si la cantidad actual entregada es mayor o igual a la cantidad total para cambiar la estación a 'Terminadas'
         if ($production->current_quantity >= $production->quantity) {
             $production->station = 'Terminadas';
@@ -343,7 +412,7 @@ class ProductionController extends Controller
 
         return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
     }
-    
+
     public function exportExcelReport()
     {
         $folio = request('folio');

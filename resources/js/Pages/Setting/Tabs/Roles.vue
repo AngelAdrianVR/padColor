@@ -45,7 +45,7 @@
                         <div v-for="(guard, index) in Object.keys(permissions.data)" :key="index" class="border p-3">
                             <h1 class="font-bold">{{ guard.replace(/_/g, " ") }}</h1>
                             <label v-for="permission in permissions.data[guard]" :key="permission.id"
-                                class="flex items-center">
+                                class="flex items-start">
                                 <input type="checkbox" v-model="form.permissions" :value="permission.id"
                                     class="rounded border-gray-400 text-primary shadow-sm focus:ring-primary bg-transparent" />
                                 <span class="ml-2 text-sm">{{ permission.name }}</span>
