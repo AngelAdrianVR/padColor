@@ -31,6 +31,7 @@
                     </svg>
                     <span>{{ selectedEvent?.name }}</span>
                 </p>
+                <p class="text-sm">{{ selectedEvent?.description }}</p>
                 <p class="mt-2">
                     <span class="font-semibold">Internos: </span><span>{{ subscriptions?.users?.length }}
                         usuario(s)</span> |
@@ -54,8 +55,9 @@
         </section>
         <section class="mt-5">
             <h2 class="rounded-md mt-3 bg-grayED py-1 px-2 font-bold">Usuarios internos</h2>
-            <UsersTable :users="users.data" :subscriptions="subscriptions.users" @toggle="toggleSubscription" />
-            <Pagination :links="users.links" />
+            <UsersTable :users="paginatedUsers" :subscriptions="subscriptions.users" @toggle="toggleSubscription" />
+            <el-pagination background layout="prev, pager, next" :total="users?.length"
+                v-model:current-page="currentPage" :page-size="pageSize" @current-change="handleCurrentPageChange" />
         </section>
 
         <DialogModal :show="isModalOpen" @close="isModalOpen = false" max-width="md">
@@ -82,8 +84,6 @@
                 </div>
             </template>
         </DialogModal>
-        <!-- <AddExternalEmailModal :show="isModalOpen" @close="isModalOpen = false"
-            :event-name="selectedEvent ? selectedEvent.name : ''" @save="addExternalEmail" /> -->
 
         <!-- <div class="mt-8 p-4 bg-gray-700 rounded-lg">
             <h3 class="font-semibold text-lg mb-2">Estado Actual (para depuración):</h3>
@@ -98,7 +98,6 @@ import InputLabel from '@/Components/InputLabel.vue';
 import UserFilters from '@/Components/MyComponents/Setting/Notifications/UserFilters.vue';
 import ExternalEmails from '@/Components/MyComponents/Setting/Notifications/ExternalEmails.vue';
 import UsersTable from '@/Components/MyComponents/Setting/Notifications/UsersTable.vue';
-import Pagination from '@/Components/MyComponents/Setting/Notifications/Pagination.vue';
 import DialogModal from '@/Components/DialogModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
@@ -117,13 +116,15 @@ export default {
             email: '',
             error: '',
             addingExternal: false,
+            currentPage: 1,
+            pageSize: 9, // tamaño de página para paginado en cliente
+            paginatedUsers: [],
         };
     },
     components: {
         UserFilters,
         ExternalEmails,
         UsersTable,
-        Pagination,
         InputLabel,
         DialogModal,
         PrimaryButton,
@@ -135,8 +136,8 @@ export default {
             default: []
         },
         users: {
-            type: Object,
-            default: {}
+            type: Array,
+            default: []
         },
         initialSubscriptions: {
             type: Object,
@@ -164,9 +165,22 @@ export default {
         },
         selectedEventId() {
             this.fetchData();
+        },
+        users(newUsers) {
+            // Si la lista de usuarios cambia, reajustar paginado (mantener página si aún válida)
+            const maxPage = Math.max(1, Math.ceil((newUsers?.length || 0) / this.pageSize));
+            if (this.currentPage > maxPage) this.currentPage = maxPage;
+            this.handleCurrentPageChange(this.currentPage);
         }
     },
     methods: {
+        handleCurrentPageChange(page) {
+            // Si se llama sin parámetro (v-model), usar currentPage
+            const newPage = page || this.currentPage || 1;
+            this.currentPage = newPage;
+            const start = (newPage - 1) * this.pageSize;
+            this.paginatedUsers = (this.users || []).slice(start, start + this.pageSize);
+        },
         saveEmail() {
             this.error = '';
             // Validación
@@ -256,6 +270,9 @@ export default {
         } else if (this.notificationEvents.length > 0) {
             this.selectedEventId = this.notificationEvents[0].id; // Selecciona el primer evento si no hay uno en la URL
         }
+
+        // Inicializar paginado en cliente con los usuarios ya cargados
+        this.handleCurrentPageChange(this.currentPage);
     }
 }
 </script>

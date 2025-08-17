@@ -4,7 +4,7 @@
             <article v-for="user in users" :key="user.id" class="border border-grayD9 px-4 py-3 rounded-xl">
                 <div class="flex pb-2 border-b border-grayD9">
                     <div class="w-[70%] flex space-x-2">
-                        <figure class="size-10 rounded-full bg-grayED">
+                        <figure class="size-10 rounded-full bg-grayED flex-shrink-0">
                             <img :src="user.profile_photo_url" class="size-10 object-contain rounded-full">
                         </figure>
                         <div class="flex flex-col space-y-1 text-xs">

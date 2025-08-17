@@ -53,7 +53,7 @@ class SettingController extends Controller
 
         return inertia('Setting/Index', [
             'notificationEvents' => $allEvents,
-            'users' => $usersQuery->paginate(9)->withQueryString(),
+            'users' => $usersQuery->get(),
             'initialSubscriptions' => [
                 'users' => $userSubscriptions,
                 'external' => $externalSubscriptions,
