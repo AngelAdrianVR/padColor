@@ -927,7 +927,7 @@ export default {
             }
 
             // Para otros casos, mostramos todas las estaciones excepto 'Terminadas' si no viene de 'Inspección'
-            return this.stations.filter(station => station.name !== 'Terminadas' && station.name !== 'Inspección');
+            return this.stations.filter(station => station.name !== 'Terminadas' && station.name !== 'Inspección' && station.name !== 'X Reproceso');
         }
     },
     methods: {
