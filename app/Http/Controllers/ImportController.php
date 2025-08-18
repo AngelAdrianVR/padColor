@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CustomsAgent;
 use App\Models\Import;
+use App\Models\RawMaterial;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,7 +47,7 @@ class ImportController extends Controller
         $suppliers = Supplier::all(['id', 'name']);
 
         // 6. Renderizamos la vista de Inertia, pasando los datos y los filtros actuales
-        return Inertia::render('Imports/Index', [
+        return Inertia::render('Import/Index', [
             'imports' => $imports,
             'suppliers' => $suppliers,
             'filters' => $request->only(['search', 'supplier', 'dates']), // Devolvemos los filtros para mantener el estado en la UI
@@ -54,7 +56,16 @@ class ImportController extends Controller
 
     public function create()
     {
-        //
+        // Obtenemos los datos necesarios para los selects del formulario
+        $suppliers = Supplier::all(['id', 'name']);
+        $customsAgents = CustomsAgent::all(['id', 'name']);
+        $rawMaterials = RawMaterial::all(['id', 'name', 'sku']);
+
+        return Inertia::render('Import/Create', [
+            'suppliers' => $suppliers,
+            'customsAgents' => $customsAgents,
+            'rawMaterials' => $rawMaterials,
+        ]);
     }
 
     public function store(Request $request)
