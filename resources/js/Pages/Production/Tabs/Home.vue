@@ -1,9 +1,9 @@
 <template>
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mx-6 my-6">
-        <article @click="$inertia.visit(route('productions.index', { currentTab: 2, filter: station.name }))"
-            v-for="(station, index) in filteredProductions" :key="index"
-            class="relative cursor-pointer hover:scale-105 transition-all duration-300">
-            <div v-if="true || station.show">
+        <article v-for="(station, index) in filteredProductions" :key="index"
+            class="relative hover:scale-105 transition-all duration-300">
+            <div @click="$inertia.visit(route('productions.index', { currentTab: 2, filter: station.name }))"
+                class="cursor-pointer">
                 <svg viewBox="0 0 536 283" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M0 30.3214C0 13.5754 13.5754 0 30.3214 0H404.286C421.032 0 434.214 13.6296 435.534 30.3236C438.899 72.9049 453.179 86.9777 505.367 90.1843C522.082 91.2113 535.679 104.54 535.679 121.286V252.679C535.679 269.425 522.103 283 505.357 283H30.3215C13.5754 283 0 269.425 0 252.679V30.3214Z"
@@ -187,12 +187,14 @@ export default {
     computed: {
         // filtrar producciones por estación
         filteredProductions() {
-            return this.stations.map(station => {
-                return {
-                    ...station,
-                    productions: this.productions.filter(production => production.station == station.name),
-                }
-            })
+            return this.stations
+                .filter(station => station.show)
+                .map(station => {
+                    return {
+                        ...station,
+                        productions: this.productions.filter(production => production.station == station.name),
+                    }
+                })
         },
     },
     components: {
