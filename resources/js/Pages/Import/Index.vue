@@ -13,10 +13,10 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item>Action 1</el-dropdown-item>
-                            <el-dropdown-item>Action 2</el-dropdown-item>
+                            <!-- <el-dropdown-item>Action 2</el-dropdown-item>
                             <el-dropdown-item>Action 3</el-dropdown-item>
                             <el-dropdown-item divided>Action 4</el-dropdown-item>
-                            <el-dropdown-item>Action 5</el-dropdown-item>
+                            <el-dropdown-item>Action 5</el-dropdown-item> -->
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -66,14 +66,14 @@
                                 @start="isDragging = true" @end="isDragging = false" :animation="300" :id="column.id"
                                 item-key="id" class="space-y-2 min-h-[60vh]">
                                 <template #item="{ element }">
-                                    <div @click="$inertia.get(route('imports.show', element.id))"
+                                    <div @click="$inertia.get(route('imports.edit', element.id))"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
                                             :class="true ? 'bg-[#27A416]' : 'bg-[#C1202A]'"></div>
                                         <div class="flex justify-between items-start text-sm mb-2">
-                                            <span class="font-light text-gray66">ID. {{ element.folio }}</span>
+                                            <span class="font-light text-gray66">ID. {{ element.id }}</span>
                                             <span class="text-gray3F font-semibold">
-                                                {{ element.incoterm }}
+                                                {{ element.incoterm.substring(0, 3) }}
                                             </span>
                                         </div>
                                         <p class="font-semibold text-gray3F">{{ element.supplier?.name }}</p>

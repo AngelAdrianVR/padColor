@@ -27,6 +27,7 @@ class Import extends Model implements HasMedia
         'estimated_arrival_date',
         'actual_arrival_date',
         'warehouse_delivery_date',
+        'notes',
     ];
 
     protected $casts = [
@@ -74,7 +75,7 @@ class Import extends Model implements HasMedia
     public function rawMaterials(): BelongsToMany
     {
         return $this->belongsToMany(RawMaterial::class, 'import_raw_material')
-            ->withPivot('quantity', 'unit_cost')
+            ->withPivot('quantity', 'unit_cost', 'currency')
             ->withTimestamps();
     }
 

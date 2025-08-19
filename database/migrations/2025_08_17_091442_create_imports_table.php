@@ -26,6 +26,8 @@ return new class extends Migration
             $table->date('estimated_arrival_date')->nullable();
             $table->date('actual_arrival_date')->nullable();
             $table->date('warehouse_delivery_date')->nullable();
+            
+            $table->text('notes')->nullable();
 
             $table->timestamps();
         });

@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CustomsAgentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\MachineController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketHistoryController;
 use App\Http\Controllers\TicketSolutionController;
@@ -187,6 +189,11 @@ Route::post('/subscriptions/add-external', [NotificationController::class, 'addE
 Route::delete('/subscriptions/remove-external', [NotificationController::class, 'removeExternalSubscription'])
     ->middleware(['auth', 'verified'])
     ->name('subscriptions.external.remove');
+
+Route::resource('suppliers', SupplierController::class);
+
+
+Route::resource('customs-agents', CustomsAgentController::class);
 
 // ===================================================================
 // RUTAS DEL MÓDULO DE IMPORTACIONES

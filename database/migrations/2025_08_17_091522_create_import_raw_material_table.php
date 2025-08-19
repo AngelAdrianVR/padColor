@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('raw_material_id')->constrained('raw_materials')->onDelete('cascade');
             $table->decimal('quantity', 10, 2);
             $table->decimal('unit_cost', 10, 2);
+            $table->string('currency')->default('USD');
             $table->timestamps(); // Opcional, pero útil para saber cuándo se agregó
         });
     }

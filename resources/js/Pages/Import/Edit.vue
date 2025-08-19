@@ -1,12 +1,12 @@
 <template>
-    <AppLayout title="Crear nueva importación">
+    <AppLayout title="Editar importación">
         <main class="px-2 lg:px-14">
-            <form @submit.prevent="store" class="rounded-lg border border-gray-200 lg:p-5 p-3 lg:w-3/4 mx-auto my-7">
+            <form @submit.prevent="update" class="rounded-lg border border-gray-200 lg:p-5 p-3 lg:w-3/4 mx-auto my-7">
 
                 <!-- Encabezado -->
                 <div class="flex items-center space-x-2 mb-3">
                     <Back />
-                    <h1 class="font-semibold">Crear nueva importación</h1>
+                    <h1 class="font-semibold">Editar importación</h1>
                 </div>
 
                 <!-- Sección: Información General -->
@@ -127,12 +127,32 @@
                     <input type="file" @change="handleFileSelection" ref="fileInput" multiple hidden>
                     <PrimaryButton @click="triggerFileInput" type="button"
                         class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
-                        <ArrowUpTrayIcon class="size-4 mr-1 inline" />
+                        <ArrowUpTrayIcon class="h-4 w-4 mr-1 inline" />
                         Adjuntar archivo
                     </PrimaryButton>
                 </div>
-                <div v-if="form.documents.length" class="mt-4 space-y-3">
-                    <div v-for="(doc, index) in form.documents" :key="index" class="grid grid-cols-3 gap-x-3 items-end">
+                <!-- Lista de documentos existentes y nuevos -->
+                <div class="mt-4 space-y-3">
+                    <!-- Documentos ya guardados -->
+                    <div v-for="(doc, index) in form.documents" :key="doc.id"
+                        class="grid grid-cols-3 gap-x-3 items-end">
+                        <FileView :file="doc" />
+                        <el-select v-model="doc.classification" placeholder="Clasificar*" class="!w-full" disabled>
+                            <!-- Opciones -->
+                        </el-select>
+                        <el-popconfirm title="¿Eliminar archivo?" @confirm="removeExistingDocument(index)"
+                            confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
+                            <template #reference>
+                                <button type="button"
+                                    class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center mb-1 justify-self-end">
+                                    <TrashIcon class="size-4" />
+                                </button>
+                            </template>
+                        </el-popconfirm>
+                    </div>
+                    <!-- Nuevos documentos a subir -->
+                    <div v-for="(doc, index) in form.new_documents" :key="index"
+                        class="grid grid-cols-3 gap-x-3 items-end">
                         <FileView :file="doc" />
                         <div>
                             <InputLabel value="Clasificar *" />
@@ -143,11 +163,11 @@
                                 <el-option label="Packing List" value="Packing List" />
                             </el-select>
                         </div>
-                        <el-popconfirm title="¿Eliminar archivo?" @confirm="removeDocument(index)" icon-color="#373737"
-                            confirm-button-text="Sí" cancel-button-text="No">
+                        <el-popconfirm title="¿Quitar archivo?" @confirm="removeNewDocument(index)"
+                            confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
                             <template #reference>
                                 <button type="button"
-                                    class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center justify-self-end">
+                                    class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center mb-1 justify-self-end">
                                     <TrashIcon class="size-4" />
                                 </button>
                             </template>
@@ -163,7 +183,7 @@
                     </CancelButton>
                     <PrimaryButton :disabled="form.processing" class="ml-2">
                         <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        Crear importación
+                        Guardar cambios
                     </PrimaryButton>
                 </div>
             </form>
@@ -218,8 +238,8 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
-import { useForm } from '@inertiajs/vue3';
-import { ArrowUpTrayIcon, PlusCircleIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+import { useForm, router } from '@inertiajs/vue3';
+import { ArrowUpTrayIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import DialogModal from '@/Components/DialogModal.vue';
 
@@ -236,23 +256,26 @@ export default {
         TrashIcon,
         PlusIcon,
         ArrowUpTrayIcon,
-        PlusCircleIcon,
     },
     props: {
+        import: Object,
         suppliers: Array,
         customsAgents: Array,
         rawMaterials: Array,
     },
     data() {
         const form = useForm({
-            supplier_id: null,
-            customs_agent_id: null,
-            incoterm: 'EXW: Ex Works (En fábrica)',
-            estimated_ship_date: null,
-            estimated_arrival_date: null,
-            notes: null,
-            products: [],
-            documents: [],
+            _method: 'PUT', // Para que Laravel reconozca la petición como PUT
+            supplier_id: this.import.supplier_id,
+            customs_agent_id: this.import.customs_agent_id,
+            incoterm: this.import.incoterm,
+            estimated_ship_date: this.import.estimated_ship_date,
+            estimated_arrival_date: this.import.estimated_arrival_date,
+            notes: this.import.notes,
+            products: this.import.products || [],
+            documents: this.import.documents || [], // Documentos existentes
+            new_documents: [], // Nuevos documentos a subir
+            documents_to_delete: [], // IDs de documentos a eliminar
         });
 
         const fastForm = useForm({
@@ -283,56 +306,20 @@ export default {
         };
     },
     methods: {
-        store() {
-            this.form.post(route('imports.store'), {
+        update() {
+            // Usamos router.post para poder enviar archivos (multipart/form-data)
+            router.post(route('imports.update', this.import.id), this.form, {
                 onSuccess: () => {
                     this.$notify({
                         title: 'Éxito',
-                        message: 'Importación creada correctamente',
+                        message: 'Importación actualizada correctamente',
                         type: 'success',
                     });
                 },
             });
         },
-        closeFastModal() {
-            this.fastForm.reset();
-            this.showFastAddModal = false;
-        },
-        storeFastItem() {
-            let routeName = 'suppliers.store';
-            if (!this.addingSupplier) {
-                routeName = 'customs-agents.store';
-            }
-
-            this.fastForm.post(route(routeName), {
-                onSuccess: () => {
-                    if (this.addingSupplier) {
-                        this.form.supplier_id = this.suppliers[this.suppliers.length - 1];
-                        this.$notify({
-                            title: 'Éxito',
-                            message: 'Nuevo proveedor agregado',
-                            type: 'success',
-                        });
-                    } else {
-                        this.form.customs_agent_id = this.customsAgents[this.customsAgents.length - 1];
-                        this.$notify({
-                            title: 'Éxito',
-                            message: 'Nuevo agente agregado',
-                            type: 'success',
-                        });
-                    }
-                    this.showFastAddModal = false;
-                    this.fastForm.reset();
-                },
-            });
-        },
         addProduct() {
-            this.form.products.push({
-                raw_material_id: null,
-                quantity: 1,
-                unit_cost: null,
-                currency: 'USD',
-            });
+            this.form.products.push({ raw_material_id: null, quantity: 1, unit_cost: null, currency: 'USD' });
         },
         removeProduct(index) {
             this.form.products.splice(index, 1);
@@ -344,15 +331,23 @@ export default {
             const files = event.target.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                this.form.documents.push({
-                    file: file, // El objeto File real para el backend
-                    file_name: file.name, // Para la prop de FileView
-                    size: file.size, // Para la prop de FileView
+                this.form.new_documents.push({
+                    file: file,
+                    file_name: file.name,
+                    size: file.size,
                     classification: null,
                 });
             }
+            // Limpiar el input para poder seleccionar el mismo archivo de nuevo
+            this.$refs.fileInput.value = '';
         },
-        removeDocument(index) {
+        removeNewDocument(index) {
+            this.form.new_documents.splice(index, 1);
+        },
+        removeExistingDocument(index) {
+            // Agregamos el ID a la lista de borrado
+            this.form.documents_to_delete.push(this.form.documents[index].id);
+            // Lo quitamos de la vista
             this.form.documents.splice(index, 1);
         },
     },

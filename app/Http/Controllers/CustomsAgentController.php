@@ -23,12 +23,18 @@ class CustomsAgentController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|unique:suppliers|max:255',
+            'contact_person' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|numeric',
+        ]);
+
+        CustomsAgent::create($request->all());
+
+        return back();
     }
 
     /**

@@ -26,7 +26,7 @@ class RawMaterial extends Model
     public function imports(): BelongsToMany
     {
         return $this->belongsToMany(Import::class, 'import_raw_material')
-            ->withPivot('quantity', 'unit_cost')
+            ->withPivot('quantity', 'unit_cost', 'currency')
             ->withTimestamps();
     }
 }
