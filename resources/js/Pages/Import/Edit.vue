@@ -239,7 +239,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import { useForm, router } from '@inertiajs/vue3';
-import { ArrowUpTrayIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+import { ArrowUpTrayIcon, PlusCircleIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import DialogModal from '@/Components/DialogModal.vue';
 
@@ -255,6 +255,7 @@ export default {
         DialogModal,
         TrashIcon,
         PlusIcon,
+        PlusCircleIcon,
         ArrowUpTrayIcon,
     },
     props: {
@@ -308,7 +309,7 @@ export default {
     methods: {
         update() {
             // Usamos router.post para poder enviar archivos (multipart/form-data)
-            router.post(route('imports.update', this.import.id), this.form, {
+            this.form.post(route('imports.update', this.import.id), this.form, {
                 onSuccess: () => {
                     this.$notify({
                         title: 'Éxito',
@@ -316,6 +317,11 @@ export default {
                         type: 'success',
                     });
                 },
+                onError: (err) => {
+                    console.log(err)
+                },
+                onFinish: () => {
+                }
             });
         },
         addProduct() {

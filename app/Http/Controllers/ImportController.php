@@ -24,7 +24,7 @@ class ImportController extends Controller
         ]);
 
         // 2. Construimos la consulta a la base de datos
-        $importsQuery = Import::with('supplier', 'customsAgent');
+        $importsQuery = Import::with('supplier', 'customsAgent', 'user');
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {

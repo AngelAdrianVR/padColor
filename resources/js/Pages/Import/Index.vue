@@ -31,7 +31,7 @@
                     <el-select v-model="localFilters.supplier" placeholder="Proveedor" class="lg:!w-60" clearable>
                         <el-option label="Todos" value="" />
                         <el-option v-for="supplier in suppliers" :key="supplier.id" :label="supplier.name"
-                        :value="supplier.id" />
+                            :value="supplier.id" />
                     </el-select>
                 </div>
                 <div>
@@ -66,7 +66,7 @@
                                 @start="isDragging = true" @end="isDragging = false" :animation="300" :id="column.id"
                                 item-key="id" class="space-y-2 min-h-[60vh]">
                                 <template #item="{ element }">
-                                    <div @click="$inertia.get(route('imports.edit', element.id))"
+                                    <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
                                             :class="true ? 'bg-[#27A416]' : 'bg-[#C1202A]'"></div>
@@ -102,6 +102,9 @@
                 </div>
             </div>
         </AppLayout>
+        <!-- Integración del Modal de Detalles -->
+        <ImportDetails v-if="selectedImport" :show="showDetailsModal" :import-data="selectedImport"
+            @close="showDetailsModal = false" />
     </div>
 </template>
 
@@ -123,6 +126,7 @@ import MarkerIcon from '@/Components/MyComponents/Icons/MarkerIcon.vue';
 import BarcoIcon from '@/Components/MyComponents/Icons/BarcoIcon.vue';
 import throttle from 'lodash/throttle';
 import InputLabel from '@/Components/InputLabel.vue';
+import ImportDetails from './Details.vue'; // Importar el nuevo componente
 
 export default {
     components: {
@@ -138,6 +142,7 @@ export default {
         BarcoIcon,
         PlusIcon,
         InputLabel,
+        ImportDetails,
     },
     props: {
         imports: Object,
@@ -147,6 +152,8 @@ export default {
     data() {
         return {
             isDragging: false,
+            showDetailsModal: false,   // Estado para controlar la visibilidad del modal
+            selectedImport: null,      // Estado para guardar la importación seleccionada
             // Usamos un objeto local para los filtros para no mutar las props directamente
             localFilters: {
                 search: this.filters.search || '',
@@ -164,6 +171,10 @@ export default {
         };
     },
     methods: {
+        showDetails(importData) {
+            this.selectedImport = importData;
+            this.showDetailsModal = true;
+        },
         handleDrop(event) {
             const newStatus = event.to.id;
             const importId = this.localImports[newStatus][event.newIndex].id;
