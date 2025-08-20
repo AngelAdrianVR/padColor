@@ -87,11 +87,11 @@
                                             class="flex justify-between items-center pt-2 mt-2 border-t border-grayD9 text-xs text-gray66">
                                             <div class="flex items-center space-x-1">
                                                 <CalendarIcon class="size-4" />
-                                                <span>{{ formatDate(element.estimated_arrival_date) }}</span>
+                                                <span>{{ formatDate(element.estimated_arrival_date) }} (ETA)</span>
                                             </div>
                                             <div class="flex items-center space-x-1">
-                                                <ChatBubbleBottomCenterTextIcon class="size-4" />
-                                                <span>{{ element.comments_count || 0 }}</span>
+                                                <PaperClipIcon class="size-4" />
+                                                <span>{{ element.documents.length || 0 }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -117,7 +117,8 @@ import {
     ArchiveBoxIcon,
     CalendarIcon,
     ChatBubbleBottomCenterTextIcon,
-    PlusIcon
+    PlusIcon,
+    PaperClipIcon
 } from '@heroicons/vue/24/outline';
 import { router } from '@inertiajs/vue3';
 import AnclaIcon from '@/Components/MyComponents/Icons/AnclaIcon.vue';
@@ -136,11 +137,12 @@ export default {
         ArchiveBoxIcon,
         CalendarIcon,
         ChatBubbleBottomCenterTextIcon,
+        PlusIcon,
+        PaperClipIcon,
         AnclaIcon,
         PalomitaIcon,
         MarkerIcon,
         BarcoIcon,
-        PlusIcon,
         InputLabel,
         ImportDetails,
     },

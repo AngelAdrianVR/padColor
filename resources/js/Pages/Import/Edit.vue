@@ -166,8 +166,12 @@
                             <el-select v-model="doc.classification" placeholder="Selecciona categoría" class="!w-full">
                                 <el-option label="Pedimento" value="Pedimento" />
                                 <el-option label="Factura" value="Factura" />
-                                <el-option label="BL" value="BL" />
+                                <el-option label="BL (Bill of landing)" value="BL (Bill of landing)" />
+                                <el-option label="Carta porte" value="Carta porte" />
                                 <el-option label="Packing List" value="Packing List" />
+                                <el-option label="Certificado de origen" value="Certificado de origen" />
+                                <el-option label="Póliza de seguro de carga" value="Póliza de seguro de carga" />
+                                <el-option label="Otro" value="Otro" />
                             </el-select>
                         </div>
                         <el-popconfirm title="¿Quitar archivo?" @confirm="removeNewDocument(index)"
