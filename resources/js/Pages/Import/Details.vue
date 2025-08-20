@@ -47,7 +47,7 @@
                         <div class="py-2 flex justify-between text-sm">
                             <span class="text-gray3F">ETA (Fecha estimada de llegada)</span>
                             <span>{{ formatDate(importData.estimated_arrival_date)
-                                }}</span>
+                            }}</span>
                         </div>
                     </div>
                 </el-tab-pane>
@@ -82,7 +82,7 @@
                                 <span>{{ product.name }}</span>
                             </div>
                             <span class="text-right self-center">{{ product.pivot.quantity }} {{ product.measure_unit
-                            }}</span>
+                                }}</span>
                             <span class="text-right self-center">{{ formatCurrency(product.pivot.unit_cost) }}</span>
                             <span class="text-right self-center font-semibold">{{ formatCurrency(product.pivot.quantity
                                 * product.pivot.unit_cost) }}</span>
@@ -119,7 +119,7 @@
                                 <span>{{ cost.concept }}</span>
                                 <span class="text-right">{{ formatCurrency(cost.amount, cost.currency) }}</span>
                                 <span class="text-right">{{ formatCurrency(cost.payments_sum_amount, cost.currency)
-                                }}</span>
+                                    }}</span>
                                 <span class="text-right font-semibold"
                                     :class="cost.amount - cost.payments_sum_amount > 0 ? 'text-[#C20000]' : null">
                                     {{ formatCurrency(cost.amount - cost.payments_sum_amount, cost.currency) }}
@@ -172,7 +172,7 @@
                                     </span>
                                     <span>{{ cost.concept }}</span>
                                     <span class="text-gray-500 truncate" :title="payment.notes">{{ payment.notes
-                                        }}</span>
+                                    }}</span>
                                     <a v-if="payment.media.length" :href="payment.media[0].original_url" target="_blank"
                                         class="text-primary hover:underline ml-2">{{ payment.media[0].file_name }}</a>
                                     <span v-else class="ml-2">-</span>
@@ -439,12 +439,38 @@ export default {
         },
         formatActivityDescription(activity) {
             const causerName = `<strong>${activity.causer.name}</strong>`;
+            const properties = activity.properties;
 
-            if (activity.event === 'updated' && activity.properties?.attributes && activity.properties?.old) {
-                const attributes = activity.properties.attributes;
-                const old = activity.properties.old;
+            // 1. Manejar logs manuales
+            switch (activity.log_message) {
+                case 'agregó la materia prima':
+                    return `${causerName} <br> agregó la materia prima <strong>${properties.materia_prima}</strong> (Cantidad: ${properties.cantidad}).`;
+                case 'eliminó un costo':
+                    return `${causerName} <br> eliminó el costo <strong>${properties.import_cost}</strong> (pagos relacionados eliminados: ${properties.payments.length}).`;
+                case 'eliminó un pago':
+                    return `${causerName} <br> eliminó un pago relacionado al costo <strong>${properties.import_cost}</strong> (monto: $${properties.amount}).`;
+                case 'eliminó la materia prima':
+                    return `${causerName} <br> eliminó la materia prima <strong>${properties.materia_prima}</strong>.`;
+                case 'actualizó la materia prima':
+                    const old = properties.old;
+                    const new_ = properties.new;
+                    let changes = [];
+                    if (old.cantidad !== new_.cantidad) {
+                        changes.push(`cantidad de <strong>${old.cantidad}</strong> a <strong>${new_.cantidad}</strong>`);
+                    }
+                    if (old.costo_unitario !== new_.costo_unitario) {
+                        changes.push(`costo de <strong>${this.formatCurrency(old.costo_unitario)}</strong> a <strong>${this.formatCurrency(new_.costo_unitario)}</strong>`);
+                    }
+                    return `${causerName} <br> actualizó la materia prima <strong>${properties.materia_prima}</strong>: ${changes.join(', ')}.`;
+                case 'adjuntó el documento':
+                    return `${causerName} <br> adjuntó el documento <strong>${properties.documento}</strong> (Tipo: ${properties.clasificacion}).`;
+                case 'eliminó el documento':
+                    return `${causerName} <br> eliminó el documento <strong>${properties.documento}</strong>.`;
+            }
 
-                // 1. Diccionario de traducciones
+            // 2. Manejar eventos de modelo (como antes)
+            if (activity.event === 'updated' && properties?.attributes && properties?.old) {
+                // --- Diccionario de traducciones ---
                 const translations = {
                     supplier_id: 'proveedor',
                     customs_agent_id: 'agente aduanal',
@@ -455,30 +481,21 @@ export default {
                     status: 'estado',
                     pendent_amount: 'saldo pendiente',
                     currency: 'moneda',
-                    raw_materials: 'materia prima',
                 };
-
-                const changes = Object.keys(attributes).map(key => {
-                    // 2. Usamos la traducción; si no existe, usamos el nombre original
+                const changes = Object.keys(properties.attributes).map(key => {
                     const translatedKey = translations[key] || key.replace(/_/g, ' ');
-
-                    let oldValue = old[key] ?? '<em>vacío</em>';
-                    let newValue = attributes[key] ?? '<em>vacío</em>';
-
+                    let oldValue = `"${properties.old[key] ?? 'vacío'}"`;
+                    let newValue = `"${properties.attributes[key] ?? 'vacío'}"`;
                     if (key === 'status') {
-                        oldValue = `"${this.formatStatus(oldValue)}"`;
-                        newValue = `"${this.formatStatus(newValue)}"`;
-                    } else {
-                        oldValue = `"${oldValue}"`;
-                        newValue = `"${newValue}"`;
+                        oldValue = `"${this.formatStatus(properties.old[key])}"`;
+                        newValue = `"${this.formatStatus(properties.attributes[key])}"`;
                     }
-
                     return `cambió <strong>${translatedKey}</strong> de ${oldValue} a ${newValue}`;
                 }).join(', ');
-
                 return `${causerName} <br> ${changes}.`;
             }
 
+            // 3. Fallback para otros eventos ('created', 'deleted' de modelos)
             return `${causerName} <br> ${activity.log_message.toLowerCase()}`;
         },
         formatRelativeTime(dateString) {

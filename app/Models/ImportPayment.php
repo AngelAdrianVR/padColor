@@ -28,7 +28,7 @@ class ImportPayment extends Model implements HasMedia
             ->logFillable()
             ->logOnlyDirty()
             // Personalizamos la descripción para los pagos
-            ->setDescriptionForEvent(fn(string $eventName) => "Un pago por la cantidad de {$this->amount} ha sido {$this->getEventAction($eventName)}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Un pago relacionado al costo <b>{$this->importCost->concept}</b> (monto: $ {$this->amount}) ha sido {$this->getEventAction($eventName)}");
     }
 
     private function getEventAction(string $eventName): string

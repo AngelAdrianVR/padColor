@@ -315,14 +315,12 @@ export default {
             this.fastForm.post(route(routeName), {
                 onSuccess: () => {
                     if (this.addingSupplier) {
-                        this.form.supplier_id = this.suppliers[this.suppliers.length - 1];
                         this.$notify({
                             title: 'Éxito',
                             message: 'Nuevo proveedor agregado',
                             type: 'success',
                         });
                     } else {
-                        this.form.customs_agent_id = this.customsAgents[this.customsAgents.length - 1];
                         this.$notify({
                             title: 'Éxito',
                             message: 'Nuevo agente agregado',

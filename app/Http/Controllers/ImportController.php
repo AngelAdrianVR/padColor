@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ImportController extends Controller
 {
@@ -157,25 +158,20 @@ class ImportController extends Controller
                 'folio' => 'IMP-' . (Import::latest('id')->first()?->id + 1),
             ]);
 
-            // 4. Adjuntar los productos a la importación (tabla pivote)
+            // 4. Adjuntar los productos a la importación (tabla pivote) y documentos
             foreach ($validatedData['products'] as $product) {
-                $import->rawMaterials()->attach($product['raw_material_id'], [
-                    'quantity' => $product['quantity'],
-                    'unit_cost' => $product['unit_cost'],
-                ]);
+                $rawMaterial = RawMaterial::find($product['raw_material_id']);
+                $this->attachRawMaterial(new Request($product), $import, $rawMaterial);
             }
 
-            // 5. Adjuntar los documentos usando Spatie Media Library
             if ($request->has('documents')) {
                 foreach ($request->documents as $document) {
-                    $import->addMedia($document['file'])
-                        // Usamos la clasificación como el nombre de la colección
-                        ->toMediaCollection($document['classification']);
+                    $this->storeDocument(new Request($document), $import);
                 }
             }
         });
 
-        // 6. Redirigir al índice
+        // 5. Redirigir al índice
         return redirect()->route('imports.index');
     }
 
@@ -240,44 +236,64 @@ class ImportController extends Controller
         ]);
 
         DB::transaction(function () use ($validatedData, $request, $import) {
+            $import->update($request->except('products', 'new_documents', 'documents_to_delete'));
 
-            // 2. Actualizar los datos principales de la importación
-            $import->update([
-                'supplier_id' => $validatedData['supplier_id'],
-                'customs_agent_id' => $validatedData['customs_agent_id'],
-                'incoterm' => $validatedData['incoterm'],
-                'estimated_ship_date' => $validatedData['estimated_ship_date'],
-                'estimated_arrival_date' => $validatedData['estimated_arrival_date'],
-                'notes' => $validatedData['notes'],
-            ]);
+            $newProductsData = collect($validatedData['products'])->keyBy('raw_material_id');
+            $currentProducts = $import->rawMaterials()->get()->keyBy('id');
 
-
-            // 3. Sincronizar los productos
-            // Preparamos el array para el método sync()
-            $productsToSync = [];
-            foreach ($validatedData['products'] as $product) {
-                $productsToSync[$product['raw_material_id']] = [
-                    'quantity' => $product['quantity'],
-                    'unit_cost' => $product['unit_cost'],
-                ];
+            // 1. Desvincular productos que ya no están en la lista
+            $idsToDetach = $currentProducts->keys()->diff($newProductsData->keys());
+            foreach ($idsToDetach as $id) {
+                $this->detachRawMaterial($import, $currentProducts[$id]);
             }
-            $import->rawMaterials()->sync($productsToSync);
 
-            // 4. Eliminar los documentos marcados para borrado
+            // 2. Vincular nuevos productos y actualizar los existentes
+            foreach ($newProductsData as $id => $productData) {
+                $rawMaterial = RawMaterial::find($id);
+                if ($currentProducts->has($id)) {
+                    // El producto ya existe, verificar si hay cambios
+                    $pivot = $currentProducts[$id]->pivot;
+                    if ($pivot->quantity != $productData['quantity'] || $pivot->unit_cost != $productData['unit_cost']) {
+                        $this->updateRawMaterial($import, $rawMaterial, $productData, $pivot);
+                    }
+                } else {
+                    // Es un producto nuevo, vincularlo
+                    $this->attachRawMaterial(new Request($productData), $import, $rawMaterial);
+                }
+            }
+
+            // --- Lógica para documentos ---
             if (!empty($validatedData['documents_to_delete'])) {
-                $import->media()->whereIn('id', $validatedData['documents_to_delete'])->delete();
+                $mediaItems = Media::find($validatedData['documents_to_delete']);
+                foreach ($mediaItems as $mediaItem) {
+                    $this->destroyDocument($mediaItem);
+                }
             }
 
-            // 5. Adjuntar los nuevos documentos
             if ($request->has('new_documents')) {
                 foreach ($request->new_documents as $document) {
-                    $import->addMedia($document['file'])
-                        ->toMediaCollection($document['classification']);
+                    $this->storeDocument(new Request($document), $import);
                 }
             }
         });
 
         return redirect()->route('imports.index');
+    }
+
+    public function updateRawMaterial(Import $import, RawMaterial $rawMaterial, array $newData, $oldPivot)
+    {
+        $import->rawMaterials()->updateExistingPivot($rawMaterial->id, [
+            'quantity' => $newData['quantity'],
+            'unit_cost' => $newData['unit_cost'],
+        ]);
+
+        activity()->performedOn($import)->causedBy(auth()->user())
+            ->withProperties([
+                'materia_prima' => $rawMaterial->name,
+                'old' => ['cantidad' => $oldPivot->quantity, 'costo_unitario' => $oldPivot->unit_cost],
+                'new' => ['cantidad' => $newData['quantity'], 'costo_unitario' => $newData['unit_cost']]
+            ])
+            ->log('actualizó la materia prima');
     }
 
     public function destroy(Import $import)
@@ -320,7 +336,7 @@ class ImportController extends Controller
             'pendent_amount' => $validatedData['amount'], // El saldo pendiente inicial es el monto total
         ]);
 
-        return back()->with('success', 'Costo registrado correctamente.');
+        return back();
     }
 
     public function storePayment(Request $request, Import $import)
@@ -361,11 +377,12 @@ class ImportController extends Controller
     public function destroyCost(ImportCost $cost)
     {
         DB::transaction(function () use ($cost) {
-            // Si el costo tiene pagos, se eliminan primero.
-            // Si tienes onDelete('cascade') en tu migración, esto es redundante pero seguro.
-            // $cost->payments()->delete();
+            activity()
+                ->performedOn($cost->import)
+                ->event('deleted')->causedBy(auth()->user())
+                ->withProperties(['import_cost' => $cost->concept, 'amount' => $cost->amount, 'payments' => $cost->payments])
+                ->log('eliminó un costo');
 
-            // Eliminar el costo
             $cost->delete();
         });
 
@@ -384,8 +401,52 @@ class ImportController extends Controller
 
             // Eliminar el pago
             $payment->delete();
+
+            activity()
+                ->performedOn($payment->importCost->import)
+                ->event('deleted')->causedBy(auth()->user())
+                ->withProperties(['import_cost' => $payment->importCost->concept, 'amount' => $payment->amount])
+                ->log('eliminó un pago');
         });
 
         return back();
+    }
+
+    public function attachRawMaterial(Request $request, Import $import, RawMaterial $rawMaterial = null)
+    {
+        $rawMaterial = $rawMaterial ?? RawMaterial::find($request->raw_material_id);
+        $import->rawMaterials()->attach($rawMaterial->id, [
+            'quantity' => $request->quantity,
+            'unit_cost' => $request->unit_cost,
+        ]);
+
+        // no registrar esta actividad si recién se creó la importación
+        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {   
+            activity()->performedOn($import)->event('created')->causedBy(auth()->user())->withProperties(['materia_prima' => $rawMaterial->name, 'cantidad' => $request->quantity])->log('agregó la materia prima');
+        }
+    }
+
+    public function detachRawMaterial(Import $import, RawMaterial $rawMaterial)
+    {
+        $import->rawMaterials()->detach($rawMaterial->id);
+        activity()->performedOn($import)->event('deleted')->causedBy(auth()->user())->withProperties(['materia_prima' => $rawMaterial->name])->log('eliminó la materia prima');
+        return back()->with('success', 'Materia prima eliminada.');
+    }
+
+    public function storeDocument(Request $request, Import $import)
+    {
+        $media = $import->addMedia($request->file)->toMediaCollection($request->classification);
+        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {   
+            activity()->performedOn($import)->event('created')->causedBy(auth()->user())->withProperties(['documento' => $media->file_name, 'clasificacion' => $request->classification])->log('adjuntó el documento');
+        }
+    }
+
+    public function destroyDocument(Media $media)
+    {
+        $import = $media->model;
+        $documentName = $media->file_name;
+        $media->delete();
+        activity()->performedOn($import)->event('deleted')->causedBy(auth()->user())->withProperties(['documento' => $documentName])->log('eliminó el documento');
+        return back()->with('success', 'Documento eliminado.');
     }
 }

@@ -27,7 +27,7 @@ class ImportCost extends Model
             ->logFillable()
             ->logOnlyDirty()
             // Personalizamos la descripción para los costos
-            ->setDescriptionForEvent(fn(string $eventName) => "El costo \"{$this->concept}\" ha sido {$this->getEventAction($eventName)}");
+            ->setDescriptionForEvent(fn(string $eventName) => "El costo <b>{$this->concept}</b> ha sido {$this->getEventAction($eventName)} (monto: $ {$this->amount})");
     }
 
     private function getEventAction(string $eventName): string
