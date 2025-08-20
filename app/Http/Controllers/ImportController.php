@@ -23,8 +23,8 @@ class ImportController extends Controller
             'dates.*' => 'nullable|date_format:Y-m-d',
         ]);
 
-        // 2. Construimos la consulta a la base de datos
-        $importsQuery = Import::with('supplier', 'customsAgent', 'user');
+        // 2. Construimos la consulta, añadiendo 'media' para cargar los archivos
+        $importsQuery = Import::with('supplier', 'customsAgent', 'user', 'rawMaterials', 'media', 'costs.payments');
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
@@ -36,23 +36,50 @@ class ImportController extends Controller
         });
 
         $importsQuery->when($request->filled('dates'), function ($query) use ($request) {
-            // Aseguramos que la fecha final incluya todo el día
             $startDate = $request->dates[0];
             $endDate = $request->dates[1] . ' 23:59:59';
             $query->whereBetween('created_at', [$startDate, $endDate]);
         });
 
-        // 4. Ejecutamos la consulta y agrupamos por estado para el Kanban
-        $imports = $importsQuery->get()->groupBy('status');
+        // 4. Ejecutamos la consulta
+        $importsCollection = $importsQuery->get();
 
-        // 5. Obtenemos los proveedores para el dropdown del filtro
+        // 5. Formateamos los documentos para cada importación
+        $importsCollection->each(function ($import) {
+            $import->documents = $import->getMedia('*')->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'size' => $media->size,
+                    'original_url' => $media->getUrl(),
+                    'classification' => $media->collection_name,
+                ];
+            });
+        });
+
+        $importsCollection->each(function ($import) {
+            // Verificamos si la relación 'costs' fue cargada y no está vacía
+            if ($import->relationLoaded('costs') && $import->costs) {
+                $import->costs->each(function ($cost) {
+                    // La relación 'payments' ya fue cargada por el with()
+                    // Sumamos el campo 'amount' de la colección de pagos
+                    // y lo añadimos como un nuevo atributo al objeto de costo.
+                    $cost->payments_sum_amount = $cost->payments->sum('amount');
+                });
+            }
+        });
+
+        // 6. Agrupamos por estado para el Kanban
+        $imports = $importsCollection->groupBy('status');
+
+        // 7. Obtenemos los proveedores para el dropdown del filtro
         $suppliers = Supplier::all(['id', 'name']);
 
-        // 6. Renderizamos la vista de Inertia, pasando los datos y los filtros actuales
-        return Inertia::render('Import/Index', [
+        // 8. Renderizamos la vista de Inertia
+        return Inertia::render('Import/Index', [ // Asegúrate que la ruta sea 'Imports/Index'
             'imports' => $imports,
             'suppliers' => $suppliers,
-            'filters' => $request->only(['search', 'supplier', 'dates']), // Devolvemos los filtros para mantener el estado en la UI
+            'filters' => $request->only(['search', 'supplier', 'dates']),
         ]);
     }
 
@@ -84,7 +111,6 @@ class ImportController extends Controller
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_cost' => 'required|numeric|min:0.01',
-            'products.*.currency' => 'required|string|in:USD,MXN',
             'documents' => 'nullable|array',
             'documents.*.file' => 'required|file|max:10240', // max 10MB
             'documents.*.classification' => 'required|string',
@@ -102,7 +128,7 @@ class ImportController extends Controller
                 'estimated_arrival_date' => $validatedData['estimated_arrival_date'],
                 'notes' => $validatedData['notes'],
                 'user_id' => auth()->id(), // Asignar el usuario que la crea
-                'status' => 'proveedor', // Estado inicial del Kanban
+                'status' => 'Con proveedor', // Estado inicial del Kanban
                 // Generar un folio único. Puedes personalizar esta lógica.
                 'folio' => 'IMP-' . (Import::latest('id')->first()?->id + 1),
             ]);
@@ -112,7 +138,6 @@ class ImportController extends Controller
                 $import->rawMaterials()->attach($product['raw_material_id'], [
                     'quantity' => $product['quantity'],
                     'unit_cost' => $product['unit_cost'],
-                    'currency' => $product['currency'],
                 ]);
             }
 
@@ -210,7 +235,6 @@ class ImportController extends Controller
                 $productsToSync[$product['raw_material_id']] = [
                     'quantity' => $product['quantity'],
                     'unit_cost' => $product['unit_cost'],
-                    // 'currency' => $product['currency'],
                 ];
             }
             $import->rawMaterials()->sync($productsToSync);
@@ -237,19 +261,12 @@ class ImportController extends Controller
         //
     }
 
-    /**
-     * Actualiza el estado de una importación desde el tablero Kanban.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Import  $import
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function updateStatus(Request $request, Import $import)
     {
         // 1. Validación
         // Nos aseguramos de que el 'status' enviado sea uno de los valores permitidos.
         $request->validate([
-            'status' => 'required|in:proveedor,puerto_origen,mar,puerto_destino,entregado',
+            'status' => 'required|in:Con proveedor,Puerto origen,En tránsito marítimo,Puerto destino,Entregado',
         ]);
 
         // 2. Actualización del Modelo
@@ -262,5 +279,58 @@ class ImportController extends Controller
         // Inertia se encargará de recargar las props (la lista de importaciones)
         // para que el cambio se refleje visualmente.
         return back();
+    }
+
+    public function storeCost(Request $request, Import $import)
+    {
+        $validatedData = $request->validate([
+            'concept' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'currency' => 'required|string|in:USD,MXN',
+        ]);
+
+        $import->costs()->create([
+            'concept' => $validatedData['concept'],
+            'amount' => $validatedData['amount'],
+            'currency' => $validatedData['currency'],
+            'pendent_amount' => $validatedData['amount'], // El saldo pendiente inicial es el monto total
+        ]);
+
+        return back()->with('success', 'Costo registrado correctamente.');
+    }
+
+    public function storePayment(Request $request, Import $import)
+    {
+        $validatedData = $request->validate([
+            'import_cost_id' => 'required|exists:import_costs,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'notes' => 'nullable|string',
+            'document' => 'nullable|file|max:10240', // max 10MB
+        ]);
+
+        // Nos aseguramos que el costo pertenezca a la importación actual para mayor seguridad
+        $cost = $import->costs()->findOrFail($validatedData['import_cost_id']);
+
+        DB::transaction(function () use ($validatedData, $cost, $request) {
+            // 1. Crear el pago
+            $payment = $cost->payments()->create([
+                'amount' => $validatedData['amount'],
+                'payment_date' => $validatedData['payment_date'],
+                'notes' => $validatedData['notes'],
+            ]);
+
+            // 2. Actualizar el saldo pendiente del costo
+            $cost->update([
+                'pendent_amount' => $cost->pendent_amount - $validatedData['amount'],
+            ]);
+
+            // 3. Si hay un documento, adjuntarlo al pago
+            if ($request->hasFile('document')) {
+                $payment->addMediaFromRequest('document')->toMediaCollection('payment_vouchers');
+            }
+        });
+
+        return back()->with('success', 'Pago registrado correctamente.');
     }
 }

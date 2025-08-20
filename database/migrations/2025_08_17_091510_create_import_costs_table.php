@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('import_id')->constrained('imports')->onDelete('cascade');
             $table->string('concept');
-            $table->decimal('amount', 10, 2);
+            $table->decimal('amount', 11, 2);
+            $table->decimal('pendent_amount', 11, 2);
             $table->string('currency', 3)->default('USD');
             $table->timestamps();
         });

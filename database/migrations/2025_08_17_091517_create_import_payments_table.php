@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('import_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('import_id')->constrained('imports')->onDelete('cascade');
+            $table->foreignId('import_cost_id')->constrained('import_costs')->onDelete('cascade');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
             $table->text('notes')->nullable();

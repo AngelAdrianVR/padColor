@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->string('incoterm')->nullable();
             $table->string('status')->default('proveedor')->index();
+            $table->string('currency')->default('USD');
 
             $table->date('estimated_ship_date')->nullable();
             $table->date('estimated_arrival_date')->nullable();

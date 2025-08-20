@@ -185,5 +185,8 @@ return [
         'material' => 'material',
         'varnish' => 'con barniz',
         'varnish_type' => 'tipo de barniz',
+        'products' => 'productos',
+        'concept' => 'concepto',
+        'amount' => 'monto',
     ],
 ];

@@ -65,6 +65,13 @@
                             placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                         <InputError :message="form.errors.estimated_arrival_date" />
                     </div>
+                    <div>
+                        <InputLabel value="Moneda" />
+                        <el-select v-model="form.currency" placeholder="Moneda">
+                            <el-option label="USD" value="USD" />
+                            <el-option label="MXN" value="MXN" />
+                        </el-select>
+                    </div>
                     <div class="col-span-full">
                         <InputLabel value="Notas" />
                         <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
@@ -73,19 +80,19 @@
                     </div>
                 </div>
 
-                <!-- Sección: Productos -->
+                <!-- Sección: Materias primas -->
                 <div class="flex items-center justify-between col-span-full my-5 pt-3 border-t">
-                    <h2 class="text-gray-600 font-bold">Productos</h2>
+                    <h2 class="text-gray-600 font-bold">Materias primas</h2>
                     <PrimaryButton @click="addProduct" type="button"
                         class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
                         <PlusIcon class="h-4 w-4 mr-1 inline" />
-                        Agregar producto
+                        Agregar materia prima
                     </PrimaryButton>
                 </div>
                 <div v-for="(product, index) in form.products" :key="index" class="flex items-end space-x-3 mb-3">
                     <div class="flex-grow">
-                        <InputLabel value="Producto *" />
-                        <el-select v-model="product.raw_material_id" placeholder="Busca el producto" class="!w-full"
+                        <InputLabel value="Materia prima *" />
+                        <el-select v-model="product.raw_material_id" placeholder="Busca el artículo" class="!w-full"
                             filterable>
                             <el-option v-for="item in rawMaterials" :key="item.id" :label="item.name"
                                 :value="item.id" />
@@ -102,12 +109,12 @@
                             <template #prepend>$</template>
                         </el-input>
                     </div>
-                    <div style="width: 100px;">
-                        <InputLabel value="Moneda" />
-                        <el-select v-model="product.currency" placeholder="Moneda">
-                            <el-option label="USD" value="USD" />
-                            <el-option label="MXN" value="MXN" />
-                        </el-select>
+                    <div style="width: 150px;">
+                        <InputLabel value="Total" />
+                        <p class="ml-3">
+                            ${{ (product.unit_cost * product.quantity)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }}
+                        </p>
                     </div>
                     <el-popconfirm title="¿Eliminar producto?" @confirm="removeProduct(index)" confirm-button-text="Sí"
                         icon-color="#373737" cancel-button-text="No">
@@ -273,6 +280,7 @@ export default {
             estimated_ship_date: this.import.estimated_ship_date,
             estimated_arrival_date: this.import.estimated_arrival_date,
             notes: this.import.notes,
+            currency: this.import.currency,
             products: this.import.products || [],
             documents: this.import.documents || [], // Documentos existentes
             new_documents: [], // Nuevos documentos a subir
@@ -325,7 +333,7 @@ export default {
             });
         },
         addProduct() {
-            this.form.products.push({ raw_material_id: null, quantity: 1, unit_cost: null, currency: 'USD' });
+            this.form.products.push({ raw_material_id: null, quantity: 1, unit_cost: null });
         },
         removeProduct(index) {
             this.form.products.splice(index, 1);

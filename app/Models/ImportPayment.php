@@ -4,16 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class ImportPayment extends Model implements HasMedia
+class ImportPayment extends Model
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory;
+
+    protected $table = 'import_payments';
 
     protected $fillable = [
-        'import_id',
+        'import_cost_id',
         'amount',
         'payment_date',
         'notes',
@@ -23,8 +22,8 @@ class ImportPayment extends Model implements HasMedia
         'payment_date' => 'date',
     ];
 
-    public function import(): BelongsTo
+    public function importCost()
     {
-        return $this->belongsTo(Import::class);
+        return $this->belongsTo(ImportCost::class);
     }
 }

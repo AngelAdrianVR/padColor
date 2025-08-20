@@ -46,7 +46,7 @@
                 <div class="max-w-full mx-auto sm:px-6 lg:px-8">
                     <div class="grid grid-cols-5 gap-2">
                         <!-- Iteramos sobre las columnas definidas en 'data' -->
-                        <div v-for="column in columns" :key="column.id"
+                        <div v-for="column in columns" :key="column.title"
                             class="rounded-[10px] p-2 transition-colors duration-300 border"
                             :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : column.borderColor, }">
                             <!-- Encabezado de la columna -->
@@ -57,13 +57,13 @@
                                     <h3 class="font-bold">{{ column.title }}</h3>
                                 </div>
                                 <span class="font-semibold px-2 py-1">
-                                    {{ (localImports[column.id] || []).length }}
+                                    {{ (localImports[column.title] || []).length }}
                                 </span>
                             </div>
 
                             <!-- Zona de Arrastre (Draggable) -->
-                            <draggable :list="localImports[column.id] || []" group="imports" @add="handleDrop"
-                                @start="isDragging = true" @end="isDragging = false" :animation="300" :id="column.id"
+                            <draggable :list="localImports[column.title] || []" group="imports" @add="handleDrop"
+                                @start="isDragging = true" @end="isDragging = false" :animation="300" :id="column.title"
                                 item-key="id" class="space-y-2 min-h-[60vh]">
                                 <template #item="{ element }">
                                     <div @click="showDetails(element)"
@@ -104,7 +104,7 @@
         </AppLayout>
         <!-- Integración del Modal de Detalles -->
         <ImportDetails v-if="selectedImport" :show="showDetailsModal" :import-data="selectedImport"
-            @close="showDetailsModal = false" />
+            @close="showDetailsModal = false" @reload="reloadData" />
     </div>
 </template>
 
@@ -161,16 +161,44 @@ export default {
                 dates: this.filters.dates || [],
             },
             columns: [
-                { id: 'proveedor', title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#D9D9D9' },
-                { id: 'puerto_origen', title: 'Puerto Origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#FFFB7B' },
-                { id: 'mar', title: 'En tránsito Marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#FDD192' },
-                { id: 'puerto_destino', title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#A5CCFE' },
-                { id: 'entregado', title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#84FC59' },
+                { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#D9D9D9' },
+                { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#FFFB7B' },
+                { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#FDD192' },
+                { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#A5CCFE' },
+                { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#84FC59' },
             ],
             localImports: {}, // Se inicializa vacío y se llena en 'created'
         };
     },
     methods: {
+        reloadData() {
+            const selectedId = this.selectedImport.id;
+
+            router.reload({
+                only: ['imports'], // Recarga solo la prop 'imports'
+                preserveState: true,
+                onSuccess: (page) => {
+                    // Una vez que Inertia trae los datos frescos...
+                    const updatedImports = page.props.imports;
+                    let foundImport = null;
+
+                    // Buscamos la importación actualizada dentro de los grupos de estado
+                    for (const status in updatedImports) {
+                        const found = updatedImports[status].find(imp => imp.id === selectedId);
+                        if (found) {
+                            foundImport = found;
+                            break;
+                        }
+                    }
+
+                    // Si la encontramos, actualizamos el estado.
+                    // Vue se encargará de pasar la nueva información al modal.
+                    if (foundImport) {
+                        this.selectedImport = foundImport;
+                    }
+                }
+            });
+        },
         showDetails(importData) {
             this.selectedImport = importData;
             this.showDetailsModal = true;
@@ -199,10 +227,10 @@ export default {
             const localData = {};
             // Nos aseguramos de que todas las columnas existan en localImports
             this.columns.forEach(column => {
-                if (importsData[column.id]) {
-                    localData[column.id] = JSON.parse(JSON.stringify(importsData[column.id]));
+                if (importsData[column.title]) {
+                    localData[column.title] = JSON.parse(JSON.stringify(importsData[column.title]));
                 } else {
-                    localData[column.id] = [];
+                    localData[column.title] = [];
                 }
             });
             this.localImports = localData;
