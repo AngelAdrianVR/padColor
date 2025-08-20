@@ -44,7 +44,7 @@ class Import extends Model implements HasMedia
         return LogOptions::defaults()
             ->logFillable() // Loguea todos los campos en $fillable
             ->logOnlyDirty() // Solo loguea si hay cambios
-            ->setDescriptionForEvent(fn(string $eventName) => "La importación con folio {$this->folio} ha sido {$this->getEventAction($eventName)}");
+            ->setDescriptionForEvent(fn(string $eventName) => "La importación con folio {$this->id} ha sido {$this->getEventAction($eventName)}");
     }
 
     private function getEventAction(string $eventName): string

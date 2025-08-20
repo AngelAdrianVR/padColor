@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomsAgent;
 use App\Models\Import;
+use App\Models\ImportCost;
+use App\Models\ImportPayment;
 use App\Models\RawMaterial;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Spatie\Activitylog\Models\Activity;
 
 class ImportController extends Controller
 {
@@ -24,7 +27,7 @@ class ImportController extends Controller
         ]);
 
         // 2. Construimos la consulta, añadiendo 'media' para cargar los archivos
-        $importsQuery = Import::with('supplier', 'customsAgent', 'user', 'rawMaterials', 'media', 'costs.payments');
+        $importsQuery = Import::with('supplier', 'customsAgent', 'user', 'rawMaterials', 'media', 'costs.payments.media', 'activities.causer');
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
@@ -55,9 +58,7 @@ class ImportController extends Controller
                     'classification' => $media->collection_name,
                 ];
             });
-        });
 
-        $importsCollection->each(function ($import) {
             // Verificamos si la relación 'costs' fue cargada y no está vacía
             if ($import->relationLoaded('costs') && $import->costs) {
                 $import->costs->each(function ($cost) {
@@ -67,6 +68,29 @@ class ImportController extends Controller
                     $cost->payments_sum_amount = $cost->payments->sum('amount');
                 });
             }
+
+            $costIds = $import->costs->pluck('id');
+            $paymentIds = $import->costs->flatMap(fn($cost) => $cost->payments->pluck('id'));
+
+            $importActivities = $import->activities()->with('causer')->get();
+            $costActivities = Activity::whereIn('subject_id', $costIds)->where('subject_type', \App\Models\ImportCost::class)->with('causer')->get();
+            $paymentActivities = Activity::whereIn('subject_id', $paymentIds)->where('subject_type', \App\Models\ImportPayment::class)->with('causer')->get();
+
+            $fullHistory = $importActivities->merge($costActivities)->merge($paymentActivities)->sortByDesc('created_at');
+
+            $import->history = $fullHistory->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'log_message' => $activity->description, // La descripción completa del modelo
+                    'event' => $activity->event, // El evento crudo: 'created', 'updated', 'deleted'
+                    'properties' => $activity->properties,
+                    'causer' => $activity->causer ? [
+                        'name' => $activity->causer->name,
+                        'avatar' => $activity->causer->profile_photo_url,
+                    ] : ['name' => 'Sistema', 'avatar' => null],
+                    'created_at' => $activity->created_at->toDateTimeString(),
+                ];
+            })->values();
         });
 
         // 6. Agrupamos por estado para el Kanban
@@ -76,7 +100,7 @@ class ImportController extends Controller
         $suppliers = Supplier::all(['id', 'name']);
 
         // 8. Renderizamos la vista de Inertia
-        return Inertia::render('Import/Index', [ // Asegúrate que la ruta sea 'Imports/Index'
+        return Inertia::render('Import/Index', [
             'imports' => $imports,
             'suppliers' => $suppliers,
             'filters' => $request->only(['search', 'supplier', 'dates']),
@@ -331,6 +355,37 @@ class ImportController extends Controller
             }
         });
 
-        return back()->with('success', 'Pago registrado correctamente.');
+        return back();
+    }
+
+    public function destroyCost(ImportCost $cost)
+    {
+        DB::transaction(function () use ($cost) {
+            // Si el costo tiene pagos, se eliminan primero.
+            // Si tienes onDelete('cascade') en tu migración, esto es redundante pero seguro.
+            // $cost->payments()->delete();
+
+            // Eliminar el costo
+            $cost->delete();
+        });
+
+        return back();
+    }
+
+    public function destroyPayment(ImportPayment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $cost = $payment->importCost;
+
+            // Actualizar el saldo pendiente del costo sumando el monto del pago eliminado
+            $cost->update([
+                'pendent_amount' => $cost->pendent_amount + $payment->amount,
+            ]);
+
+            // Eliminar el pago
+            $payment->delete();
+        });
+
+        return back();
     }
 }

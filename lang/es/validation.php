@@ -188,5 +188,6 @@ return [
         'products' => 'productos',
         'concept' => 'concepto',
         'amount' => 'monto',
+        'import_cost_id' => 'costo relacionado',
     ],
 ];

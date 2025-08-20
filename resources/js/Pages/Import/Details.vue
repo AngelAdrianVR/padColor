@@ -16,7 +16,7 @@
                     </p>
                 </div>
                 <PrimaryButton @click="editImport"
-                    class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
+                    class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                     <PencilIcon class="size-4 inline mr-1" />
                     Editar
                 </PrimaryButton>
@@ -76,9 +76,9 @@
                             <span class="text-right">Total</span>
                         </div>
                         <div v-for="product in importData.raw_materials" :key="product.id"
-                            class="grid grid-cols-4 px-4 py-3 border-b text-sm">
+                            class="grid grid-cols-4 px-4 py-2 border-b text-[11px]">
                             <div class="flex items-center space-x-2">
-                                <PhotoIcon class="h-8 w-8 text-gray-300" />
+                                <!-- <PhotoIcon class="size-8 text-gray-300" /> -->
                                 <span>{{ product.name }}</span>
                             </div>
                             <span class="text-right self-center">{{ product.pivot.quantity }} {{ product.measure_unit
@@ -87,7 +87,7 @@
                             <span class="text-right self-center font-semibold">{{ formatCurrency(product.pivot.quantity
                                 * product.pivot.unit_cost) }}</span>
                         </div>
-                        <div class="grid grid-cols-4 px-4 py-3 bg-gray-50 text-sm font-semibold">
+                        <div class="grid grid-cols-4 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
                             <span class="col-span-3 text-right">Total</span>
                             <span class="text-right">{{ formatCurrency(merchandiseTotal) }}</span>
                         </div>
@@ -101,21 +101,21 @@
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800">Costos</h3>
                             <PrimaryButton @click="openCostModal" type="button"
-                                class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
+                                class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                                 <PlusIcon class="size-4 inline mr-1" />
                                 Registrar costo
                             </PrimaryButton>
                         </div>
                         <div class="border rounded-lg">
                             <div
-                                class="grid grid-cols-4 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
+                                class="grid grid-cols-5 px-2 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
                                 <span>Concepto</span>
                                 <span class="text-right">Cantidad</span>
                                 <span class="text-right">Monto pagado</span>
                                 <span class="text-right">Saldo pendiente</span>
                             </div>
                             <div v-for="cost in importData.costs" :key="cost.id"
-                                class="grid grid-cols-4 px-4 py-3 border-b text-sm items-center">
+                                class="grid grid-cols-5 px-2 py-1 border-b text-[11px] items-center">
                                 <span>{{ cost.concept }}</span>
                                 <span class="text-right">{{ formatCurrency(cost.amount, cost.currency) }}</span>
                                 <span class="text-right">{{ formatCurrency(cost.payments_sum_amount, cost.currency)
@@ -124,8 +124,19 @@
                                     :class="cost.amount - cost.payments_sum_amount > 0 ? 'text-[#C20000]' : null">
                                     {{ formatCurrency(cost.amount - cost.payments_sum_amount, cost.currency) }}
                                 </span>
+                                <div class="flex justify-end">
+                                    <el-popconfirm title="¿Eliminar costo?" @confirm="deleteCost(cost.id)"
+                                        confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
+                                        <template #reference>
+                                            <button type="button"
+                                                class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center mb-1">
+                                                <TrashIcon class="size-4" />
+                                            </button>
+                                        </template>
+                                    </el-popconfirm>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-4 px-4 py-3 bg-gray-50 text-sm font-semibold">
+                            <div class="grid grid-cols-5 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
                                 <span class="col-span-3 text-right">Total</span>
                                 <span class="text-right">{{ formatCurrency(totalCosts) }}</span>
                             </div>
@@ -135,7 +146,7 @@
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800">Pagos realizados</h3>
                             <PrimaryButton @click="openPaymentModal" type="button"
-                                class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
+                                class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                                 <PlusIcon class="size-4 inline mr-1" />
                                 Registrar pago
                             </PrimaryButton>
@@ -143,34 +154,80 @@
                         <div class="border rounded-lg">
                             <!-- Encabezado -->
                             <div
-                                class="grid grid-cols-5 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
+                                class="grid grid-cols-6 px-2 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
                                 <span>Fecha</span>
                                 <span>Monto</span>
                                 <span>Concepto relacionado</span>
                                 <span>Notas</span>
-                                <span>Documento vinculado</span>
+                                <span class="ml-2">Documento vinculado</span>
+                                <span></span>
                             </div>
                             <!-- Filas de Pagos -->
                             <template v-for="cost in importData.costs" :key="cost.id">
                                 <div v-for="payment in cost.payments" :key="payment.id"
-                                    class="grid grid-cols-5 px-4 py-3 border-b text-sm items-center">
+                                    class="grid grid-cols-6 px-2 py-1 border-b text-[11px] items-center">
                                     <span>{{ formatDate(payment.payment_date) }}</span>
-                                    <span>{{ formatCurrency(payment.amount, cost.currency)
-                                    }}</span>
+                                    <span>
+                                        {{ formatCurrency(payment.amount, cost.currency) }}
+                                    </span>
                                     <span>{{ cost.concept }}</span>
-                                    <span class="text-gray-500 truncate">{{ payment.notes }}</span>
-                                    <a href="#" class="text-blue-500 hover:underline">Factura_PROV_1122.pdf</a>
+                                    <span class="text-gray-500 truncate" :title="payment.notes">{{ payment.notes
+                                        }}</span>
+                                    <a v-if="payment.media.length" :href="payment.media[0].original_url" target="_blank"
+                                        class="text-primary hover:underline ml-2">{{ payment.media[0].file_name }}</a>
+                                    <span v-else class="ml-2">-</span>
+                                    <div class="flex justify-end">
+                                        <el-popconfirm title="¿Eliminar pago?" @confirm="deletePayment(payment.id)"
+                                            confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
+                                            <template #reference>
+                                                <button type="button"
+                                                    class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center mb-1">
+                                                    <TrashIcon class="size-4" />
+                                                </button>
+                                            </template>
+                                        </el-popconfirm>
+                                    </div>
                                 </div>
                             </template>
                         </div>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="Historial" name="history">
-                    <p class="text-gray-500 p-4">Sección de historial en construcción.</p>
+                    <div v-if="importData.history && importData.history.length" class="relative pl-8">
+                        <!-- Línea vertical de la línea de tiempo -->
+                        <div class="absolute left-0 top-0 h-full border-l-2 border-gray-200 ml-[15px]"></div>
+
+                        <!-- Items del historial -->
+                        <div v-for="activity in importData.history" :key="activity.id" class="relative mb-8">
+                            <!-- Avatar y Icono -->
+                            <div class="absolute -left-2 top-0 flex items-center">
+                                <img :src="activity.causer.avatar" :alt="activity.causer.name"
+                                    class="h-8 w-8 rounded-full ring-2 ring-white">
+                                <div class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
+                                    :class="getActivityIcon(activity).bgColor">
+                                    <component :is="getActivityIcon(activity).icon" class="h-3 w-3 text-white" />
+                                </div>
+                            </div>
+                            <!-- Contenido del evento -->
+                            <div class="ml-12">
+                                <!-- <p class="text-sm text-gray-800">
+                                    <strong>{{ activity.causer.name }}</strong> <br>
+                                    <span>{{ activity.log_message.toLowerCase() }}</span>
+                                </p> -->
+                                <p class="text-sm text-gray-800" v-html="formatActivityDescription(activity)"></p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ formatRelativeTime(activity.created_at) }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center text-gray-500 p-4">
+                        <p>No hay historial de actividades para esta importación.</p>
+                    </div>
                 </el-tab-pane>
             </el-tabs>
         </template>
     </DialogModal>
+
     <DialogModal :show="showCostModal" @close="showCostModal = false">
         <template #title>
             Agregar costo
@@ -208,7 +265,6 @@
             </PrimaryButton>
         </template>
     </DialogModal>
-
     <!-- Modal para Registrar Pago -->
     <DialogModal :show="showPaymentModal" @close="showPaymentModal = false">
         <template #title>
@@ -219,17 +275,17 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-full">
                     <InputLabel value="Costo relacionado*" />
-                    <el-select v-model="paymentForm.import_cost_id" placeholder="Selecciona el concepto del costo"
-                        class="!w-full">
-                        <el-option v-for="cost in importData.costs" :key="cost.id" :label="cost.concept"
-                            :value="cost.id" />
+                    <el-select v-model="paymentForm.import_cost_id" @change="handleImportCostChange"
+                        placeholder="Selecciona el concepto del costo" class="!w-full">
+                        <el-option v-for="cost in importData.costs" :key="cost.id" :disabled="cost.pendent_amount <= 0"
+                            :label="cost.concept" :value="cost.id" />
                     </el-select>
                     <InputError :message="paymentForm.errors.import_cost_id" />
                 </div>
                 <div>
                     <InputLabel value="Monto del pago*" />
                     <el-input v-model="paymentForm.amount" placeholder="Ej. 7,000.00">
-                        <template #append>USD</template> <!-- Esto debería ser dinámico -->
+                        <template #append>{{ importData.currency }}</template>
                     </el-input>
                     <InputError :message="paymentForm.errors.amount" />
                 </div>
@@ -246,14 +302,16 @@
                     <InputError :message="paymentForm.errors.notes" />
                 </div>
                 <div class="col-span-full">
-                    <InputLabel value="Documento" />
-                    <button @click="triggerPaymentFileInput" type="button"
-                        class="w-full mt-1 text-sm text-primary border border-gray-300 rounded-md py-2 hover:bg-gray-50">
-                        <ArrowUpTrayIcon class="size-4 mr-1 inline" />
-                        Adjuntar comprobante de pago
-                    </button>
+                    <div class="flex items-center justify-between">
+                        <InputLabel value="Documento" />
+                        <button @click="triggerPaymentFileInput" type="button"
+                            class="text-xs text-primary border border-gray-300 rounded-md py-1 px-2 hover:bg-gray-50">
+                            <ArrowUpTrayIcon class="size-4 mr-1 inline" />
+                            Adjuntar comprobante de pago
+                        </button>
+                    </div>
                     <input type="file" @change="handlePaymentFile" ref="paymentFileInput" hidden>
-                    <div v-if="paymentForm.document" class="mt-2">
+                    <div v-if="paymentForm.document" class="grid grid-cols-1 lg:grid-cols-2 mt-2">
                         <FileView :file="{ file_name: paymentForm.document.name, size: paymentForm.document.size }"
                             can-delete @delete-file="paymentForm.document = null" />
                     </div>
@@ -276,7 +334,9 @@ import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import { markRaw } from 'vue';
 import DialogModal from '@/Components/DialogModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { ArchiveBoxIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline';
+import {
+    ArchiveBoxIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, PencilSquareIcon, CheckCircleIcon
+} from '@heroicons/vue/24/outline';
 import { router } from '@inertiajs/vue3';
 import AnclaIcon from '@/Components/MyComponents/Icons/AnclaIcon.vue';
 import PalomitaIcon from '@/Components/MyComponents/Icons/PalomitaIcon.vue';
@@ -285,6 +345,8 @@ import BarcoIcon from '@/Components/MyComponents/Icons/BarcoIcon.vue';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default {
     components: {
@@ -296,6 +358,8 @@ export default {
         PlusIcon,
         TrashIcon,
         ArrowUpTrayIcon,
+        PencilSquareIcon,
+        CheckCircleIcon,
         AnclaIcon,
         PalomitaIcon,
         MarkerIcon,
@@ -364,10 +428,90 @@ export default {
         }
     },
     methods: {
+        getActivityIcon(activity) {
+            const icons = {
+                created: { icon: PlusIcon, bgColor: 'bg-blue-500' },
+                updated: { icon: PencilSquareIcon, bgColor: 'bg-orange-500' },
+                deleted: { icon: TrashIcon, bgColor: 'bg-red-500' },
+            };
+            // Usamos la nueva propiedad 'event' para seleccionar el ícono
+            return icons[activity.event] || { icon: PencilIcon, bgColor: 'bg-gray-500' };
+        },
+        formatActivityDescription(activity) {
+            const causerName = `<strong>${activity.causer.name}</strong>`;
+
+            if (activity.event === 'updated' && activity.properties?.attributes && activity.properties?.old) {
+                const attributes = activity.properties.attributes;
+                const old = activity.properties.old;
+
+                // 1. Diccionario de traducciones
+                const translations = {
+                    supplier_id: 'proveedor',
+                    customs_agent_id: 'agente aduanal',
+                    incoterm: 'incoterm',
+                    estimated_ship_date: 'fecha estimada de embarque',
+                    estimated_arrival_date: 'fecha estimada de llegada (ETA)',
+                    notes: 'notas',
+                    status: 'estado',
+                    pendent_amount: 'saldo pendiente',
+                    currency: 'moneda',
+                    raw_materials: 'materia prima',
+                };
+
+                const changes = Object.keys(attributes).map(key => {
+                    // 2. Usamos la traducción; si no existe, usamos el nombre original
+                    const translatedKey = translations[key] || key.replace(/_/g, ' ');
+
+                    let oldValue = old[key] ?? '<em>vacío</em>';
+                    let newValue = attributes[key] ?? '<em>vacío</em>';
+
+                    if (key === 'status') {
+                        oldValue = `"${this.formatStatus(oldValue)}"`;
+                        newValue = `"${this.formatStatus(newValue)}"`;
+                    } else {
+                        oldValue = `"${oldValue}"`;
+                        newValue = `"${newValue}"`;
+                    }
+
+                    return `cambió <strong>${translatedKey}</strong> de ${oldValue} a ${newValue}`;
+                }).join(', ');
+
+                return `${causerName} <br> ${changes}.`;
+            }
+
+            return `${causerName} <br> ${activity.log_message.toLowerCase()}`;
+        },
+        formatRelativeTime(dateString) {
+            return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: es });
+        },
+        handleImportCostChange(val) {
+            const amountToPay = this.importData.costs.find(c => c.id == val)?.pendent_amount;
+            if (amountToPay) {
+                this.paymentForm.amount = amountToPay;
+            }
+        },
         openCostModal() {
             this.costForm.reset();
             this.costForm.import_id = this.importData.id; // Asegurarse de tener el ID
             this.showCostModal = true;
+        },
+        deleteCost(costId) {
+            router.delete(route('imports.costs.destroy', costId), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$notify({ title: 'Éxito', message: 'Costo eliminado', type: 'success' });
+                    this.$emit('reload'); // Recargar datos para reflejar el cambio
+                },
+            });
+        },
+        deletePayment(paymentId) {
+            router.delete(route('imports.payments.destroy', paymentId), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$notify({ title: 'Éxito', message: 'Pago eliminado', type: 'success' });
+                    this.$emit('reload'); // Recargar datos para reflejar el cambio
+                },
+            });
         },
         storeCost() {
             this.costForm.post(route('imports.costs.store', this.importData.id), {
@@ -414,7 +558,7 @@ export default {
         },
         formatDate(dateString) {
             if (!dateString) return 'N/A';
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(dateString).toLocaleDateString('es-ES', options);
         },
         formatStatus(status) {
