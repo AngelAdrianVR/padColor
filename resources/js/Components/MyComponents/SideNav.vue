@@ -180,6 +180,12 @@ export default {
                     active: route().current('imports.*') || route().current('suppliers.*') || route().current('customs-agents.*'),
                     options: [
                         {
+                            label: 'Kanban',
+                            route: route('imports.index'),
+                            show: true,
+                            active: route().current('imports.*'),
+                        },
+                        {
                             label: 'Proveedores',
                             route: route('suppliers.index'),
                             show: true,
