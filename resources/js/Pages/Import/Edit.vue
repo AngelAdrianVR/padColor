@@ -16,8 +16,8 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Proveedor*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = true" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear proveedores')"
+                                    @click="showFastAddModal = true; addingSupplier = true" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>
@@ -33,8 +33,8 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Agente aduanal*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = false" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear agentes aduanales')"
+                                    @click="showFastAddModal = true; addingSupplier = false" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>
@@ -253,6 +253,7 @@ import { useForm, router } from '@inertiajs/vue3';
 import { ArrowUpTrayIcon, PlusCircleIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -335,6 +336,41 @@ export default {
                 onFinish: () => {
                 }
             });
+        },
+        storeFastItem() {
+            let routeName = this.addingSupplier ? route('suppliers.store') : route('customs-agents.store');
+
+            this.fastForm.processing = true;
+
+            // Usamos axios para hacer la petición y manejar la respuesta JSON
+            axios.post(routeName, this.fastForm.data())
+                .then(response => {
+                    const newItem = response.data; // El nuevo proveedor o agente devuelto por el controlador
+
+                    if (this.addingSupplier) {
+                        // 1. Añadir el nuevo proveedor a la lista de props
+                        this.suppliers.push(newItem);
+                        // 2. Seleccionarlo automáticamente en el formulario principal
+                        this.form.supplier_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo proveedor agregado', type: 'success' });
+                    } else {
+                        this.customsAgents.push(newItem);
+                        this.form.customs_agent_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo agente agregado', type: 'success' });
+                    }
+
+                    this.showFastAddModal = false;
+                    this.fastForm.reset();
+                })
+                .catch(error => {
+                    // Manejar errores de validación
+                    if (error.response.status === 422) {
+                        this.fastForm.errors = error.response.data.errors;
+                    }
+                })
+                .finally(() => {
+                    this.fastForm.processing = false;
+                });
         },
         addProduct() {
             this.form.products.push({ raw_material_id: null, quantity: 1, unit_cost: null });

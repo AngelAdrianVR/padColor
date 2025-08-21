@@ -16,8 +16,8 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Proveedor*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = true" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear proveedores')"
+                                    @click="showFastAddModal = true; addingSupplier = true" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>
@@ -33,8 +33,8 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Agente aduanal*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = false" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear Agentes aduanales')"
+                                    @click="showFastAddModal = true; addingSupplier = false" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>

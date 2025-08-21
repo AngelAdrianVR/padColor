@@ -8,7 +8,7 @@
                 <div>
                     <h3 class="font-bold text-gray3F">{{ supplierData.name }}</h3>
                 </div>
-                <PrimaryButton @click="editSupplier"
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar proveedores')" @click="editSupplier"
                     class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                     <PencilIcon class="size-4 inline mr-1" />
                     Editar

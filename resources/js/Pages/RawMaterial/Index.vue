@@ -3,7 +3,7 @@
         <main class="px-2 lg:px-14 py-2">
             <div class="flex justify-between items-center">
                 <h1 class="font-bold text-xl">Materia prima</h1>
-                <PrimaryButton @click="$inertia.get(route('raw-materials.create'))">
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear materias primas')" @click="$inertia.get(route('raw-materials.create'))">
                     <PlusIcon class="size-5 inline mr-1" />
                     Crear materia prima
                 </PrimaryButton>
@@ -34,7 +34,7 @@
                                         <el-dropdown-item :command="'show-' + scope.row.id" class="!text-xs">
                                             <EyeIcon class="size-4 mr-2" /> Ver
                                         </el-dropdown-item>
-                                        <el-dropdown-item :command="'edit-' + scope.row.id" class="!text-xs">
+                                        <el-dropdown-item v-if="$page.props.auth.user.permissions.includes('Editar materias primas')" :command="'edit-' + scope.row.id" class="!text-xs">
                                             <PencilIcon class="size-4 mr-2" /> Editar
                                         </el-dropdown-item>
                                         <!-- <el-dropdown-item :command="'delete-' + scope.row.id" class="!text-xs">

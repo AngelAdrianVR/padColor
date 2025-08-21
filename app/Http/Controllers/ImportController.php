@@ -25,7 +25,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ImportController extends Controller
 {
     use NotifiesViaEvents;
-    
+
     public function index(Request $request)
     {
         // 1. Validamos los filtros que vienen de la URL
@@ -346,7 +346,7 @@ class ImportController extends Controller
                     $notificationInstance = new ImportArrivedAtDestination($import);
                     $this->sendNotification('import.new-status.destination-port', $notificationInstance);
                 }
-                
+
                 break;
 
             case 'Entregado':
@@ -425,6 +425,13 @@ class ImportController extends Controller
                 ->withProperties(['import_cost' => $cost->concept, 'amount' => $cost->amount, 'payments' => $cost->payments])
                 ->log('eliminó un costo');
 
+            // limpiar los archivos de cada pago
+            foreach ($cost->payments as $payment) {
+                foreach ($payment->getMediaCollections() as $collection) {
+                    $payment->clearMediaCollection($collection->name);
+                }
+            }
+
             $cost->delete();
         });
 
@@ -442,6 +449,10 @@ class ImportController extends Controller
             ]);
 
             // Eliminar el pago
+            // Itera sobre cada colección de medios y la limpia
+            foreach ($payment->getMediaCollections() as $collection) {
+                $payment->clearMediaCollection($collection->name);
+            }
             $payment->delete();
 
             activity()

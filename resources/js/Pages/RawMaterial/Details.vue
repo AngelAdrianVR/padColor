@@ -9,7 +9,7 @@
                     <h3 class="font-bold text-gray3F">{{ rawMaterialData.name }}</h3>
                     <p class="text-sm text-gray3F">Código: {{ rawMaterialData.sku }}</p>
                 </div>
-                <PrimaryButton @click="editRawMaterial"
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar materia prima')" @click="editRawMaterial"
                     class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                     <PencilIcon class="size-4 inline mr-1" />
                     Editar

@@ -9,7 +9,7 @@
                     <h3 class="font-bold text-gray3F">{{ agentData.name }}</h3>
                     <p class="text-sm text-gray3F">ID: {{ agentData.id }}</p>
                 </div>
-                <PrimaryButton @click="editAgent"
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar agentes aduanales')" @click="editAgent"
                     class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                     <PencilIcon class="size-4 inline mr-1" />
                     Editar
