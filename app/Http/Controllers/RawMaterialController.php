@@ -38,7 +38,7 @@ class RawMaterialController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:raw_materials,sku',
+            'sku' => 'nullable|string|max:255|unique:raw_materials,sku',
             'measure_unit' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
@@ -62,7 +62,7 @@ class RawMaterialController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:raw_materials,sku,' . $rawMaterial->id,
+            'sku' => 'nullable|string|max:255|unique:raw_materials,sku,' . $rawMaterial->id,
             'measure_unit' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);

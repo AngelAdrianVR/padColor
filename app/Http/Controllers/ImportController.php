@@ -14,9 +14,18 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Exports\ImportsReportExport;
+use App\Models\NotificationEvent;
+use App\Models\User;
+use App\Notifications\ImportArrivedAtDestination;
+use App\Traits\NotifiesViaEvents;
+use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ImportController extends Controller
 {
+    use NotifiesViaEvents;
+    
     public function index(Request $request)
     {
         // 1. Validamos los filtros que vienen de la URL
@@ -32,7 +41,7 @@ class ImportController extends Controller
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
-            $query->where('folio', 'like', '%' . $request->search . '%');
+            $query->where('id', 'like', '%' . $request->search . '%');
         });
 
         $importsQuery->when($request->filled('supplier'), function ($query) use ($request) {
@@ -304,20 +313,53 @@ class ImportController extends Controller
     public function updateStatus(Request $request, Import $import)
     {
         // 1. Validación
-        // Nos aseguramos de que el 'status' enviado sea uno de los valores permitidos.
-        $request->validate([
+        // Los valores deben coincidir con los IDs de las columnas en el frontend
+        $validatedData = $request->validate([
             'status' => 'required|in:Con proveedor,Puerto origen,En tránsito marítimo,Puerto destino,Entregado',
         ]);
 
-        // 2. Actualización del Modelo
-        // Asignamos el nuevo estado al campo 'status' de la importación.
-        $import->status = $request->status;
+        $oldStatus = $import->status;
+        $newStatus = $validatedData['status'];
+
+        // 2. Actualización del estado
+        $import->status = $newStatus;
+
+        // 3. Actualización automática de Fechas Clave
+        // Asigna la fecha actual al campo correspondiente cuando la importación
+        // entra en una nueva etapa por primera vez.
+        switch ($newStatus) {
+            case 'En tránsito marítimo':
+                // Si la fecha de embarque no ha sido establecida, la registramos.
+                if (is_null($import->estimated_ship_date)) {
+                    $import->estimated_ship_date = now();
+                }
+                break;
+
+            case 'Puerto destino':
+                // Si la fecha de llegada real no ha sido establecida, la registramos.
+                if (is_null($import->actual_arrival_date)) {
+                    $import->actual_arrival_date = now();
+                }
+
+                if ($oldStatus != $newStatus) {
+                    // notificar
+                    $notificationInstance = new ImportArrivedAtDestination($import);
+                    $this->sendNotification('import.new-status.destination-port', $notificationInstance);
+                }
+                
+                break;
+
+            case 'Entregado':
+                // Si la fecha de entrega en bodega no ha sido establecida, la registramos.
+                if (is_null($import->warehouse_delivery_date)) {
+                    $import->warehouse_delivery_date = now();
+                }
+                break;
+        }
+
         $import->save();
 
-        // 3. Respuesta
-        // Redirigimos al usuario a la página anterior (el tablero Kanban).
-        // Inertia se encargará de recargar las props (la lista de importaciones)
-        // para que el cambio se refleje visualmente.
+        // 4. Respuesta
         return back();
     }
 
@@ -341,16 +383,16 @@ class ImportController extends Controller
 
     public function storePayment(Request $request, Import $import)
     {
+        // Nos aseguramos que el costo pertenezca a la importación actual para mayor seguridad
+        $cost = $import->costs()->findOrFail($request->import_cost_id);
+
         $validatedData = $request->validate([
             'import_cost_id' => 'required|exists:import_costs,id',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:' . $cost->pendent_amount,
             'payment_date' => 'required|date',
             'notes' => 'nullable|string',
             'document' => 'nullable|file|max:10240', // max 10MB
         ]);
-
-        // Nos aseguramos que el costo pertenezca a la importación actual para mayor seguridad
-        $cost = $import->costs()->findOrFail($validatedData['import_cost_id']);
 
         DB::transaction(function () use ($validatedData, $cost, $request) {
             // 1. Crear el pago
@@ -421,7 +463,7 @@ class ImportController extends Controller
         ]);
 
         // no registrar esta actividad si recién se creó la importación
-        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {   
+        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {
             activity()->performedOn($import)->event('created')->causedBy(auth()->user())->withProperties(['materia_prima' => $rawMaterial->name, 'cantidad' => $request->quantity])->log('agregó la materia prima');
         }
     }
@@ -436,7 +478,7 @@ class ImportController extends Controller
     public function storeDocument(Request $request, Import $import)
     {
         $media = $import->addMedia($request->file)->toMediaCollection($request->classification);
-        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {   
+        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {
             activity()->performedOn($import)->event('created')->causedBy(auth()->user())->withProperties(['documento' => $media->file_name, 'clasificacion' => $request->classification])->log('adjuntó el documento');
         }
     }
@@ -448,5 +490,36 @@ class ImportController extends Controller
         $media->delete();
         activity()->performedOn($import)->event('deleted')->causedBy(auth()->user())->withProperties(['documento' => $documentName])->log('eliminó el documento');
         return back()->with('success', 'Documento eliminado.');
+    }
+
+    public function export(Request $request)
+    {
+        // Validar los filtros (igual que en el método index)
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+            'supplier' => 'nullable|integer|exists:suppliers,id',
+            'dates' => 'nullable|array|size:2',
+            'dates.*' => 'nullable|date_format:Y-m-d',
+        ]);
+
+        // Construir la consulta con los filtros (igual que en el método index)
+        $importsQuery = Import::with('supplier', 'rawMaterials', 'costs'); // Cargar relaciones necesarias
+
+        $importsQuery->when($request->filled('search'), function ($query) use ($request) {
+            $query->where('folio', 'like', '%' . $request->search . '%');
+        });
+        $importsQuery->when($request->filled('supplier'), function ($query) use ($request) {
+            $query->where('supplier_id', $request->supplier);
+        });
+        $importsQuery->when($request->filled('dates'), function ($query) use ($request) {
+            $startDate = $request->dates[0];
+            $endDate = $request->dates[1] . ' 23:59:59';
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        });
+
+        $imports = $importsQuery->latest()->get();
+
+        // Generar y descargar el archivo Excel
+        return Excel::download(new ImportsReportExport($imports), 'reporte_de_importaciones.xlsx');
     }
 }

@@ -53,12 +53,12 @@
                         </el-select>
                         <InputError :message="form.errors.incoterm" />
                     </div>
-                    <div>
+                    <!-- <div>
                         <InputLabel value="Fecha estimada de embarque" />
                         <el-date-picker class="!w-full" v-model="form.estimated_ship_date" type="date"
                             placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                         <InputError :message="form.errors.estimated_ship_date" />
-                    </div>
+                    </div> -->
                     <div>
                         <InputLabel value="Fecha estimada de llegada (ETA)" />
                         <el-date-picker class="!w-full" v-model="form.estimated_arrival_date" type="date"
@@ -92,8 +92,8 @@
                 <div v-for="(product, index) in form.products" :key="index" class="flex items-end space-x-3 mb-3">
                     <div class="flex-grow">
                         <InputLabel value="Materia prima *" />
-                        <el-select v-model="product.raw_material_id" placeholder="Busca el artículo"
-                            class="!w-full" filterable>
+                        <el-select v-model="product.raw_material_id" placeholder="Busca el artículo" class="!w-full"
+                            filterable>
                             <el-option v-for="item in rawMaterials" :key="item.id" :label="item.name"
                                 :value="item.id" />
                         </el-select>
@@ -233,6 +233,7 @@ import { useForm } from '@inertiajs/vue3';
 import { ArrowUpTrayIcon, PlusCircleIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -311,30 +312,39 @@ export default {
             this.showFastAddModal = false;
         },
         storeFastItem() {
-            let routeName = 'suppliers.store';
-            if (!this.addingSupplier) {
-                routeName = 'customs-agents.store';
-            }
+            let routeName = this.addingSupplier ? route('suppliers.store') : route('customs-agents.store');
 
-            this.fastForm.post(route(routeName), {
-                onSuccess: () => {
+            this.fastForm.processing = true;
+
+            // Usamos axios para hacer la petición y manejar la respuesta JSON
+            axios.post(routeName, this.fastForm.data())
+                .then(response => {
+                    const newItem = response.data; // El nuevo proveedor o agente devuelto por el controlador
+
                     if (this.addingSupplier) {
-                        this.$notify({
-                            title: 'Éxito',
-                            message: 'Nuevo proveedor agregado',
-                            type: 'success',
-                        });
+                        // 1. Añadir el nuevo proveedor a la lista de props
+                        this.suppliers.push(newItem);
+                        // 2. Seleccionarlo automáticamente en el formulario principal
+                        this.form.supplier_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo proveedor agregado', type: 'success' });
                     } else {
-                        this.$notify({
-                            title: 'Éxito',
-                            message: 'Nuevo agente agregado',
-                            type: 'success',
-                        });
+                        this.customsAgents.push(newItem);
+                        this.form.customs_agent_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo agente agregado', type: 'success' });
                     }
+
                     this.showFastAddModal = false;
                     this.fastForm.reset();
-                },
-            });
+                })
+                .catch(error => {
+                    // Manejar errores de validación
+                    if (error.response.status === 422) {
+                        this.fastForm.errors = error.response.data.errors;
+                    }
+                })
+                .finally(() => {
+                    this.fastForm.processing = false;
+                });
         },
         addProduct() {
             this.form.products.push({

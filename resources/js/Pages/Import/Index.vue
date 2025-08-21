@@ -7,16 +7,13 @@
                     <h2 class="font-semibold text-black">Importaciones</h2>
                     <span class="text-gray-500 text-sm">Gestiona y monitorea todas tus operaciones de importación</span>
                 </div>
-                <el-dropdown split-button type="primary" trigger="click" @click="$inertia.get(route('imports.create'))">
+                <el-dropdown split-button type="primary" trigger="click" @click="$inertia.get(route('imports.create'))"
+                    @command="handleCommand">
                     <PlusIcon class="size-4 mr-1" />
                     Crear importación
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item>Action 1</el-dropdown-item>
-                            <!-- <el-dropdown-item>Action 2</el-dropdown-item>
-                            <el-dropdown-item>Action 3</el-dropdown-item>
-                            <el-dropdown-item divided>Action 4</el-dropdown-item>
-                            <el-dropdown-item>Action 5</el-dropdown-item> -->
+                            <el-dropdown-item command="export">Exportar en excel</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -77,9 +74,20 @@
                                             </span>
                                         </div>
                                         <p class="font-semibold text-gray3F">{{ element.supplier?.name }}</p>
-                                        <p class="font-bold">
+                                        <!-- <p class="font-bold">
                                             {{ formatCurrency(element.total_cost) }}
-                                        </p>
+                                        </p> -->
+                                        <div class="text-sm text-gray-600 mt-2 h-10 overflow-hidden">
+                                            <p v-if="element.raw_materials && element.raw_materials.length"
+                                                class="leading-tight text-xs">
+                                                <span v-for="(item, index) in element.raw_materials" :key="index" class="block">
+                                                    • {{ item.name }}
+                                                </span>
+                                            </p>
+                                            <p v-else class="text-gray-400 italic text-xs">
+                                                Sin productos asignados
+                                            </p>
+                                        </div>
                                         <p class="text-gray3F font-semibold">
                                             Agente: {{ element.customs_agent?.name }}
                                         </p>
@@ -173,6 +181,30 @@ export default {
         };
     },
     methods: {
+        handleCommand(command) {
+            if (command === 'export') {
+                this.export();
+            }
+        },
+        export() {
+            // Crea un objeto para los parámetros de la URL, omitiendo los que estén vacíos.
+            const queryParams = {};
+            if (this.localFilters.search) {
+                queryParams.search = this.localFilters.search;
+            }
+            if (this.localFilters.supplier) {
+                queryParams.supplier = this.localFilters.supplier;
+            }
+            if (this.localFilters.dates && this.localFilters.dates.length === 2) {
+                queryParams.dates = this.localFilters.dates;
+            }
+
+            // Construye la URL con los parámetros.
+            const url = route('imports.export', queryParams);
+
+            // Abre la URL para iniciar la descarga del archivo.
+            window.open(url, '_blank');
+        },
         reloadData() {
             const selectedId = this.selectedImport.id;
 

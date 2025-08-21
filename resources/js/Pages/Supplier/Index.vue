@@ -16,6 +16,7 @@
             <div class="mt-6">
                 <el-table :data="suppliers.data" style="width: 100%" max-height="670" @row-click="handleRowClick"
                     :row-class-name="tableRowClassName">
+                    <el-table-column prop="id" label="ID" width="90" />
                     <el-table-column prop="name" label="Nombre / Razón Social" />
                     <el-table-column prop="contact_person" label="Contacto" />
                     <el-table-column prop="email" label="Email" />

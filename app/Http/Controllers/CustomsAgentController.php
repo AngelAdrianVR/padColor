@@ -43,14 +43,19 @@ class CustomsAgentController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'notes' => 'nullable|string',
         ]);
 
         $validatedData['user_id'] = Auth::id();
 
-        CustomsAgent::create($validatedData);
+        $customsAgent = CustomsAgent::create($validatedData);
 
-        return redirect()->route('customs-agents.index');
+        // Si la petición espera una respuesta JSON, devuelve el nuevo agente
+        if ($request->wantsJson()) {
+            return response()->json($customsAgent);
+        }
+
+        // Si no, redirige a la vista de índice
+        return redirect()->route('customs-agents.index')->with('success', 'Agente aduanal creado correctamente.');
     }
 
     public function edit(CustomsAgent $customsAgent)

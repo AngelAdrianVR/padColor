@@ -53,12 +53,12 @@
                         </el-select>
                         <InputError :message="form.errors.incoterm" />
                     </div>
-                    <div>
+                    <!-- <div>
                         <InputLabel value="Fecha estimada de embarque" />
                         <el-date-picker class="!w-full" v-model="form.estimated_ship_date" type="date"
                             placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                         <InputError :message="form.errors.estimated_ship_date" />
-                    </div>
+                    </div> -->
                     <div>
                         <InputLabel value="Fecha estimada de llegada (ETA)" />
                         <el-date-picker class="!w-full" v-model="form.estimated_arrival_date" type="date"

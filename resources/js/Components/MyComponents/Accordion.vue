@@ -8,8 +8,7 @@
             <span v-html="icon"></span>
             <span>{{ title }}</span>
         </p>
-        <i class="fa-solid fa-angle-down transform origin-center transition duration-200 ease-out size-2"
-            :class="{ '!rotate-180': accordionOpen }"></i>
+        <ChevronDownIcon class="size-3 transform origin-center transition duration-200 ease-out" :class="{ '!rotate-180': accordionOpen }" />
     </button>
     <div :id="`accordion-text-${id}`" role="region" :aria-labelledby="`accordion-title-${id}`"
         class="grid text-sm overflow-hidden transition-all duration-300 ease-in-out"
@@ -22,6 +21,8 @@
     </div>
 </template>
 <script>
+import { ChevronDownIcon } from '@heroicons/vue/24/outline';
+
 export default {
     data() {
         return {
@@ -35,6 +36,7 @@ export default {
         icon: String,
     },
     components: {
+        ChevronDownIcon,
     }
 }
 </script>

@@ -20,8 +20,8 @@ class SupplierController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $searchTerm = '%' . $request->search . '%';
                 $query->where('name', 'like', $searchTerm)
-                      ->orWhere('contact_person', 'like', $searchTerm)
-                      ->orWhere('email', 'like', $searchTerm);
+                    ->orWhere('contact_person', 'like', $searchTerm)
+                    ->orWhere('email', 'like', $searchTerm);
             })
             ->latest()
             ->paginate(10);
@@ -49,9 +49,15 @@ class SupplierController extends Controller
 
         $validatedData['user_id'] = Auth::id();
 
-        Supplier::create($validatedData);
+        $supplier = Supplier::create($validatedData);
 
-        return redirect()->route('suppliers.index');
+        // Si la petición espera una respuesta JSON, devuelve el nuevo proveedor
+        if ($request->wantsJson()) {
+            return response()->json($supplier);
+        }
+
+        // Si no, redirige a la vista de índice
+        return redirect()->route('suppliers.index')->with('success', 'Proveedor creado correctamente.');
     }
 
     public function edit(Supplier $supplier)

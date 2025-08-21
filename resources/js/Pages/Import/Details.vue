@@ -136,10 +136,10 @@
                                     </el-popconfirm>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-5 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
+                            <!-- <div class="grid grid-cols-5 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
                                 <span class="col-span-3 text-right">Total</span>
                                 <span class="text-right">{{ formatCurrency(totalCosts) }}</span>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     <div class="border rounded-lg p-4 mt-6">
@@ -538,6 +538,7 @@ export default {
                     this.$notify({ title: 'Éxito', message: 'Costo agregado', type: 'success' });
                     // recargar los datos para ver el cambio al instante
                     this.$emit('reload');
+                    this.costForm.reset();
                 },
             });
         },
@@ -552,6 +553,7 @@ export default {
                     this.showPaymentModal = false;
                     this.$notify({ title: 'Éxito', message: 'Pago registrado', type: 'success' });
                     this.$emit('reload');
+                    this.paymentForm.reset();
                 },
             });
         },
