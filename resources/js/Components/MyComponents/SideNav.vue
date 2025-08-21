@@ -21,33 +21,55 @@
                 <section>
                     <template v-if="small">
                         <div v-for="(menu, index) in menus" :key="index">
-                            <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
-                                :title="menu.label"
-                                class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
-                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                <span v-html="menu.icon"></span>
-                            </button>
+                            <SideNavLink v-if="menu.show" :href="menu.route" :active="menu.active"
+                                :dropdown="menu.options.length > 0" class="mb-px">
+                                <template #trigger>
+                                    <button v-if="menu.show" :active="menu.active" :title="menu.label"
+                                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
+                                        :class="menu.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                        <span v-html="menu.icon"></span>
+                                    </button>
+                                    <i v-if="menu.notifications"
+                                        class="fa-solid fa-circle fa-flip text-primary text-[10px] absolute bottom-7 right-1"></i>
+                                </template>
+                                <template #content>
+                                    <template v-for="option in menu.options" :key="option">
+                                        <DropdownNavLink v-if="option.show" :href="option.route"
+                                            :active="option.active">
+                                            {{ option.label }}
+                                        </DropdownNavLink>
+                                    </template>
+                                </template>
+                            </SideNavLink>
                         </div>
                     </template>
                     <template v-else v-for="(menu, index) in menus" :key="index">
+                        <!-- Con submenues -->
                         <div v-if="menu.show">
                             <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active"
                                 :title="menu.label" :id="index">
-                                <div v-for="(option, index2) in menu.options" :key="index2">
-                                    <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
-                                        :title="option.label"
-                                        class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                        :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                        <p class="w-full truncate"> {{ option.label }}</p>
+                                <!-- Opciones del menu -->
+                                <div class="relative" v-for="(option, index2) in menu.options" :key="index2">
+                                    <Link :href="option.route" class="flex items-center">
+                                    <button v-if="option.show" :active="option.active" :title="option.label"
+                                        class="w-full text-start ml-6 px-3 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
+                                        :class="option.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                        <p class="w-full truncate">{{ option.label }}</p>
                                     </button>
+                                    <!-- Adorno lateral de subcategorias-->
+                                    <i class="absolute left-[8px] top-[14px] fa-solid fa-circle text-[7px] z-10 p-1"
+                                        :class="option.active ? 'text-primary' : 'text-grayD9'"></i>
+                                    <div class="border-l border-grayD9 absolute left-[15px] h-full"></div>
+                                    </Link>
                                 </div>
                             </Accordion>
+                            <!-- Sin submenues -->
                             <button v-else-if="menu.show" @click="goToRoute(menu.route)" :title="menu.label"
                                 class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{
-                                    menu.label
-                                    }}</p>
+                                :class="menu.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span>
+                                    {{ menu.label }}
+                                </p>
                             </button>
                         </div>
                     </template>
@@ -55,7 +77,7 @@
                     <button v-if="small"
                         @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
                         title="Capacitación"
-                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                 class="size-[22px] inline">
@@ -67,7 +89,7 @@
                     <button v-else
                         @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
                         title="Capacitación"
-                        class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <p class="w-full text-sm truncate">
                             <span class="mr-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -80,7 +102,6 @@
                         </p>
                     </button>
                 </section>
-
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
                     <button v-if="$page.props.jetstream.managesProfilePhotos"
@@ -110,6 +131,8 @@ import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import ProfileCard from './ProfileCard.vue';
+import SideNavLink from './SideNavLink.vue';
+import DropdownNavLink from './DropdownNavLink.vue';
 
 export default {
     data() {
@@ -124,7 +147,6 @@ export default {
                     route: route('dashboard'),
                     active: route().current('dashboard'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver dashboard'),
                 },
                 {
@@ -133,7 +155,6 @@ export default {
                     route: route('tickets.index'),
                     active: route().current('tickets.*'),
                     options: [],
-                    dropdown: false,
                     show: true,
                 },
                 {
@@ -142,7 +163,6 @@ export default {
                     route: route('users.index'),
                     active: route().current('users.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver usuarios'),
                 },
                 {
@@ -151,7 +171,6 @@ export default {
                     route: route('users.index'),
                     active: route().current('users.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver clientes'),
                 },
                 {
@@ -162,18 +181,17 @@ export default {
                     options: [
                         {
                             label: 'Proveedores',
-                            route: route().current('suppliers.index'),
+                            route: route('suppliers.index'),
                             show: true,
                             active: route().current('suppliers.*'),
                         },
                         {
-                            label: 'Gastos',
+                            label: 'Agentes aduanales',
                             route: route('customs-agents.index'),
                             show: true,
                             active: route().current('customs-agents.*'),
                         },
                     ],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver importaciones'),
                 },
                 {
@@ -182,16 +200,27 @@ export default {
                     route: route('productions.index'),
                     active: route().current('productions.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver producciones'),
                 },
                 {
-                    label: 'Productos',
+                    label: 'Catálogo',
                     icon: '<svg width="19" height="19" class="inline" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.98136 4.49467C0.954921 2.88619 4.70988 -2.07101 7.62927 4.42519C11.4445 -2.4881 15.3186 2.94497 12.1003 4.49464C14.1193 2.76468 11.5041 -1.05771 7.62927 4.42519C5.36546 -0.402134 1.76655 2.41175 2.98136 4.49467Z" fill="currentColor"/><path d="M7.62927 4.42519C4.70988 -2.07101 0.954921 2.88619 2.98136 4.49467C1.76655 2.41175 5.36546 -0.402134 7.62927 4.42519ZM7.62927 4.42519C11.4445 -2.4881 15.3186 2.94497 12.1003 4.49464C14.1193 2.76468 11.5041 -1.05771 7.62927 4.42519Z" stroke="currentColor" stroke-width="0.119196"/><path d="M0 7.76328V5.31975C-0.000220968 4.60458 0.0595985 4.42578 0.65558 4.42578H14.9591C15.6147 4.42578 15.6147 4.78337 15.6147 5.31975V7.76328C15.6147 8.35926 15.4359 8.59765 14.9591 8.59765H0.65558C0.0595987 8.59765 0 8.29966 0 7.76328Z" fill="currentColor"/><path d="M0.65625 16.4031V8.71495L14.9002 8.71484V16.4031C14.9002 16.8798 14.6618 16.9991 14.185 16.9991H1.37143C0.835044 16.9991 0.65625 16.8202 0.65625 16.4031Z" fill="currentColor"/><path d="M6.07812 16.999V8.71484H9.35602V16.999H6.07812Z" fill="#EDEDED"/><path d="M5.83984 8.59765V4.42578H9.71372V8.59765H5.83984Z" fill="#EDEDED"/></svg>',
                     route: route('products.index'),
-                    active: route().current('products.*'),
-                    options: [],
-                    dropdown: false,
+                    active: route().current('products.*') || route().current('raw-materials.*'),
+                    options: [
+                        {
+                            label: 'Productos',
+                            route: route('products.index'),
+                            show: true,
+                            active: route().current('products.*'),
+                        },
+                        {
+                            label: 'Materia prima',
+                            route: route('raw-materials.index'),
+                            show: true,
+                            active: route().current('raw-materials.*'),
+                        },
+                    ],
                     show: this.$page.props.auth.user.permissions.includes('Ver productos'),
                 },
                 {
@@ -200,33 +229,8 @@ export default {
                     route: route('settings.index'),
                     active: route().current('settings.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver configuraciones'),
                 },
-                //     label: 'Comunidad',
-                //     icon: '<i class="fa-solid fa-people-roof text-sm mr-2"></i>',
-                //     // route: route('posts.index'),
-                //     active: route().current('posts.*') || route().current('community-events.*')|| route().current('neighbors.*'),
-                //     options: [
-                //         {
-                //             label: 'Muro de noticias',
-                //             route: route('posts.index'),
-                //             show: true,
-                //         },
-                //         {
-                //             label: 'Eventos',
-                //             route: route('community-events.index'),
-                //             show: true,
-                //         },
-                //         {
-                //             label: 'Directorio de vecinos',
-                //             route: route('neighbors.index'),
-                //             show: true,
-                //         },
-                //     ],
-                //     dropdown: true,
-                //     show: true
-                // },
             ],
         }
     },
@@ -237,6 +241,8 @@ export default {
         Dropdown,
         Link,
         ProfileCard,
+        SideNavLink,
+        DropdownNavLink,
     },
     methods: {
         openNewTab(url) {

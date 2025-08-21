@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('contact_person')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->foreignId('user_id')->comment('Usuario creador')->constrained('users');
             $table->timestamps();
         });
     }

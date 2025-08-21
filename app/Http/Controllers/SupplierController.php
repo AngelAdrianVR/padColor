@@ -4,69 +4,82 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $suppliers = Supplier::query()
+            ->with('user') // Cargar la relación con el usuario creador
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+                $query->where('name', 'like', $searchTerm)
+                      ->orWhere('contact_person', 'like', $searchTerm)
+                      ->orWhere('email', 'like', $searchTerm);
+            })
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Supplier/Index', [
+            'suppliers' => $suppliers,
+            'filters' => $request->only(['search']),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return Inertia::render('Supplier/Create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|unique:suppliers|max:255',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|numeric',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
         ]);
 
-        Supplier::create($request->all());
+        $validatedData['user_id'] = Auth::id();
 
-        return back();
+        Supplier::create($validatedData);
+
+        return redirect()->route('suppliers.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Supplier $supplier)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Supplier $supplier)
     {
-        //
+        return Inertia::render('Supplier/Edit', [
+            'supplier' => $supplier,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Supplier $supplier)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'contact_person' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+        ]);
+
+        $supplier->update($validatedData);
+
+        return redirect()->route('suppliers.index');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Supplier $supplier)
     {
-        //
+        // Opcional: Añadir lógica para verificar si el proveedor está en uso antes de eliminar.
+        $supplier->delete();
+        return redirect()->route('suppliers.index');
     }
 }

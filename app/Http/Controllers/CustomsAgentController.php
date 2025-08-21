@@ -4,68 +4,80 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomsAgent;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CustomsAgentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $customsAgents = CustomsAgent::query()
+            ->with('user') // Cargar la relación con el usuario creador
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+                $query->where('name', 'like', $searchTerm)
+                    ->orWhere('contact_person', 'like', $searchTerm);
+            })
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('CustomsAgent/Index', [
+            'customs_agents' => $customsAgents,
+            'filters' => $request->only(['search']),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return Inertia::render('CustomsAgent/Create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|unique:suppliers|max:255',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|numeric',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
         ]);
 
-        CustomsAgent::create($request->all());
+        $validatedData['user_id'] = Auth::id();
 
-        return back();
+        CustomsAgent::create($validatedData);
+
+        return redirect()->route('customs-agents.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(CustomsAgent $customsAgent)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(CustomsAgent $customsAgent)
     {
-        //
+        return Inertia::render('CustomsAgent/Edit', [
+            'customs_agent' => $customsAgent,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, CustomsAgent $customsAgent)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'contact_person' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
+        ]);
+
+        $customsAgent->update($validatedData);
+
+        return redirect()->route('customs-agents.index');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(CustomsAgent $customsAgent)
     {
-        //
+        $customsAgent->delete();
+        return redirect()->route('customs-agents.index');
     }
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\RawMaterialController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TicketController;
@@ -192,6 +193,7 @@ Route::delete('/subscriptions/remove-external', [NotificationController::class, 
 
 Route::resource('suppliers', SupplierController::class);
 
+Route::resource('raw-materials', RawMaterialController::class);
 
 Route::resource('customs-agents', CustomsAgentController::class);
 

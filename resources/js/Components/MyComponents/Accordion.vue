@@ -1,9 +1,9 @@
 <template>
-    <button :id="`accordion-title-${id}`" class="w-full text-start px-2 mb-1 flex justify-between text-xs rounded-md py-1"
-        :class="active ? 'font-bold text-primary' : ''" @click.prevent="accordionOpen = !accordionOpen"
+    <button :id="`accordion-title-${id}`" class="w-full text-start px-2 mb-1 mt-[11px] flex justify-between items-center text-xs rounded-md py-1"
+        :class="active ? 'bg-grayD9 font-bold text-primary' : ''" @click.prevent="accordionOpen = !accordionOpen"
         :aria-expanded="accordionOpen" :aria-controls="`accordion-text-${id}`" :title="title">
         <p class="truncate"><span v-html="icon"></span> {{ title }}</p>
-        <i class="fa-solid fa-angle-down transform origin-center transition duration-200 ease-out"
+        <i class="fa-solid fa-angle-down transform origin-center transition duration-200 ease-out size-2"
             :class="{ '!rotate-180': accordionOpen }"></i>
     </button>
     <div :id="`accordion-text-${id}`" role="region" :aria-labelledby="`accordion-title-${id}`"

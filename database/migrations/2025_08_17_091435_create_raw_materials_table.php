@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('raw_materials', function (Blueprint $table) {
             $table->id();
-            $table->string('sku')->unique();
+            $table->string('sku')->nullable();
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('measure_unit')->default('pieza');
             $table->decimal('stock', 10, 2)->default(0);
             $table->json('attributes')->nullable();
+            $table->foreignId('user_id')->comment('Usuario creador')->constrained('users');
             $table->timestamps();
         });
     }
