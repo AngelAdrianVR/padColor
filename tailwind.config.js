@@ -15,7 +15,9 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                // sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                // sans: ['Hahmlet', ...defaultTheme.fontFamily.sans],
+                sans: ['Wix Madefor Text', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 primary: '#25346D',
@@ -29,6 +31,7 @@ export default {
                 grayD9: '#D9D9D9',
                 gray99: '#999999',
                 grayED: '#EDEDED',
+                gray3F: '#3F3F3F',
             },
         },
     },
