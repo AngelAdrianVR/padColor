@@ -7,17 +7,19 @@ use App\Models\Production;
 use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
 use App\Imports\ProductionsImport;
-use App\Models\Machine;
 use App\Models\NotificationEvent;
 use App\Models\User;
 use App\Notifications\ProductionForwardedNotification;
 use App\Notifications\ProductionReturnedNotification;
+use App\Traits\NotifiesViaEvents;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
 {
+    use NotifiesViaEvents;
+    
     public function index()
     {
         $productions = Production::latest('folio')->get(['folio', 'station']);
@@ -254,7 +256,7 @@ class ProductionController extends Controller
             $request->reason ?? 'No se especificó un motivo.'
         );
 
-        $this->sendProductionNotification($eventKey, $notificationInstance);
+        $this->sendNotification($eventKey, $notificationInstance);
     }
 
     public function productionRelease(Request $request, Production $production)
@@ -275,7 +277,7 @@ class ProductionController extends Controller
             $request->close_quantity
         );
         $eventKey = 'production.forwarded.quality';
-        $this->sendProductionNotification($eventKey, $notificationInstance);
+        $this->sendNotification($eventKey, $notificationInstance);
     }
 
     public function qualityRelease(Request $request, Production $production)
@@ -296,7 +298,7 @@ class ProductionController extends Controller
             $request->quality_quantity
         );
         $eventKey = 'production.forwarded.inspection';
-        $this->sendProductionNotification($eventKey, $notificationInstance);
+        $this->sendNotification($eventKey, $notificationInstance);
     }
 
     public function inspectionRelease(Request $request, Production $production)
@@ -337,36 +339,7 @@ class ProductionController extends Controller
             $production->current_quantity
         );
         $eventKey = 'production.forwarded.finished_product';
-        $this->sendProductionNotification($eventKey, $notificationInstance);
-    }
-
-    /**
-     * Método reutilizable para encontrar a los suscriptores y enviarles la notificación.
-     */
-    private function sendProductionNotification(string $eventKey, $notificationInstance): void
-    {
-        $event = NotificationEvent::where('event_key', $eventKey)->first();
-
-        if (!$event) {
-            return; // Si el evento no existe, no hacemos nada
-        }
-
-        // Obtener usuarios del sistema suscritos
-        $userIds = $event->subscriptions()->where('notifiable_type', User::class)->pluck('notifiable_id');
-        $users = User::findMany($userIds);
-
-        // Obtener correos externos suscritos
-        $externalEmails = $event->subscriptions()->where('notifiable_type', 'external')->pluck('notifiable_id');
-
-        // Enviar notificación a los usuarios del sistema
-        if ($users->isNotEmpty()) {
-            Notification::send($users, $notificationInstance);
-        }
-
-        // Enviar notificación a los correos externos
-        foreach ($externalEmails as $email) {
-            Notification::route('mail', $email)->notify($notificationInstance);
-        }
+        $this->sendNotification($eventKey, $notificationInstance);
     }
 
     public function addPartial(Request $request, Production $production)

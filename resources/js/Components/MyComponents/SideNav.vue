@@ -21,33 +21,55 @@
                 <section>
                     <template v-if="small">
                         <div v-for="(menu, index) in menus" :key="index">
-                            <button v-if="menu.show" @click="goToRoute(menu.route)" :active="menu.active"
-                                :title="menu.label"
-                                class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
-                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                <span v-html="menu.icon"></span>
-                            </button>
+                            <SideNavLink v-if="menu.show" :href="menu.route" :active="menu.active"
+                                :dropdown="menu.options.length > 0" class="mb-px">
+                                <template #trigger>
+                                    <button v-if="menu.show" :active="menu.active" :title="menu.label"
+                                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150"
+                                        :class="menu.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                        <span v-html="menu.icon"></span>
+                                    </button>
+                                    <i v-if="menu.notifications"
+                                        class="fa-solid fa-circle fa-flip text-primary text-[10px] absolute bottom-7 right-1"></i>
+                                </template>
+                                <template #content>
+                                    <template v-for="option in menu.options" :key="option">
+                                        <DropdownNavLink v-if="option.show" :href="option.route"
+                                            :active="option.active">
+                                            {{ option.label }}
+                                        </DropdownNavLink>
+                                    </template>
+                                </template>
+                            </SideNavLink>
                         </div>
                     </template>
                     <template v-else v-for="(menu, index) in menus" :key="index">
+                        <!-- Con submenues -->
                         <div v-if="menu.show">
                             <Accordion v-if="menu.options.length" :icon="menu.icon" :active="menu.active"
                                 :title="menu.label" :id="index">
-                                <div v-for="(option, index2) in menu.options" :key="index2">
-                                    <button @click="goToRoute(option.route)" v-if="option.show" :active="option.active"
-                                        :title="option.label"
-                                        class="w-full text-start pl-6 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                        :class="option.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                        <p class="w-full truncate"> {{ option.label }}</p>
+                                <!-- Opciones del menu -->
+                                <div class="relative" v-for="(option, index2) in menu.options" :key="index2">
+                                    <Link :href="option.route" class="flex items-center">
+                                    <button v-if="option.show" :active="option.active" :title="option.label"
+                                        class="w-full text-start ml-6 px-3 pr-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
+                                        :class="option.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                        <p class="w-full truncate">{{ option.label }}</p>
                                     </button>
+                                    <!-- Adorno lateral de subcategorias-->
+                                    <i class="absolute left-[8px] top-[14px] fa-solid fa-circle text-[7px] z-10 p-1"
+                                        :class="option.active ? 'text-primary' : 'text-grayD9'"></i>
+                                    <div class="border-l border-grayD9 absolute left-[15px] h-full"></div>
+                                    </Link>
                                 </div>
                             </Accordion>
+                            <!-- Sin submenues -->
                             <button v-else-if="menu.show" @click="goToRoute(menu.route)" :title="menu.label"
                                 class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150"
-                                :class="menu.active ? 'bg-[#c8c8c8] text-primary' : 'hover:text-primary hover:bg-[#c8c8c8] text-gray66'">
-                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span> {{
-                                    menu.label
-                                }}</p>
+                                :class="menu.active ? 'bg-grayD9 text-primary' : 'hover:text-primary hover:bg-grayD9 text-gray66'">
+                                <p class="w-full text-sm truncate"><span class="mr-2" v-html="menu.icon"></span>
+                                    {{ menu.label }}
+                                </p>
                             </button>
                         </div>
                     </template>
@@ -55,7 +77,7 @@
                     <button v-if="small"
                         @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
                         title="Capacitación"
-                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                 class="size-[22px] inline">
@@ -67,7 +89,7 @@
                     <button v-else
                         @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
                         title="Capacitación"
-                        class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-[#c8c8c8]">
+                        class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <p class="w-full text-sm truncate">
                             <span class="mr-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -80,7 +102,6 @@
                         </p>
                     </button>
                 </section>
-
                 <!-- Avatar de usuario -->
                 <div class="mt-24 text-center">
                     <button v-if="$page.props.jetstream.managesProfilePhotos"
@@ -110,6 +131,8 @@ import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import ProfileCard from './ProfileCard.vue';
+import SideNavLink from './SideNavLink.vue';
+import DropdownNavLink from './DropdownNavLink.vue';
 
 export default {
     data() {
@@ -124,7 +147,6 @@ export default {
                     route: route('dashboard'),
                     active: route().current('dashboard'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver dashboard'),
                 },
                 {
@@ -133,7 +155,6 @@ export default {
                     route: route('tickets.index'),
                     active: route().current('tickets.*'),
                     options: [],
-                    dropdown: false,
                     show: true,
                 },
                 {
@@ -142,7 +163,6 @@ export default {
                     route: route('users.index'),
                     active: route().current('users.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver usuarios'),
                 },
                 {
@@ -151,8 +171,34 @@ export default {
                     route: route('users.index'),
                     active: route().current('users.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver clientes'),
+                },
+                {
+                    label: 'Importaciones',
+                    icon: '<svg width="20" height="22" class="inline" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7532 16.7774C12.7964 16.7774 12.9038 16.9183 12.9038 16.9615C12.9038 17.0047 12.7964 17.1571 12.7532 17.1571H3.42057C3.37738 17.1571 3.26923 17.0047 3.26923 16.9615C3.26923 16.9183 3.37738 16.7774 3.42057 16.7774H12.7532Z" fill="currentColor"/><path d="M15.6208 9.80189C15.2654 12.6342 14.5842 14.0034 12.4168 15.9802H15.8293C15.8725 15.9802 16 16.0948 16 16.1538C16 16.2129 15.8725 16.36 15.8293 16.36H7.98262H0.135899C0.0927066 16.36 0 16.197 0 16.1538C0 16.1107 0.0927066 15.9802 0.135899 15.9802H3.85967C1.18647 13.6772 0.531832 12.315 0.605138 9.80189L7.85356 7.06771V9.51057L2.14177 11.6814C2 11.7115 2.00159 11.8953 2.01923 11.9423C2.03441 11.9827 2.11538 12.1154 2.19676 12.0897L7.85356 9.9395V15.9802H8.23334V9.93879L13.9253 12.0899C13.9795 12.1119 14.0962 12.0192 14.1154 11.9231C14.1346 11.8269 14.0962 11.7308 13.9795 11.6812L8.23334 9.51016V7.0669L15.6208 9.80189Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14.0567 5.05736V8.68231L8.00869 6.54467L2.16927 8.68231V5.05736C2.16927 4.72715 2.28223 4.37957 2.74278 4.37957H13.2746C13.683 4.37957 14.0567 4.58812 14.0567 5.05736ZM4.04623 6.04797H4.86162V5.36534H4.04623V6.04797ZM5.81891 6.04797H6.6343V5.36534H5.81891V6.04797ZM7.80014 6.04797H8.61553V5.36534H7.80014V6.04797ZM9.6771 6.04797H10.4925V5.36534H9.6771V6.04797ZM11.5541 6.04797H12.3694V5.36534H11.5541V6.04797Z" fill="currentColor"/><path d="M9.10358 0C9.46854 0 9.62496 0.156413 9.62496 0.573515V4.01429H6.54883V0.573515C6.54883 0.156413 6.75739 0 7.17449 0H9.10358Z" fill="currentColor"/></svg>',
+                    route: route('imports.index'),
+                    active: route().current('imports.*') || route().current('suppliers.*') || route().current('customs-agents.*'),
+                    options: [
+                        {
+                            label: 'Kanban',
+                            route: route('imports.index'),
+                            show: true,
+                            active: route().current('imports.*'),
+                        },
+                        {
+                            label: 'Proveedores',
+                            route: route('suppliers.index'),
+                            show: true,
+                            active: route().current('suppliers.*'),
+                        },
+                        {
+                            label: 'Agentes aduanales',
+                            route: route('customs-agents.index'),
+                            show: true,
+                            active: route().current('customs-agents.*'),
+                        },
+                    ],
+                    show: this.$page.props.auth.user.permissions.includes('Ver importaciones'),
                 },
                 {
                     label: 'SwAssistant',
@@ -160,60 +206,37 @@ export default {
                     route: route('productions.index'),
                     active: route().current('productions.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver producciones'),
                 },
                 {
-                    label: 'Productos',
+                    label: 'Catálogo',
                     icon: '<svg width="19" height="19" class="inline" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.98136 4.49467C0.954921 2.88619 4.70988 -2.07101 7.62927 4.42519C11.4445 -2.4881 15.3186 2.94497 12.1003 4.49464C14.1193 2.76468 11.5041 -1.05771 7.62927 4.42519C5.36546 -0.402134 1.76655 2.41175 2.98136 4.49467Z" fill="currentColor"/><path d="M7.62927 4.42519C4.70988 -2.07101 0.954921 2.88619 2.98136 4.49467C1.76655 2.41175 5.36546 -0.402134 7.62927 4.42519ZM7.62927 4.42519C11.4445 -2.4881 15.3186 2.94497 12.1003 4.49464C14.1193 2.76468 11.5041 -1.05771 7.62927 4.42519Z" stroke="currentColor" stroke-width="0.119196"/><path d="M0 7.76328V5.31975C-0.000220968 4.60458 0.0595985 4.42578 0.65558 4.42578H14.9591C15.6147 4.42578 15.6147 4.78337 15.6147 5.31975V7.76328C15.6147 8.35926 15.4359 8.59765 14.9591 8.59765H0.65558C0.0595987 8.59765 0 8.29966 0 7.76328Z" fill="currentColor"/><path d="M0.65625 16.4031V8.71495L14.9002 8.71484V16.4031C14.9002 16.8798 14.6618 16.9991 14.185 16.9991H1.37143C0.835044 16.9991 0.65625 16.8202 0.65625 16.4031Z" fill="currentColor"/><path d="M6.07812 16.999V8.71484H9.35602V16.999H6.07812Z" fill="#EDEDED"/><path d="M5.83984 8.59765V4.42578H9.71372V8.59765H5.83984Z" fill="#EDEDED"/></svg>',
                     route: route('products.index'),
-                    active: route().current('products.*'),
-                    options: [],
-                    dropdown: false,
+                    active: route().current('products.*') || route().current('raw-materials.*'),
+                    options: [
+                        {
+                            label: 'Productos',
+                            route: route('products.index'),
+                            show: true,
+                            active: route().current('products.*'),
+                        },
+                        {
+                            label: 'Materia prima',
+                            route: route('raw-materials.index'),
+                            show: true,
+                            active: route().current('raw-materials.*'),
+                        },
+                    ],
                     show: this.$page.props.auth.user.permissions.includes('Ver productos'),
                 },
-                // {
-                //     label: 'Máquinas',
-                //     icon: '<svg width="20" height="20" class="inline" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.62556 10.668L7.62362 9.87727C7.27364 8.36406 4.84289 8.44244 4.64844 10.2347V4.15422L4.95246 3.8502C5.35782 4.66092 6.83395 4.86868 7.60835 3.66406L7.62362 9.87727C7.67628 10.105 7.68183 10.3687 7.62556 10.668Z" fill="currentColor"/><path d="M7.47852 1.51437L5.8813 1.72088C7.68822 1.72088 7.6812 3.14154 7.47852 3.74958L8.18791 4.25628L11.3295 2.83752C10.9107 2.02197 10.6137 0.912066 12.5456 0L7.47852 1.51437Z" fill="currentColor"/><path d="M12.0389 5.26969V3.34422C12.9509 3.85092 14.167 3.24288 14.471 2.22947L14.3697 5.26969C14.3697 4.86433 12.1402 4.76299 12.0389 5.26969Z" fill="currentColor"/><path d="M13.7616 5.84714C13.5392 5.24868 12.7992 5.17985 12.5456 5.84714L13.1536 7.56993L13.7616 5.84714Z" fill="currentColor"/><path d="M9.30266 11.2488V13.1743H3.01953V11.2488C3.01953 10.9448 3.12087 10.6407 3.52623 10.6407H4.74232C5.45171 12.0595 6.97182 11.9582 7.57986 10.6407H8.69461C9.09997 10.6407 9.30266 10.8434 9.30266 11.2488Z" fill="currentColor"/><circle cx="6.16855" cy="3.1412" r="1.41877" stroke="currentColor" stroke-width="0.202681"/><path d="M1.30402 13.1758C1.10134 13.1761 1 13.2768 1 13.4798V14.6959C1 14.8986 1.20268 14.9999 1.40536 14.9999H15.289C15.4917 14.9999 15.5931 14.8986 15.5931 14.6959V13.3785C15.5931 13.1758 15.4917 13.1758 15.289 13.1758H1.30402Z" fill="currentColor" stroke="currentColor" stroke-width="0.486435"/><circle cx="6.16855" cy="10.2564" r="1.41877" stroke="currentColor" stroke-width="0.202681"/><circle cx="6.188" cy="10.2993" r="0.570817" fill="currentColor"/><circle cx="6.188" cy="3.15285" r="0.570817" fill="currentColor"/><circle cx="12.768" cy="1.83829" r="0.744544" fill="currentColor"/><circle cx="12.7577" cy="1.82413" r="1.70252" stroke="currentColor" stroke-width="0.243218"/><path d="M11.4413 5.90082C11.9746 5.0795 11.9746 4.91992 13.1449 4.91992C14.1926 4.91992 14.5173 5.02317 14.8658 5.90082C14.9683 6.15895 14.2905 7.01212 13.7474 7.58728C14.0362 6.98387 14.3178 6.26221 14.3496 6.02128C14.4098 5.56375 13.7474 5.24689 13.1449 4.91992C12.4395 5.2641 12.0627 5.71153 12.0091 6.09012C11.9652 6.39988 12.1148 6.95886 12.4395 7.58728C11.8885 6.97044 11.2625 6.17616 11.4413 5.90082Z" fill="currentColor"/></svg>',
-                //     route: route('machines.index'),
-                //     active: route().current('machines.*'),
-                //     options: [],
-                //     dropdown: false,
-                //     show: this.$page.props.auth.user.permissions.includes('Ver máquinas'),
-                // },
                 {
                     label: 'Configuraciones',
                     icon: '<svg width="20" height="20" class="inline" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.21973 0.0478516C7.94732 -0.0418853 8.42134 0.0143806 9.00684 0.0664062L9.09961 0.0791016C9.18688 0.0962526 9.2619 0.126104 9.32324 0.169922C9.40531 0.228698 9.46298 0.312233 9.49609 0.418945L9.76367 1.28125L9.76465 1.28418L9.80469 1.3877C9.8196 1.41139 9.83951 1.42705 9.87207 1.43457L10.0957 1.49121C10.5862 1.6255 10.8765 1.78638 11.3193 2.04688L11.3691 2.06836C11.3845 2.07248 11.3993 2.07388 11.4131 2.07324C11.4413 2.07179 11.4694 2.06139 11.498 2.0459L12.2412 1.64453L12.4004 1.5752C12.5595 1.52213 12.7163 1.52281 12.8379 1.61621L13.2959 1.9834C13.7038 2.3293 13.9866 2.63882 14.3574 3.13672L14.4062 3.20996C14.4473 3.28332 14.4681 3.35679 14.4717 3.43066C14.4763 3.52897 14.4506 3.62834 14.4043 3.73145L14.4033 3.73242L14.002 4.49121C13.955 4.58008 13.9417 4.63279 13.9717 4.68457L14.166 5.03516C14.3359 5.36295 14.4435 5.64899 14.5684 6.10156L14.5986 6.19922C14.6038 6.20956 14.6099 6.21845 14.6172 6.22461C14.6244 6.23063 14.6345 6.23524 14.6475 6.23926L15.5703 6.52246L15.6475 6.55078C15.722 6.58311 15.7889 6.62808 15.8418 6.68652C15.9125 6.76477 15.9583 6.86773 15.9668 6.99707L15.9961 7.52832C16.0148 8.01604 16.0035 8.40753 15.9668 8.99219C15.9662 9.17899 15.8612 9.36166 15.6914 9.44922L15.6143 9.48145L14.707 9.76367C14.6784 9.77259 14.6568 9.78302 14.6396 9.79883C14.6312 9.80669 14.623 9.81623 14.6162 9.82812L14.5977 9.87305C14.4654 10.3243 14.3579 10.6146 14.1914 10.9541L14.002 11.3184C13.9825 11.3543 13.9743 11.382 13.9746 11.4082C13.975 11.4343 13.9836 11.462 14.002 11.498L14.4033 12.2861L14.4395 12.3643C14.47 12.4419 14.4863 12.5204 14.4834 12.5986C14.4804 12.6772 14.4583 12.7558 14.4121 12.834L14.3574 12.9121C13.9857 13.3766 13.7163 13.6735 13.3301 14.0059L12.8975 14.3574C12.8291 14.4104 12.7441 14.4551 12.6406 14.4697C12.5373 14.4842 12.4153 14.4687 12.2725 14.4043L12.2715 14.4033L11.498 13.9873C11.4622 13.968 11.437 13.9619 11.416 13.9629C11.4056 13.9635 11.3955 13.9657 11.3848 13.9697L11.3486 13.9873C10.9367 14.2124 10.6516 14.3425 10.2803 14.4629L9.87207 14.583C9.84548 14.5903 9.82801 14.603 9.81445 14.6201C9.8005 14.6379 9.78986 14.6621 9.77832 14.6934L9.48145 15.5996C9.44346 15.7153 9.38568 15.7977 9.29883 15.8535C9.23408 15.895 9.15334 15.9217 9.05371 15.9385L8.94824 15.9521C8.47899 15.9968 8.04378 16.0141 7.51562 15.9902L6.95215 15.9521C6.76507 15.9358 6.60402 15.8194 6.53223 15.667L6.50781 15.5986L6.25488 14.6914C6.25057 14.6759 6.2474 14.6641 6.24414 14.6533C6.24106 14.6432 6.23749 14.635 6.2334 14.6289C6.22958 14.6234 6.22408 14.6182 6.21582 14.6133L6.17578 14.5977C5.73103 14.4771 5.43943 14.3754 5.09082 14.2021L4.71484 14.002C4.68239 13.9837 4.6512 13.9745 4.62012 13.9746C4.60465 13.9747 4.58858 13.9771 4.57227 13.9814L4.52051 14.002L3.74707 14.3887C3.61114 14.4566 3.49226 14.4775 3.37695 14.457C3.2907 14.4416 3.20703 14.4027 3.12012 14.3457L3.03223 14.2832C2.54132 13.9061 2.26232 13.6367 1.97461 13.2842L1.67578 12.8965C1.60861 12.8058 1.56445 12.7254 1.5498 12.6426C1.5352 12.5591 1.5505 12.4744 1.59961 12.376L2.03125 11.5127L2.05664 11.457C2.06224 11.4415 2.06509 11.428 2.06543 11.415C2.06572 11.4024 2.06289 11.3892 2.05762 11.374L2.03125 11.3184C1.80622 10.9178 1.68069 10.6431 1.56543 10.2959L1.4502 9.91699C1.43766 9.8726 1.42702 9.84179 1.41309 9.82031C1.40649 9.81023 1.39866 9.80171 1.38965 9.79492L1.35547 9.77832L0.433594 9.48145C0.319952 9.44479 0.240057 9.3902 0.18457 9.3125C0.143357 9.25459 0.116253 9.18372 0.0976562 9.09863L0.0810547 9.00781C-0.028582 8.22578 -0.0241658 7.77648 0.0810547 6.96582L0.105469 6.83887C0.11658 6.79921 0.131607 6.76249 0.151367 6.72949C0.191317 6.66292 0.252266 6.61239 0.344727 6.58203L1.34082 6.25488L1.40723 6.23047C1.42052 6.22265 1.43005 6.21137 1.43555 6.19043L1.55664 5.77148C1.68072 5.39173 1.8224 5.1039 2.06152 4.68457L2.07812 4.6377C2.08027 4.62257 2.07943 4.60754 2.07617 4.59277L2.0332 4.49414L2.03125 4.49121L1.64453 3.76172C1.5967 3.66138 1.56245 3.55439 1.5498 3.45996C1.53736 3.36616 1.54621 3.28034 1.58691 3.22559L1.9541 2.75293C2.2995 2.33446 2.60217 2.05384 3.07715 1.69043L3.16797 1.62793C3.25518 1.57487 3.3307 1.55048 3.4043 1.54688C3.50166 1.54217 3.59396 1.57359 3.70117 1.61426H3.70215L4.52051 2.03125L4.57617 2.05566C4.5912 2.06061 4.60438 2.06263 4.61621 2.0625C4.63975 2.0621 4.66351 2.05246 4.7002 2.03125L4.89941 1.91992C5.34258 1.68403 5.6366 1.60295 6.11523 1.43555L6.17773 1.41211C6.19342 1.40529 6.20477 1.39838 6.21387 1.39062C6.231 1.37595 6.24165 1.35555 6.25488 1.31152L6.52246 0.418945L6.5498 0.352539C6.58217 0.289608 6.62963 0.236279 6.68164 0.195312C6.75086 0.14087 6.82933 0.106062 6.8916 0.0957031L7.21973 0.0478516ZM7.98242 4.20215C5.89377 4.20215 4.2002 5.89573 4.2002 7.98438C4.20044 10.0728 5.89393 11.7656 7.98242 11.7656C10.0708 11.7655 11.7634 10.0728 11.7637 7.98438C11.7637 5.89578 10.071 4.20224 7.98242 4.20215Z" fill="currentColor"/></svg>',
                     route: route('settings.index'),
                     active: route().current('settings.*'),
                     options: [],
-                    dropdown: false,
                     show: this.$page.props.auth.user.permissions.includes('Ver configuraciones'),
                 },
-                //     label: 'Comunidad',
-                //     icon: '<i class="fa-solid fa-people-roof text-sm mr-2"></i>',
-                //     // route: route('posts.index'),
-                //     active: route().current('posts.*') || route().current('community-events.*')|| route().current('neighbors.*'),
-                //     options: [
-                //         {
-                //             label: 'Muro de noticias',
-                //             route: route('posts.index'),
-                //             show: true,
-                //         },
-                //         {
-                //             label: 'Eventos',
-                //             route: route('community-events.index'),
-                //             show: true,
-                //         },
-                //         {
-                //             label: 'Directorio de vecinos',
-                //             route: route('neighbors.index'),
-                //             show: true,
-                //         },
-                //     ],
-                //     dropdown: true,
-                //     show: true
-                // },
             ],
         }
     },
@@ -224,6 +247,8 @@ export default {
         Dropdown,
         Link,
         ProfileCard,
+        SideNavLink,
+        DropdownNavLink,
     },
     methods: {
         openNewTab(url) {

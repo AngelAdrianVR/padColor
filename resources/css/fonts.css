@@ -45,3 +45,59 @@
     font-weight: 600;
     font-style: normal;
 }
+
+/* Wix Madefor Text - Regular */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-Regular.ttf') format('truetype');
+    font-weight: 400; /* normal */
+    font-style: normal;
+}
+
+/* Wix Madefor Text - Medium */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* Wix Madefor Text - SemiBold */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Wix Madefor Text - Bold */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-Bold.ttf') format('truetype');
+    font-weight: 700; /* bold */
+    font-style: normal;
+}
+
+/* Wix Madefor Text - italic */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-Italic.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* Wix Madefor Text - ExtraBold */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* Wix Madefor Text - Black */
+@font-face {
+    font-family: 'Wix Madefor Text';
+    src: url('/fonts/WixMadeforText-Black.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+}

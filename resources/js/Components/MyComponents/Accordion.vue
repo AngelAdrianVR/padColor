@@ -1,10 +1,14 @@
 <template>
-    <button :id="`accordion-title-${id}`" class="w-full text-start px-2 mb-1 flex justify-between text-xs rounded-md py-1"
-        :class="active ? 'font-bold text-primary' : ''" @click.prevent="accordionOpen = !accordionOpen"
-        :aria-expanded="accordionOpen" :aria-controls="`accordion-text-${id}`" :title="title">
-        <p class="truncate"><span v-html="icon"></span> {{ title }}</p>
-        <i class="fa-solid fa-angle-down transform origin-center transition duration-200 ease-out"
-            :class="{ '!rotate-180': accordionOpen }"></i>
+    <button :id="`accordion-title-${id}`"
+        class="w-full text-start px-2 mb-1 mt-[11px] flex justify-between items-center text-sm rounded-md py-1"
+        :class="active ? 'bg-grayD9 font-bold text-primary' : 'text-gray66'"
+        @click.prevent="accordionOpen = !accordionOpen" :aria-expanded="accordionOpen"
+        :aria-controls="`accordion-text-${id}`" :title="title">
+        <p class="truncate flex items-center space-x-2">
+            <span v-html="icon"></span>
+            <span>{{ title }}</span>
+        </p>
+        <ChevronDownIcon class="size-3 transform origin-center transition duration-200 ease-out" :class="{ '!rotate-180': accordionOpen }" />
     </button>
     <div :id="`accordion-text-${id}`" role="region" :aria-labelledby="`accordion-title-${id}`"
         class="grid text-sm overflow-hidden transition-all duration-300 ease-in-out"
@@ -17,6 +21,8 @@
     </div>
 </template>
 <script>
+import { ChevronDownIcon } from '@heroicons/vue/24/outline';
+
 export default {
     data() {
         return {
@@ -30,6 +36,7 @@ export default {
         icon: String,
     },
     components: {
+        ChevronDownIcon,
     }
 }
 </script>
