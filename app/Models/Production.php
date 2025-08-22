@@ -41,6 +41,7 @@ class Production extends Model
         'quality_quantity',
         'current_quantity',
         'scrap_quantity',
+        'shortage_quantity',
         'returns',
         'look',
         'changes',

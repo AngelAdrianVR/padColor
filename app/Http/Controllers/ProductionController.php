@@ -19,7 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ProductionController extends Controller
 {
     use NotifiesViaEvents;
-    
+
     public function index()
     {
         $productions = Production::latest('folio')->get(['folio', 'station']);
@@ -217,7 +217,7 @@ class ProductionController extends Controller
         $newProduction->start_date = now();
         $newProduction->save();
 
-        return to_route('productions.edit', ['production' => $newProduction->folio]);
+        return to_route('productions.edit', ['production' => $newProduction->id]);
     }
 
     public function returnStation(Request $request, Production $production)
@@ -261,13 +261,27 @@ class ProductionController extends Controller
 
     public function productionRelease(Request $request, Production $production)
     {
-        $scrap = $production->quantity - $request->close_quantity;
+        $validatedData = $request->validate([
+            'close_quantity' => 'required|numeric|min:0',
+            'close_production_date' => 'required|date',
+            'scrap_quantity' => 'required|numeric|min:0',
+            'shortage_quantity' => 'required|numeric|min:0',
+        ]);
+
+        // Validación adicional para asegurar que los números cuadren
+        $totalDifference = $production->quantity - $validatedData['close_quantity'];
+        $justifiedDifference = $validatedData['scrap_quantity'] + $validatedData['shortage_quantity'];
+
+        if ($totalDifference > 0 && abs($totalDifference - $justifiedDifference) > 0.01) { // Se usa una tolerancia pequeña
+            return back()->withErrors(['scrap_quantity' => 'La suma de la merma y el faltante no coincide con la diferencia total.']);
+        }
 
         $production->update([
             'station' => 'Calidad',
-            'close_quantity' => $request->close_quantity,
-            'scrap_quantity' => $scrap > 0 ? $scrap : 0,
-            'close_production_date' => $request->close_production_date,
+            'close_quantity' => $validatedData['close_quantity'],
+            'scrap_quantity' => $validatedData['scrap_quantity'],
+            'shortage_quantity' => $validatedData['shortage_quantity'],
+            'close_production_date' => $validatedData['close_production_date'],
             'modified_user_id' => auth()->id(),
         ]);
 
@@ -276,26 +290,40 @@ class ProductionController extends Controller
             'Calidad',
             $request->close_quantity
         );
-        $eventKey = 'production.forwarded.quality';
-        $this->sendNotification($eventKey, $notificationInstance);
+        $this->sendNotification('production.forwarded.quality', $notificationInstance);
     }
 
     public function qualityRelease(Request $request, Production $production)
     {
-        $scrap = $production->close_quantity - $request->quality_quantity;
+        // 1. Validar los datos de entrada
+        $validatedData = $request->validate([
+            'quality_quantity' => 'required|numeric|min:0',
+            'quality_released_date' => 'required|date',
+        ]);
 
+        // 2. Calcular la merma generada específicamente en la etapa de Calidad
+        $scrapFromQuality = $production->close_quantity - $validatedData['quality_quantity'];
+
+        // 3. Calcular la nueva merma total.
+        // Se suma:
+        // - La merma que ya venía de Producción ($production->scrap_quantity).
+        // - La nueva merma generada en Calidad ($scrapFromQuality).
+        $totalScrap = $production->scrap_quantity + $scrapFromQuality;
+
+        // 4. Actualizar el registro de producción
         $production->update([
             'station' => 'Inspección',
-            'quality_quantity' => $request->quality_quantity,
-            'scrap_quantity' => $production->scrap_quantity + ($scrap > 0 ? $scrap : 0),
-            'quality_released_date' => $request->quality_released_date,
+            'quality_quantity' => $validatedData['quality_quantity'],
+            'scrap_quantity' => $totalScrap,
+            'quality_released_date' => $validatedData['quality_released_date'],
             'modified_user_id' => auth()->id(),
         ]);
 
+        // 5. Enviar la notificación
         $notificationInstance = new ProductionForwardedNotification(
             $production,
             'Inspección',
-            $request->quality_quantity
+            $validatedData['quality_quantity']
         );
         $eventKey = 'production.forwarded.inspection';
         $this->sendNotification($eventKey, $notificationInstance);
@@ -319,8 +347,6 @@ class ProductionController extends Controller
         }
 
         if ($production->current_quantity >= $production->quantity) {
-            // $production->station = 'Terminadas';
-            // $production->finish_date = $request->close_production_date;
             $this->finishProduction($request, $production);
         }
     }

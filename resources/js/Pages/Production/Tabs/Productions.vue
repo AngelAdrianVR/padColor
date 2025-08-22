@@ -465,21 +465,47 @@
     </DialogModal>
     <DialogModal :show="showProductionRelease" @close="showProductionRelease = false">
         <template #title>
-            <h1 class="font-semibold">Producción</h1>
+            <h1 class="font-semibold">Liberar Producción</h1>
         </template>
         <template #content>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <InputLabel value="Cantidad entregada:" />
+                    <InputLabel value="Cantidad entregada*" />
                     <el-input-number v-model="form.close_quantity" placeholder="Ingresa la cantidad" :min="0"
                         class="!w-full" />
                     <InputError :message="form.errors.close_quantity" />
                 </div>
                 <div>
-                    <InputLabel value="Fecha de liberación:" />
+                    <InputLabel value="Fecha de liberación*" />
                     <el-date-picker class="!w-full" v-model="form.close_production_date" type="date"
                         placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                     <InputError :message="form.errors.close_production_date" />
+                </div>
+
+                <!-- Nuevos campos para Merma y Faltante -->
+                <div v-if="difference > 0" class="col-span-full border-t pt-4 mt-2">
+                    <p class="text-sm text-gray-600 mb-2">
+                        Hay una diferencia de <strong class="text-lg">{{ difference.toFixed(2) }}</strong> piezas. Por
+                        favor, clasifícala:
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel value="Cantidad de merma" />
+                            <el-input-number v-model="form.scrap_quantity" placeholder="Merma" :min="0"
+                                :max="difference" class="!w-full" />
+                            <InputError :message="form.errors.scrap_quantity" />
+                        </div>
+                        <div>
+                            <InputLabel value="Cantidad faltante (sin material)" />
+                            <el-input-number v-model="form.shortage_quantity" placeholder="Faltante" :min="0"
+                                :max="difference" class="!w-full" />
+                            <InputError :message="form.errors.shortage_quantity" />
+                        </div>
+                    </div>
+                    <p v-if="!isDifferenceJustified" class="text-xs text-red-500 mt-2">
+                        La suma de la merma y el faltante debe ser igual a la diferencia total ({{ difference.toFixed(2)
+                        }}).
+                    </p>
                 </div>
             </div>
         </template>
@@ -488,7 +514,7 @@
                 <CancelButton @click="showProductionRelease = false" :disabled="form.processing">
                     Cancelar
                 </CancelButton>
-                <PrimaryButton @click="productionRelease" :disabled="form.processing">
+                <PrimaryButton @click="productionRelease" :disabled="form.processing || !isDifferenceJustified">
                     <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                     Continuar
                 </PrimaryButton>
@@ -706,6 +732,8 @@ export default {
             excel: [], // solo se usa en importación
             //parcialidades
             quantity: 0,
+            shortage_quantity: 0,
+            scrap_quantity: 0,
             date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto,
         });
 
@@ -906,6 +934,18 @@ export default {
     props: {
     },
     computed: {
+        difference() {
+            if (this.selectedProduction && this.form.close_quantity !== null) {
+                const diff = this.selectedProduction.quantity - this.form.close_quantity;
+                return diff > 0 ? diff : 0;
+            }
+            return 0;
+        },
+        isDifferenceJustified() {
+            if (this.difference === 0) return true;
+            // Usamos toFixed para evitar problemas con decimales de punto flotante
+            return (this.form.scrap_quantity + this.form.shortage_quantity).toFixed(2) == this.difference.toFixed(2);
+        },
         filteredStations() {
             // Si la estación actual es 'Terminadas', no mostramos opciones
             if (this.currentStation === 'Terminadas') {
@@ -1127,19 +1167,13 @@ export default {
         },
         productionRelease() {
             this.form.post(route('productions.production-release', this.selectedProduction.id), {
-                onSuccess: async () => {
+                onSuccess: () => {
                     this.showProductionRelease = false;
-                    this.$notify({
-                        title: "Entrega de producción a calidad",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Éxito", message: "Entrega de producción registrada", type: "success" });
                     this.updateDetails();
                 },
                 onError: () => {
-                    this.$notify({
-                        title: "Error al registrar entrega de producción a calidad",
-                        type: "error",
-                    });
+                    this.$notify({ title: "Error", message: "No se pudo registrar la entrega", type: "error" });
                 },
             });
         },
