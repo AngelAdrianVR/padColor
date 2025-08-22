@@ -46,7 +46,7 @@
                         <!-- Iteramos sobre las columnas definidas en 'data' -->
                         <div v-for="column in columns" :key="column.title"
                             class="rounded-[10px] p-2 transition-colors duration-300 border"
-                            :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : column.borderColor, }">
+                            :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : null, }">
                             <!-- Encabezado de la columna -->
                             <div class="flex items-center justify-between text-sm mb-2 pb-1 border-b border-grayD9"
                                 :class="column.iconColor">
@@ -67,7 +67,7 @@
                                     <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
-                                            :class="true ? 'bg-[#27A416]' : 'bg-[#C1202A]'"></div>
+                                            :style="{backgroundColor: column.borderColor}"></div>
                                         <div class="flex justify-between items-start text-sm mb-2">
                                             <span class="font-light text-gray66">ID. {{ element.id }}</span>
                                             <span class="text-gray3F font-semibold">
@@ -173,11 +173,11 @@ export default {
                 dates: this.filters.dates || [],
             },
             columns: [
-                { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#D9D9D9' },
-                { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#FFFB7B' },
-                { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#FDD192' },
-                { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#A5CCFE' },
-                { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#84FC59' },
+                { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#3f3f3f' },
+                { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#645E20' },
+                { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#C06102' },
+                { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#004C7B' },
+                { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#448734' },
             ],
             localImports: {}, // Se inicializa vacío y se llena en 'created'
         };

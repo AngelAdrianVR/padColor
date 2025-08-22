@@ -44,6 +44,7 @@ class SupplierController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
             'address' => 'nullable|string',
         ]);
 
@@ -74,6 +75,7 @@ class SupplierController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
             'address' => 'nullable|string',
         ]);
 

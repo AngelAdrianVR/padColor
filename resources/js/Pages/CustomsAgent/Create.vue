@@ -18,7 +18,7 @@
                         <el-input v-model="form.contact_person" placeholder="Ej. Ernesto Moreno Cisneros" />
                         <InputError :message="form.errors.contact_person" />
                     </div>
-                     <div>
+                    <div>
                         <InputLabel value="Correo electrónico" />
                         <el-input v-model="form.email" placeholder="Ej. ernesto@gmail.com" />
                         <InputError :message="form.errors.email" />
@@ -27,6 +27,12 @@
                         <InputLabel value="Teléfono" />
                         <el-input v-model="form.phone" placeholder="Escribe el número con la lada" />
                         <InputError :message="form.errors.phone" />
+                    </div>
+                    <div class="col-span-full">
+                        <InputLabel value="Notas" />
+                        <el-input v-model="form.notes" :autosize="{ minRows: 2, maxRows: 4 }" type="textarea"
+                            placeholder="Escribe comentarios relacionados con el agente" />
+                        <InputError :message="form.errors.notes" />
                     </div>
                 </div>
 
@@ -64,6 +70,7 @@ export default {
                 contact_person: null,
                 email: null,
                 phone: null,
+                notes: null,
             }),
         };
     },

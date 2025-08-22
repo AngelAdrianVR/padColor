@@ -18,6 +18,10 @@ class Import extends Model implements HasMedia
 
     protected $fillable = [
         'folio',
+        'client',
+        'cedis',
+        'arrival_port',
+        'warehouse',
         'supplier_id',
         'customs_agent_id',
         'user_id',

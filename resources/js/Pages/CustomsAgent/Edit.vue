@@ -28,6 +28,12 @@
                         <el-input v-model="form.phone" placeholder="Escribe el número con la lada" />
                         <InputError :message="form.errors.phone" />
                     </div>
+                    <div class="col-span-full">
+                        <InputLabel value="Notas" />
+                        <el-input v-model="form.notes" :autosize="{ minRows: 2, maxRows: 4 }" type="textarea"
+                            placeholder="Escribe comentarios relacionados con el agente" />
+                        <InputError :message="form.errors.notes" />
+                    </div>
                 </div>
 
                 <div class="text-right mt-6">
@@ -67,6 +73,7 @@ export default {
                 contact_person: this.customs_agent.contact_person,
                 email: this.customs_agent.email,
                 phone: this.customs_agent.phone,
+                notes: this.customs_agent.notes,
             }),
         };
     },

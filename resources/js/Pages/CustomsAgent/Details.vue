@@ -17,28 +17,34 @@
             </div>
             <div class="divide-y divide-gray-200 mt-6">
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Nombre / Razón Social</span>
-                    <span class="text-black">{{ agentData.name }}</span>
+                    <span class="text-gray3F w-[35%]">Nombre / Razón Social</span>
+                    <span class="text-black w-[65%] text-right">{{ agentData.name }}</span>
                 </div>
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Nombre del contacto</span>
-                    <span class="text-black">{{ agentData.contact_person ?? '-' }}</span>
+                    <span class="text-gray3F w-[35%]">Nombre del contacto</span>
+                    <span class="text-black w-[65%] text-right">{{ agentData.contact_person ?? '-' }}</span>
                 </div>
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Correo electrónico</span>
-                    <span class="text-black">{{ agentData.email ?? '-' }}</span>
+                    <span class="text-gray3F w-[35%]">Correo electrónico</span>
+                    <span class="text-black w-[65%] text-right">{{ agentData.email ?? '-' }}</span>
                 </div>
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Teléfono</span>
-                    <span class="text-black">{{ agentData.phone ?? '-' }}</span>
+                    <span class="text-gray3F w-[35%]">Teléfono</span>
+                    <span class="text-black w-[65%] text-right">{{ agentData.phone ?? '-' }}</span>
                 </div>
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Creado por</span>
-                    <span class="text-black">{{ agentData.user?.name ?? 'N/A' }}</span>
+                    <span class="text-gray3F w-[35%]">Notas</span>
+                    <span class="text-black w-[65%] text-right" style="white-space: pre-line;">
+                        {{ agentData.notes ?? '-' }}
+                    </span>
                 </div>
                 <div class="py-3 flex justify-between text-sm">
-                    <span class="text-gray3F">Creado el</span>
-                    <span class="text-black">{{ formatDate(agentData.created_at) }}</span>
+                    <span class="text-gray3F w-[35%]">Creado por</span>
+                    <span class="text-black w-[65%] text-right">{{ agentData.user?.name ?? 'N/A' }}</span>
+                </div>
+                <div class="py-3 flex justify-between text-sm">
+                    <span class="text-gray3F w-[35%]">Creado el</span>
+                    <span class="text-black w-[65%] text-right">{{ formatDate(agentData.created_at) }}</span>
                 </div>
             </div>
         </template>

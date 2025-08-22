@@ -34,6 +34,22 @@
                             <span>{{ formatDate(importData.created_at) }}</span>
                         </div>
                         <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Cliente que solicita </span>
+                            <span>{{ importData.client }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Cedis</span>
+                            <span>{{ importData.cedis }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Almacén</span>
+                            <span>{{ importData.warehouse }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Puerto de llegada</span>
+                            <span>{{ importData.arrival_port }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
                             <span class="text-gray3F">Proveedor</span>
                             <span>{{ importData.supplier?.name }}</span>
                         </div>

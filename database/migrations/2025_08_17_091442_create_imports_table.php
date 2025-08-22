@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('imports', function (Blueprint $table) {
             $table->id();
             $table->string('folio')->unique();
+
+            $table->string('client')->nullable();
+            $table->string('cedis')->nullable();
+            $table->string('arrival_port')->nullable();
+            $table->string('warehouse')->nullable();
             
             $table->foreignId('supplier_id')->constrained('suppliers');
             $table->foreignId('customs_agent_id')->constrained('customs_agents');

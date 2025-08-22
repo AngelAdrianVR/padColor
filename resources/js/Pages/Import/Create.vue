@@ -13,6 +13,38 @@
                 <h2 class="text-gray-500 font-semibold col-span-full my-3">Información general</h2>
                 <div class="lg:grid grid-cols-2 gap-3">
                     <div>
+                        <InputLabel value="Cliente que solicita*" />
+                        <el-select v-model="form.client" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['PadColor Insumos graficos', 'Papel, diseño y color']"
+                                :key="item" :label="item" :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.client" />
+                    </div>
+                    <div>
+                        <InputLabel value="Cedis*" />
+                        <el-select v-model="form.cedis" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['GDL', 'CDMX', 'Pendiente']" :key="item" :label="item"
+                                :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.cedis" />
+                    </div>
+                    <div>
+                        <InputLabel value="Puerto de llegada*" />
+                        <el-select v-model="form.arrival_port" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['Altamira', 'Manzanillo']" :key="item" :label="item"
+                                :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.arrival_port" />
+                    </div>
+                    <div>
+                        <InputLabel value="Almacén*" />
+                        <el-select v-model="form.warehouse" placeholder="Selecciona el incoterm" class="!w-full">
+                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C']" :key="item"
+                                :label="item" :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.warehouse" />
+                    </div>
+                    <div>
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Proveedor*</span>
@@ -151,6 +183,7 @@
                                 <el-option label="Packing List" value="Packing List" />
                                 <el-option label="Certificado de origen" value="Certificado de origen" />
                                 <el-option label="Póliza de seguro de carga" value="Póliza de seguro de carga" />
+                                <el-option label="Orden de compra" value="Orden de compra" />
                                 <el-option label="Otro" value="Otro" />
                             </el-select>
                         </div>
@@ -257,6 +290,10 @@ export default {
     },
     data() {
         const form = useForm({
+            client: null,
+            cedis: null,
+            arrival_port: null,
+            warehouse: null,
             supplier_id: null,
             customs_agent_id: null,
             incoterm: 'EXW: Ex Works (En fábrica)',
