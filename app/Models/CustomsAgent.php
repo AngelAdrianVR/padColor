@@ -16,6 +16,7 @@ class CustomsAgent extends Model
         'contact_person',
         'email',
         'phone',
+        'notes',
         'user_id',
     ];
 

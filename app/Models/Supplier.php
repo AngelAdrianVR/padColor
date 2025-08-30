@@ -17,6 +17,7 @@ class Supplier extends Model
         'email',
         'phone',
         'address',
+        'notes',
         'user_id',
     ];
 

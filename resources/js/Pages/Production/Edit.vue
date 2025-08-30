@@ -60,7 +60,7 @@
                 </div>
                 <div>
                     <InputLabel value="Cantidad solicitada*" />
-                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" step="0.01"
+                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :step="0.01"
                         :min="0.01" class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
@@ -166,7 +166,7 @@
                 </div>
                 <div>
                     <InputLabel value="Pz/H" />
-                    <el-input-number v-model="form.pps" @change="handleSheet" :min="0.01" placeholder="Piezas por hoja" step="0.01"
+                    <el-input-number v-model="form.pps" @change="handleSheet" :min="0.01" placeholder="Piezas por hoja" :step="0.01"
                         class="!w-full" />
                     <InputError :message="form.errors.pps" />
                 </div>
@@ -187,7 +187,7 @@
                 </div>
                 <div>
                     <InputLabel value="Ajuste" />
-                    <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" step="0.01"
+                    <el-input-number v-model="form.adjust" @change="handleHa" placeholder="Ajuste" :min="0" :step="0.01"
                         class="!w-full" />
                     <InputError :message="form.errors.adjust" />
                 </div>
@@ -208,7 +208,7 @@
                 </div>
                 <div>
                     <InputLabel value="P/F" />
-                    <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full" step="0.01" />
+                    <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full" :step="0.01" />
                     <InputError :message="form.errors.pf" />
                 </div>
                 <div>

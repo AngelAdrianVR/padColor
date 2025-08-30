@@ -200,35 +200,36 @@ Route::resource('customs-agents', CustomsAgentController::class);
 // ===================================================================
 // RUTAS DEL MÓDULO DE IMPORTACIONES
 // ===================================================================
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Ruta para el reporte de Excel
+    // Se define antes del resource para que no choque con la ruta "show"
+    Route::get('imports/export', [ImportController::class, 'export'])->name('imports.export');
 
-// Ruta para el reporte de Excel
-// Se define antes del resource para que no choque con la ruta "show"
-Route::get('imports/export', [ImportController::class, 'export'])->name('imports.export');
+    // --- ACCIONES DE LAS PESTAÑAS (Detalle de Importación) ---
 
-// --- ACCIONES DE LAS PESTAÑAS (Detalle de Importación) ---
+    // Para Materia Prima (adjuntar y quitar de la importación)
+    Route::post('imports/{import}/raw-materials', [ImportController::class, 'attachRawMaterial'])->name('imports.raw-materials.attach');
+    Route::delete('imports/{import}/raw-materials/{rawMaterial}', [ImportController::class, 'detachRawMaterial'])->name('imports.raw-materials.detach');
 
-// Para Materia Prima (adjuntar y quitar de la importación)
-Route::post('imports/{import}/raw-materials', [ImportController::class, 'attachRawMaterial'])->name('imports.raw-materials.attach');
-Route::delete('imports/{import}/raw-materials/{rawMaterial}', [ImportController::class, 'detachRawMaterial'])->name('imports.raw-materials.detach');
+    // Para Costos
+    Route::post('imports/{import}/costs', [ImportController::class, 'storeCost'])->name('imports.costs.store');
+    Route::delete('costs/{cost}', [ImportController::class, 'destroyCost'])->name('imports.costs.destroy');
 
-// Para Costos
-Route::post('imports/{import}/costs', [ImportController::class, 'storeCost'])->name('imports.costs.store');
-Route::delete('costs/{cost}', [ImportController::class, 'destroyCost'])->name('imports.costs.destroy');
+    // Para Pagos
+    Route::post('imports/{import}/payments', [ImportController::class, 'storePayment'])->name('imports.payments.store');
+    Route::delete('payments/{payment}', [ImportController::class, 'destroyPayment'])->name('imports.payments.destroy');
 
-// Para Pagos
-Route::post('imports/{import}/payments', [ImportController::class, 'storePayment'])->name('imports.payments.store');
-Route::delete('payments/{payment}', [ImportController::class, 'destroyPayment'])->name('imports.payments.destroy');
+    // Para Documentos (Media Library)
+    Route::post('imports/{import}/documents', [ImportController::class, 'storeDocument'])->name('imports.documents.store');
+    // Usaremos el ID del registro de media para borrarlo
+    Route::delete('documents/{media}', [ImportController::class, 'destroyDocument'])->name('imports.documents.destroy');
 
-// Para Documentos (Media Library)
-Route::post('imports/{import}/documents', [ImportController::class, 'storeDocument'])->name('imports.documents.store');
-// Usaremos el ID del registro de media para borrarlo
-Route::delete('documents/{media}', [ImportController::class, 'destroyDocument'])->name('imports.documents.destroy');
+    // --- ACCIONES PRINCIPALES ---
 
-// --- ACCIONES PRINCIPALES ---
+    // Ruta específica para actualizar el estado del Kanban (Drag and Drop)
+    Route::patch('imports/{import}/status', [ImportController::class, 'updateStatus'])->name('imports.status.update');
 
-// Ruta específica para actualizar el estado del Kanban (Drag and Drop)
-Route::patch('imports/{import}/status', [ImportController::class, 'updateStatus'])->name('imports.status.update');
-
-// Controlador de Recursos para el CRUD principal de Importaciones
-// Gestiona: index, create, store, show, edit, update, destroy
-Route::resource('imports', ImportController::class);
+    // Controlador de Recursos para el CRUD principal de Importaciones
+    // Gestiona: index, create, store, show, edit, update, destroy
+    Route::resource('imports', ImportController::class);
+});

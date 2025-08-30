@@ -25,7 +25,7 @@ class ImportArrivedAtDestination extends Notification implements ShouldQueue
         if (app()->environment() == 'production') {
             return ['mail'];
         } else {
-            return ['mail'];
+            return [];
         }
     }
 

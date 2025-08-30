@@ -22,13 +22,28 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
         return $this->productions;
     }
 
+    /**
+     * Calcula el porcentaje de un valor sobre un total, manejando divisiones por cero.
+     *
+     * @param float|int $value
+     * @param float|int $total
+     * @return float
+     */
+    private function getPercentage($value, $total)
+    {
+        if (empty($total) || empty($value)) {
+            return 0;
+        }
+        return ($value / $total) * 100;
+    }
+
     public function styles(Worksheet $sheet)
     {
         // Negritas en los encabezados
         $sheet->getStyle(1)->getFont()->setBold(true);
 
-        // Autoajustar el ancho de las columnas
-        foreach (range('A', 'X') as $columnID) {
+        // Autoajustar el ancho de las columnas (rango extendido para nuevas columnas)
+        foreach (range('A', 'AU') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
@@ -53,14 +68,25 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             'Fecha inicio',
             'Fecha esperada producción',
             'Fecha fin producción',
-            'Cantidad entregada',
+            'Cantidad entregada (Producción)',
+            'Merma (Producción)',
+            'Merma % (Producción)',
+            'Diferencia (Producción)',
+            'Cantidad entregada (Calidad)',
+            'Merma (Calidad)',
+            'Merma % (Calidad)',
+            'Diferencia (Calidad)',
+            'Cantidad final (Inspección)',
+            'Merma (Inspección)',
+            'Merma % (Inspección)',
+            'Diferencia (Inspección)',
+            'Merma (Total)',
+            'Diferencia (Total)',
+            'Restante',
             'Fecha esperada empaque',
             'Producto terminado',
             'Parcial 1°',
             'Parcial N°',
-            'Cantidad final',
-            'Merma',
-            'Restante',
             'Dimensión del formato de impresión',
             'Piezas por hoja',
             'Ajuste',
@@ -81,9 +107,15 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function map($production): array
     {
         // Obtener cantidad de parcial 1
-        $partial1 = $production->partials ? $production->partials[0]['quantity'] : 0;
+        $partial1 = $production->partials[0]['quantity'] ?? 0;
         // Obtener cantidad de parcial N que es la suma de todos los parciales menos el primero
         $partialN = $production->partials ? array_sum(array_column($production->partials, 'quantity')) - $partial1 : 0;
+
+        // (Cálculo de mermas y porcentajes por estación) ---
+        $productionScrapPercentage = $this->getPercentage($production->production_scrap, $production->quantity);
+        $qualityScrapPercentage = $this->getPercentage($production->quality_scrap, $production->close_quantity);
+        $inspectionScrapPercentage = $this->getPercentage($production->inspection_scrap, $production->quality_quantity);
+
         return [
             $production->product->name ?? '',
             $production->product->season ?? '',
@@ -97,17 +129,28 @@ class ProductionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $production->material . ' ' . $production->gauge . ' ' . $production->varnish_type,
             $production->width . ' x ' . $production->large,
             $production->ts,
-            $production->start_date?->isoFormat('YYYY/DD/MM'),
+            $production->start_date?->isoFormat('YYYY/MM/DD'),
             $production->estimated_date?->isoFormat('DD/MM/YYYY'),
             $production->close_production_date?->toDateTimeString(),
             $production->close_quantity,
+            $production->production_scrap,
+            number_format($productionScrapPercentage, 2) . '%',
+            $production->production_shortage,
+            $production->quality_quantity,
+            $production->quality_scrap,
+            number_format($qualityScrapPercentage, 2) . '%',
+            $production->quality_shortage,
+            $production->current_quantity,
+            $production->inspection_scrap,
+            number_format($inspectionScrapPercentage, 2) . '%',
+            $production->inspection_shortage,
+            $production->scrap_quantity,
+            $production->shortage_quantity,
+            $production->quantity - $production->current_quantity,
             $production->estimated_package_date?->isoFormat('DD/MM/YYYY'),
             $production->finish_date?->toDateTimeString(),
             $partial1,
             $partialN,
-            $production->current_quantity,
-            $production->scrap_quantity,
-            $production->quantity - $production->current_quantity,
             $production->dfi,
             $production->pps,
             $production->adjust,

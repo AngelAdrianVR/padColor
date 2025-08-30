@@ -13,11 +13,43 @@
                 <h2 class="text-gray-500 font-semibold col-span-full my-3">Información general</h2>
                 <div class="lg:grid grid-cols-2 gap-3">
                     <div>
+                        <InputLabel value="Cliente que solicita*" />
+                        <el-select v-model="form.client" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['PadColor Insumos graficos', 'Papel, diseño y color']"
+                                :key="item" :label="item" :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.client" />
+                    </div>
+                    <div>
+                        <InputLabel value="Cedis*" />
+                        <el-select v-model="form.cedis" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['GDL', 'CDMX', 'Pendiente']" :key="item" :label="item"
+                                :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.cedis" />
+                    </div>
+                    <div>
+                        <InputLabel value="Puerto de llegada*" />
+                        <el-select v-model="form.arrival_port" placeholder="Selecciona" class="!w-full">
+                            <el-option v-for="item in ['Altamira', 'Manzanillo']" :key="item" :label="item"
+                                :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.arrival_port" />
+                    </div>
+                    <div>
+                        <InputLabel value="Almacén*" />
+                        <el-select v-model="form.warehouse" placeholder="Selecciona el incoterm" class="!w-full">
+                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C']" :key="item"
+                                :label="item" :value="item" />
+                        </el-select>
+                        <InputError :message="form.errors.warehouse" />
+                    </div>
+                    <div>
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Proveedor*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = true" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear proveedores')"
+                                    @click="showFastAddModal = true; addingSupplier = true" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>
@@ -33,8 +65,8 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Agente aduanal*</span>
-                                <button @click="showFastAddModal = true; addingSupplier = false" type="button"
-                                    class="mr-2">
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear agentes aduanales')"
+                                    @click="showFastAddModal = true; addingSupplier = false" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
                             </div>
@@ -171,6 +203,7 @@
                                 <el-option label="Packing List" value="Packing List" />
                                 <el-option label="Certificado de origen" value="Certificado de origen" />
                                 <el-option label="Póliza de seguro de carga" value="Póliza de seguro de carga" />
+                                <el-option label="Orden de compra" value="Orden de compra" />
                                 <el-option label="Otro" value="Otro" />
                             </el-select>
                         </div>
@@ -253,6 +286,7 @@ import { useForm, router } from '@inertiajs/vue3';
 import { ArrowUpTrayIcon, PlusCircleIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import FileView from '@/Components/MyComponents/Ticket/FileView.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -278,6 +312,10 @@ export default {
     data() {
         const form = useForm({
             _method: 'PUT', // Para que Laravel reconozca la petición como PUT
+            client: this.import.client,
+            cedis: this.import.cedis,
+            arrival_port: this.import.arrival_port,
+            warehouse: this.import.warehouse,
             supplier_id: this.import.supplier_id,
             customs_agent_id: this.import.customs_agent_id,
             incoterm: this.import.incoterm,
@@ -335,6 +373,41 @@ export default {
                 onFinish: () => {
                 }
             });
+        },
+        storeFastItem() {
+            let routeName = this.addingSupplier ? route('suppliers.store') : route('customs-agents.store');
+
+            this.fastForm.processing = true;
+
+            // Usamos axios para hacer la petición y manejar la respuesta JSON
+            axios.post(routeName, this.fastForm.data())
+                .then(response => {
+                    const newItem = response.data; // El nuevo proveedor o agente devuelto por el controlador
+
+                    if (this.addingSupplier) {
+                        // 1. Añadir el nuevo proveedor a la lista de props
+                        this.suppliers.push(newItem);
+                        // 2. Seleccionarlo automáticamente en el formulario principal
+                        this.form.supplier_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo proveedor agregado', type: 'success' });
+                    } else {
+                        this.customsAgents.push(newItem);
+                        this.form.customs_agent_id = newItem.id;
+                        this.$notify({ title: 'Éxito', message: 'Nuevo agente agregado', type: 'success' });
+                    }
+
+                    this.showFastAddModal = false;
+                    this.fastForm.reset();
+                })
+                .catch(error => {
+                    // Manejar errores de validación
+                    if (error.response.status === 422) {
+                        this.fastForm.errors = error.response.data.errors;
+                    }
+                })
+                .finally(() => {
+                    this.fastForm.processing = false;
+                });
         },
         addProduct() {
             this.form.products.push({ raw_material_id: null, quantity: 1, unit_cost: null });

@@ -15,7 +15,8 @@
                         </span>
                     </p>
                 </div>
-                <PrimaryButton @click="editImport"
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar importaciones')"
+                    @click="editImport"
                     class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                     <PencilIcon class="size-4 inline mr-1" />
                     Editar
@@ -31,6 +32,22 @@
                         <div class="py-2 flex justify-between text-sm">
                             <span class="text-gray3F">Creado el</span>
                             <span>{{ formatDate(importData.created_at) }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Cliente que solicita </span>
+                            <span>{{ importData.client }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Cedis</span>
+                            <span>{{ importData.cedis }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Almacén</span>
+                            <span>{{ importData.warehouse }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Puerto de llegada</span>
+                            <span>{{ importData.arrival_port }}</span>
                         </div>
                         <div class="py-2 flex justify-between text-sm">
                             <span class="text-gray3F">Proveedor</span>
@@ -51,7 +68,8 @@
                         </div>
                     </div>
                 </el-tab-pane>
-                <el-tab-pane label="Documentos" name="documents">
+                <el-tab-pane v-if="$page.props.auth.user.permissions.includes('Ver documentos de importaciones')"
+                    label="Documentos" name="documents">
                     <div v-if="importData.documents && importData.documents.length" class="border rounded-lg">
                         <div class="grid grid-cols-2 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
                             <span>Documentos adjuntos</span>
@@ -96,11 +114,14 @@
                         <p>No hay mercancías registradas en esta importación.</p>
                     </div>
                 </el-tab-pane>
-                <el-tab-pane label="Costos y pagos" name="costss">
+                <el-tab-pane v-if="$page.props.auth.user.permissions.includes('Ver costos y pagos de importaciones')"
+                    label="Costos y pagos" name="costss">
                     <div class="border rounded-lg p-4">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800">Costos</h3>
-                            <PrimaryButton @click="openCostModal" type="button"
+                            <PrimaryButton
+                                v-if="$page.props.auth.user.permissions.includes('Crear costos de importación')"
+                                @click="openCostModal" type="button"
                                 class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                                 <PlusIcon class="size-4 inline mr-1" />
                                 Registrar costo
@@ -124,7 +145,8 @@
                                     :class="cost.amount - cost.payments_sum_amount > 0 ? 'text-[#C20000]' : null">
                                     {{ formatCurrency(cost.amount - cost.payments_sum_amount, cost.currency) }}
                                 </span>
-                                <div class="flex justify-end">
+                                <div v-if="$page.props.auth.user.permissions.includes('Eliminar costos de importación')"
+                                    class="flex justify-end">
                                     <el-popconfirm title="¿Eliminar costo?" @confirm="deleteCost(cost.id)"
                                         confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
                                         <template #reference>
@@ -146,6 +168,7 @@
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800">Pagos realizados</h3>
                             <PrimaryButton @click="openPaymentModal" type="button"
+                                v-if="$page.props.auth.user.permissions.includes('Crear pagos de costo de importación')"
                                 class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
                                 <PlusIcon class="size-4 inline mr-1" />
                                 Registrar pago
@@ -177,7 +200,7 @@
                                         class="text-primary hover:underline ml-2">{{ payment.media[0].file_name }}</a>
                                     <span v-else class="ml-2">-</span>
                                     <div class="flex justify-end">
-                                        <el-popconfirm title="¿Eliminar pago?" @confirm="deletePayment(payment.id)"
+                                        <el-popconfirm v-if="$page.props.auth.user.permissions.includes('Eliminar pagos de costo de importación')" title="¿Eliminar pago?" @confirm="deletePayment(payment.id)"
                                             confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
                                             <template #reference>
                                                 <button type="button"
@@ -192,7 +215,9 @@
                         </div>
                     </div>
                 </el-tab-pane>
-                <el-tab-pane label="Historial" name="history">
+                <el-tab-pane
+                    v-if="$page.props.auth.user.permissions.includes('Ver historial de actividad de importaciones')"
+                    label="Historial" name="history">
                     <div v-if="importData.history && importData.history.length" class="relative pl-8">
                         <!-- Línea vertical de la línea de tiempo -->
                         <div class="absolute left-0 top-0 h-full border-l-2 border-gray-200 ml-[15px]"></div>
