@@ -42,10 +42,20 @@ class Production extends Model
         'current_quantity',
         'scrap_quantity',
         'shortage_quantity',
+
+        'production_scrap',
+        'production_shortage',
+        'quality_scrap',
+        'quality_shortage',
+        'inspection_scrap',
+        'inspection_shortage',
+
         'returns',
         'look',
         'changes',
         'sheets',
+        'close_production_notes',
+        'quality_notes',
         'ha',
         'pf',
         'ts',
@@ -64,9 +74,9 @@ class Production extends Model
         'estimated_date' => 'date',
         'estimated_package_date' => 'date',
         'start_date' => 'date',
-        'finish_date' => 'date',
-        'close_production_date' => 'date',
-        'quality_released_date' => 'date',
+        'finish_date' => 'datetime',
+        'close_production_date' => 'datetime',
+        'quality_released_date' => 'datetime',
     ];
 
     //realciones
@@ -84,7 +94,7 @@ class Production extends Model
     {
         return $this->belongsTo(Product::class);
     }
-    
+
     public function machine()
     {
         return $this->belongsTo(Machine::class);

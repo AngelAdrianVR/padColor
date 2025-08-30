@@ -208,6 +208,9 @@ class ProductionController extends Controller
             'current_quantity',
             'close_quantity',
             'scrap_quantity',
+            'shortage_quantity',
+            'close_production_notes',
+            'quality_notes',
             'partials',
             'start_date',
         ]);
@@ -266,22 +269,20 @@ class ProductionController extends Controller
             'close_production_date' => 'required|date',
             'scrap_quantity' => 'required|numeric|min:0',
             'shortage_quantity' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
         ]);
-
-        // Validación adicional para asegurar que los números cuadren
-        $totalDifference = $production->quantity - $validatedData['close_quantity'];
-        $justifiedDifference = $validatedData['scrap_quantity'] + $validatedData['shortage_quantity'];
-
-        if ($totalDifference > 0 && abs($totalDifference - $justifiedDifference) > 0.01) { // Se usa una tolerancia pequeña
-            return back()->withErrors(['scrap_quantity' => 'La suma de la merma y el faltante no coincide con la diferencia total.']);
-        }
 
         $production->update([
             'station' => 'Calidad',
             'close_quantity' => $validatedData['close_quantity'],
+            'close_production_date' => $validatedData['close_production_date'],
+            'close_production_notes' => $validatedData['notes'],
+            // Guardar valores específicos de la estación de producción
+            'production_scrap' => $validatedData['scrap_quantity'],
+            'production_shortage' => $validatedData['shortage_quantity'],
+            // Actualizar los totales generales (en esta etapa son los mismos)
             'scrap_quantity' => $validatedData['scrap_quantity'],
             'shortage_quantity' => $validatedData['shortage_quantity'],
-            'close_production_date' => $validatedData['close_production_date'],
             'modified_user_id' => auth()->id(),
         ]);
 
@@ -295,31 +296,29 @@ class ProductionController extends Controller
 
     public function qualityRelease(Request $request, Production $production)
     {
-        // 1. Validar los datos de entrada
         $validatedData = $request->validate([
             'quality_quantity' => 'required|numeric|min:0',
             'quality_released_date' => 'required|date',
+            'notes' => 'nullable|string',
+            'scrap_quantity' => 'required|numeric|min:0',
+            'shortage_quantity' => 'required|numeric|min:0',
         ]);
 
-        // 2. Calcular la merma generada específicamente en la etapa de Calidad
-        $scrapFromQuality = $production->close_quantity - $validatedData['quality_quantity'];
-
-        // 3. Calcular la nueva merma total.
-        // Se suma:
-        // - La merma que ya venía de Producción ($production->scrap_quantity).
-        // - La nueva merma generada en Calidad ($scrapFromQuality).
-        $totalScrap = $production->scrap_quantity + $scrapFromQuality;
-
-        // 4. Actualizar el registro de producción
         $production->update([
             'station' => 'Inspección',
             'quality_quantity' => $validatedData['quality_quantity'],
-            'scrap_quantity' => $totalScrap,
             'quality_released_date' => $validatedData['quality_released_date'],
+            'quality_notes' => $validatedData['notes'],
+            // Guardar valores específicos de la estación de calidad
+            'quality_scrap' => $validatedData['scrap_quantity'],
+            'quality_shortage' => $validatedData['shortage_quantity'],
+            // Actualizar los totales sumando los de la estación anterior
+            'scrap_quantity' => $production->production_scrap + $validatedData['scrap_quantity'],
+            'shortage_quantity' => $production->production_shortage + $validatedData['shortage_quantity'],
             'modified_user_id' => auth()->id(),
         ]);
 
-        // 5. Enviar la notificación
+        // Enviar la notificación
         $notificationInstance = new ProductionForwardedNotification(
             $production,
             'Inspección',
@@ -336,7 +335,7 @@ class ProductionController extends Controller
         $production->current_quantity += $request->close_quantity;
 
         if ($request->production_close_type === 'Parcialidades') {
-            $partials = $production->partilas;
+            $partials = $production->partials ?? []; // <-- CAMBIO: corregido 'partilas' a 'partials'
             $partials[] = [
                 'quantity' => $request->close_quantity,
                 'date' => $request->close_production_date,
@@ -355,7 +354,7 @@ class ProductionController extends Controller
     {
         $production->update([
             'station' => 'Terminadas',
-            'finish_date' => today(),
+            'finish_date' => now(),
             'modified_user_id' => auth()->id(),
         ]);
 
@@ -370,20 +369,44 @@ class ProductionController extends Controller
 
     public function addPartial(Request $request, Production $production)
     {
+
+        $validatedData = $request->validate([
+            'quantity' => 'required|numeric|min:0',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
+            'scrap_quantity' => 'required|numeric|min:0',
+            'shortage_quantity' => 'required|numeric|min:0',
+            'is_last_delivery' => 'boolean',
+        ]);
+
         $partials = $production->partials ?? [];
         $partials[] = [
-            'quantity' => $request->quantity,
-            'date' => $request->date,
+            'quantity' => $validatedData['quantity'],
+            'date' => $validatedData['date'],
+            'notes' => $validatedData['notes'],
+            'scrap' => $validatedData['scrap_quantity'],
+            'difference' => $validatedData['shortage_quantity'],
         ];
+
+        // Sumar a los totales de la estación de inspección
+        $inspectionScrap = ($production->inspection_scrap ?? 0) + $validatedData['scrap_quantity'];
+        $inspectionShortage = ($production->inspection_shortage ?? 0) + $validatedData['shortage_quantity'];
 
         $production->partials = $partials;
         $production->modified_user_id = auth()->id();
-        $production->current_quantity += $request->quantity;
+        $production->current_quantity += $validatedData['quantity'];
 
-        // revisar si la cantidad actual entregada es mayor o igual a la cantidad total para cambiar la estación a 'Terminadas'
-        if ($production->current_quantity >= $production->quantity) {
+        // Actualizar los totales de inspección
+        $production->inspection_scrap = $inspectionScrap;
+        $production->inspection_shortage = $inspectionShortage;
+
+        // Actualizar los totales generales
+        $production->scrap_quantity = $production->production_scrap + $production->quality_scrap + $inspectionScrap;
+        $production->shortage_quantity = $production->production_shortage + $production->quality_shortage + $inspectionShortage;
+
+        if ($validatedData['is_last_delivery'] || $production->current_quantity >= $production->quantity) {
             $production->station = 'Terminadas';
-            $production->finish_date = $request->date;
+            $production->finish_date = $validatedData['date'];
         }
 
         $production->save();
@@ -425,12 +448,6 @@ class ProductionController extends Controller
 
     public function importExcel(Request $request)
     {
-        // $request->validate([
-        //     'excel' => 'required|mimes:xlsx,xls,csv',
-        // ]);
-        // dd($request->excel[0]);
-        // Log::info('excel: ', $request->excel);
-
         Excel::import(new ProductionsImport, $request->file('excel')[0]);
     }
 

@@ -22,8 +22,17 @@ return new class extends Migration
             $table->unsignedFloat('quantity', 11, 2);
             $table->unsignedFloat('current_quantity', 11, 2)->default(0);
             $table->unsignedFloat('scrap_quantity', 11, 2)->default(0);
+            $table->unsignedFloat('shortage_quantity', 11, 2)->default(0);
+            $table->unsignedFloat('production_scrap', 11,2)->default(0);
+            $table->unsignedFloat('production_shortage', 11,2)->default(0);
+            $table->unsignedFloat('quality_scrap', 11,2)->default(0);
+            $table->unsignedFloat('quality_shortage', 11,2)->default(0);
+            $table->unsignedFloat('inspection_scrap', 11,2)->default(0);
+            $table->unsignedFloat('inspection_shortage', 11,2)->default(0);
             $table->unsignedFloat('close_quantity', 11, 2)->default(0);
             $table->unsignedFloat('quality_quantity', 11, 2)->default(0);
+            $table->text('close_production_notes')->nullable();
+            $table->text('quality_notes')->nullable();
             $table->json('returns')->nullable();
             $table->unsignedFloat('width', 8, 2)->nullable();
             $table->unsignedFloat('large', 8, 2)->nullable();
@@ -47,10 +56,10 @@ return new class extends Migration
             $table->foreignId('modified_user_id')->constrained('users')->cascadeOnDelete();
             $table->date('estimated_date')->nullable();
             $table->date('estimated_package_date')->nullable();
-            $table->date('close_production_date')->nullable();
-            $table->date('quality_released_date')->nullable();
+            $table->timestamp('close_production_date')->nullable();
+            $table->timestamp('quality_released_date')->nullable();
             $table->date('start_date')->nullable();
-            $table->date('finish_date')->nullable();
+            $table->timestamp('finish_date')->nullable();
             $table->timestamps();
         });
     }
