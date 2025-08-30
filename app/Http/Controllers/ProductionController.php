@@ -208,8 +208,15 @@ class ProductionController extends Controller
             'current_quantity',
             'close_quantity',
             'scrap_quantity',
+            'production_scrap',
+            'quality_scrap',
+            'inspection_scrap',
             'shortage_quantity',
+            'production_shortage',
+            'quality_shortage',
+            'inspection_shortage',
             'close_production_notes',
+            'inspection_notes',
             'quality_notes',
             'partials',
             'start_date',
@@ -330,24 +337,50 @@ class ProductionController extends Controller
 
     public function inspectionRelease(Request $request, Production $production)
     {
-        $production->production_close_type = $request->production_close_type;
+        // 1. Validar todos los datos de entrada para mayor seguridad
+        $validatedData = $request->validate([
+            'production_close_type' => 'required|string|in:Única,Parcialidades',
+            'quantity' => 'required|numeric|min:0',
+            'date' => 'required',
+            'scrap_quantity' => 'requiredif:production_close_type,Única|numeric|min:0',
+            'shortage_quantity' => 'requiredif:production_close_type,Única|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        // 2. Acumular los valores de la estación de inspección
+        $production->current_quantity += $validatedData['quantity'];
+        $production->inspection_scrap += $validatedData['scrap_quantity'];
+        $production->inspection_shortage += $validatedData['shortage_quantity'];
+
+        // 3. Recalcular los totales generales sumando todas las estaciones
+        $production->scrap_quantity = $production->production_scrap + $production->quality_scrap + $production->inspection_scrap;
+        $production->shortage_quantity = $production->production_shortage + $production->quality_shortage + $production->inspection_shortage;
+
+        // 4. Actualizar los campos generales y de parcialidades
+        $production->production_close_type = $validatedData['production_close_type'];
+        $production->inspection_notes = $validatedData['notes'];
         $production->modified_user_id = auth()->id();
-        $production->current_quantity += $request->close_quantity;
 
-        if ($request->production_close_type === 'Parcialidades') {
-            $partials = $production->partials ?? []; // <-- CAMBIO: corregido 'partilas' a 'partials'
+        if ($validatedData['production_close_type'] === 'Parcialidades') {
+            $partials = $production->partials ?? [];
             $partials[] = [
-                'quantity' => $request->close_quantity,
-                'date' => $request->close_production_date,
+                'quantity' => $validatedData['quantity'],
+                'date' => $validatedData['date'],
+                'notes' => $validatedData['notes'],
             ];
-
             $production->partials = $partials;
-            $production->save();
         }
 
-        if ($production->current_quantity >= $production->quantity) {
+        // 5. Guardar todos los cambios en una sola operación
+        $production->save();
+
+        // 6. Determinar si la producción debe finalizar
+        $isFinished = ($production->current_quantity >= $production->quantity) || ($validatedData['production_close_type'] === 'Única');
+
+        if ($isFinished) {
             $this->finishProduction($request, $production);
         }
+
     }
 
     public function finishProduction(Request $request, Production $production)
@@ -386,6 +419,7 @@ class ProductionController extends Controller
             'notes' => $validatedData['notes'],
             'scrap' => $validatedData['scrap_quantity'],
             'difference' => $validatedData['shortage_quantity'],
+            'is_last_delivery' => $validatedData['is_last_delivery'],
         ];
 
         // Sumar a los totales de la estación de inspección

@@ -66,7 +66,7 @@
                     </el-table-column>
                     <el-table-column prop="current_quantity" label="Cantidad actual">
                         <template #default="scope">
-                            {{ scope.row.current_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
+                            {{ scope.row.current_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
                         </template>
                     </el-table-column>
                     <el-table-column prop="notes" label="Notas" width="160">
@@ -264,20 +264,18 @@
     </DialogModal>
     <DialogModal :show="showDetails" @close="showDetails = false">
         <template #title>
-            <div class="flex items-center justify-between">
-                <h1 class="font-semibold">Orden de producción</h1>
-                <div class="flex items-center space-x-2">
-                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
-                        @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
-                        class="text-sm text-[#EC4899] border border-[#EC4899] rounded-md px-2 py-1 hover:bg-[#FCE7F3] transition-all">
-                        Hoja viajera
-                    </button>
-                    <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
-                        @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
-                        class="text-sm text-gray-600 border border-gray-400 rounded-md px-2 py-1 hover:bg-gray-200 transition-all">
-                        Editar
-                    </button>
-                </div>
+            <h1 class="font-semibold">Orden de producción</h1>
+            <div class="flex items-center space-x-2">
+                <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                    @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
+                    class="text-sm text-[#EC4899] border border-[#EC4899] rounded-md px-2 py-1 hover:bg-[#FCE7F3] transition-all">
+                    Hoja viajera
+                </button>
+                <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
+                    @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
+                    class="text-sm text-gray-600 border border-gray-400 rounded-md px-2 py-1 hover:bg-gray-200 transition-all">
+                    Editar
+                </button>
             </div>
         </template>
         <template #content>
@@ -288,67 +286,67 @@
                 <!-- ------------ Información de la orden ------------ -->
                 <h2 class="text-[#666666] font-bold">Información de la orden</h2>
                 <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
-                    <p class="text-[#464646] justify-self-end">N° de Orden:</p>
+                    <p class="text-[#464646]">N° de Orden:</p>
                     <p class="col-span-2 font-semibold">{{ selectedProduction.folio }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Fecha de emisión:</p>
+                    <p class="text-[#464646]">Fecha de emisión:</p>
                     <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Fecha estimada de entrega:</p>
+                    <p class="text-[#464646]">Fecha estimada de entrega:</p>
                     <p class="col-span-2">{{ formatDate(selectedProduction.estimated_date) }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Cliente:</p>
+                    <p class="text-[#464646]">Cliente:</p>
                     <p class="col-span-2">{{ selectedProduction.client }}</p>
                 </div>
 
                 <!-- ------------ Información del producto ------------ -->
                 <h2 class="text-[#666666] font-bold mt-5">Información del producto</h2>
                 <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
-                    <p class="text-[#464646] justify-self-end">Código del producto</p>
+                    <p class="text-[#464646]">Código del producto</p>
                     <p class="col-span-2">{{ selectedProduction.product.code }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Nombre del producto:</p>
+                    <p class="text-[#464646]">Nombre del producto:</p>
                     <p class="col-span-2">{{ selectedProduction.product.name }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Temporada:</p>
+                    <p class="text-[#464646]">Temporada:</p>
                     <p class="col-span-2">{{ selectedProduction.product.season }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Descripción:</p>
+                    <p class="text-[#464646]">Descripción:</p>
                     <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
 
-                    <p class="text-[#464646] justify-self-end">Cantidad solicitada:</p>
-                    <p class="col-span-2 font-bold text-lg">
+                    <p class="text-[#464646]">Cantidad solicitada:</p>
+                    <p class="col-span-2 font-bold text-base">
                         {{ selectedProduction.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                     </p>
 
-                    <p class="text-[#464646] justify-self-end">Lista de material:</p>
+                    <p class="text-[#464646]">Lista de material:</p>
                     <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
                 </div>
 
                 <!-- ------------ Proceso de producción ------------ -->
                 <h2 class="text-[#666666] font-bold mt-5">Proceso de producción</h2>
                 <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2 items-center">
-                    <p class="text-[#464646] justify-self-end">Progreso:</p>
+                    <p class="text-[#464646]">Progreso:</p>
                     <div class="col-span-2 flex items-center">
-                        <div class="rounded-full size-6 flex items-center justify-center mr-2"
-                            :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
-                            v-html="stations.find(s => s.name === tempStation)?.icon">
-                        </div>
                         <el-select @change="updateStation" v-model="tempStation" class="!w-2/3"
                             :disabled="tempStation === 'Terminadas'">
                             <el-option v-for="station in filteredStations" :key="station.name" :label="station.name"
                                 :value="station.name" />
                         </el-select>
+                        <div class="rounded-full size-6 flex items-center justify-center ml-2"
+                            :style="{ backgroundColor: stations.find(s => s.name === tempStation)?.light, color: stations.find(s => s.name === tempStation)?.dark }"
+                            v-html="stations.find(s => s.name === tempStation)?.icon">
+                        </div>
                     </div>
 
-                    <p class="text-[#464646] justify-self-end">Máquina:</p>
+                    <p class="text-[#464646]">Máquina:</p>
                     <el-select @change="updateMachine" v-model="selectedProduction.machine.id"
                         class="col-span-2 !w-2/3">
                         <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
                             :value="machine.id" />
                     </el-select>
 
-                    <p class="text-[#464646] justify-self-end">Notas:</p>
+                    <p class="text-[#464646]">Notas:</p>
                     <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.notes ?? '-' }}</p>
                 </div>
 
@@ -357,19 +355,19 @@
                     <h2 class="font-bold text-gray-700">Devoluciones</h2>
                     <div v-for="(item, index) in selectedProduction.returns" :key="index" class="mt-2">
                         <div class="grid grid-cols-3 gap-x-2 gap-y-1">
-                            <p class="text-[#464646] justify-self-end">Cambio de estación:</p>
+                            <p class="text-[#464646]">Cambio de estación:</p>
                             <p class="col-span-2">
                                 {{ item.old_station }} <i class="fa-solid fa-arrow-right mx-1 text-xs"></i> {{
                                     item.new_station }}
                             </p>
-                            <p class="text-[#464646] justify-self-end">Fecha:</p>
+                            <p class="text-[#464646]">Fecha:</p>
                             <p class="col-span-2">{{ formatDateTime(item.date) }}</p>
-                            <p class="text-[#464646] justify-self-end">Cantidad:</p>
-                            <p class="col-span-2">{{ item.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            <p class="text-[#464646]">Cantidad:</p>
+                            <p class="col-span-2">{{ item.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                             </p>
-                            <p class="text-[#464646] justify-self-end">Motivo:</p>
+                            <p class="text-[#464646]">Motivo:</p>
                             <p class="col-span-2" style="white-space: pre-line;">{{ item.reason }}</p>
-                            <p class="text-[#464646] justify-self-end">Usuario:</p>
+                            <p class="text-[#464646]">Usuario:</p>
                             <p class="col-span-2">{{ item.user }}</p>
                         </div>
                         <hr v-if="index < selectedProduction.returns.length - 1"
@@ -381,25 +379,27 @@
                 <div v-if="selectedProduction.close_production_date" class="bg-[#F3F4F6] py-3 px-4 rounded-lg mt-5">
                     <h2 class="font-bold text-gray-700">Liberado por producción</h2>
                     <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
-                        <p class="text-[#464646] justify-self-end">Fecha de liberación:</p>
+                        <p class="text-[#464646]">Fecha de liberación:</p>
                         <p class="col-span-2">{{ formatDateTime(selectedProduction.close_production_date) }}</p>
 
-                        <p class="text-[#464646] justify-self-end">Cantidad entregada:</p>
+                        <p class="text-[#464646]">Cantidad entregada:</p>
                         <p class="col-span-2">{{
-                            selectedProduction.close_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                            selectedProduction.close_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
 
-                        <p class="text-[#464646] justify-self-end">Merma:</p>
+                        <p class="text-[#464646]">Merma:</p>
                         <p class="col-span-2">{{
-                            selectedProduction.production_scrap?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} ({{
-                                getScrapPercentage(selectedProduction.production_scrap, selectedProduction.quantity) }}%)</p>
-
-                        <p class="text-[#464646] justify-self-end">Diferencia:</p>
-                        <p class="col-span-2">{{
-                            parseFloat(selectedProduction.production_shortage)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,
-                            ",") }}
+                            selectedProduction.production_scrap?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            ({{ getScrapPercentage(selectedProduction.production_scrap, selectedProduction.quantity) }}%
+                            de los {{ selectedProduction.quantity }} solicitados)
                         </p>
 
-                        <p class="text-[#464646] justify-self-end">Notas:</p>
+                        <p class="text-[#464646]">Diferencia:</p>
+                        <p class="col-span-2">{{
+                            parseFloat(selectedProduction.production_shortage)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
+                                ",") }}
+                        </p>
+
+                        <p class="text-[#464646]">Notas:</p>
                         <p class="col-span-2" style="white-space: pre-line;">{{
                             selectedProduction.close_production_notes ?? '-' }}</p>
                     </div>
@@ -409,26 +409,29 @@
                 <div v-if="selectedProduction.quality_released_date" class="bg-[#F3F4F6] py-3 px-4 rounded-lg mt-5">
                     <h2 class="font-bold text-gray-700">Liberado por calidad</h2>
                     <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
-                        <p class="text-[#464646] justify-self-end">Fecha de liberación:</p>
+                        <p class="text-[#464646]">Fecha de liberación:</p>
                         <p class="col-span-2">{{ formatDateTime(selectedProduction.quality_released_date) }}</p>
 
-                        <p class="text-[#464646] justify-self-end">Cantidad entregada:</p>
+                        <p class="text-[#464646]">Cantidad entregada:</p>
                         <p class="col-span-2">{{
-                            selectedProduction.quality_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                            selectedProduction.quality_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
 
-                        <p class="text-[#464646] justify-self-end">Merma:</p>
-                        <p class="col-span-2">{{ (selectedProduction.quality_scrap)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
-                            ({{ getScrapPercentage(selectedProduction.quality_scrap, selectedProduction.close_quantity) }}%)</p>
+                        <p class="text-[#464646]">Merma:</p>
+                        <p class="col-span-2">{{
+                            (selectedProduction.quality_scrap)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            ({{ getScrapPercentage(selectedProduction.quality_scrap, selectedProduction.close_quantity)
+                            }}% de los {{ selectedProduction.close_quantity }} recibidos)</p>
 
-                        <p class="text-[#464646] justify-self-end">Diferencia:</p>
+                        <p class="text-[#464646]">Diferencia:</p>
                         <p class="col-span-2">
-                           {{ parseFloat(selectedProduction.quality_shortage)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,
-                            ",") }}
+                            {{
+                                parseFloat(selectedProduction.quality_shortage)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
+                                    ",") }}
                         </p>
 
-                        <p class="text-[#464646] justify-self-end">Notas:</p>
+                        <p class="text-[#464646]">Notas:</p>
                         <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.quality_notes ?? '-'
-                        }}</p>
+                            }}</p>
                     </div>
                 </div>
 
@@ -449,51 +452,83 @@
                     </div>
 
                     <div v-if="selectedProduction.production_close_type" class="grid grid-cols-3 gap-x-2 gap-y-1 mt-3">
-                        <p class="text-[#464646] justify-self-end">Tipo de entrega:</p>
+                        <p class="text-[#464646]">Tipo de entrega:</p>
                         <p class="col-span-2">{{ selectedProduction.production_close_type }}</p>
 
                         <div v-if="selectedProduction.production_close_type != 'Parcialidades'"
-                            class="col-span-full contents">
-                            <p class="text-[#464646] justify-self-end">Fecha de entrega:</p>
-                            <p class="col-span-2">{{ formatDateTime(selectedProduction.finish_date) }}</p>
+                            class="grid grid-cols-3 gap-x-2 gap-y-1 col-span-full">
+                            <div class="col-span-full contents">
+                                <p class="text-[#464646]">Fecha de entrega:</p>
+                                <p class="col-span-2">{{ formatDateTime(selectedProduction.finish_date) }}</p>
+                            </div>
+                            <p class="text-[#464646]">Cantidad entregada:</p>
+                            <p class="col-span-2">{{
+                                selectedProduction.current_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            </p>
+
+                            <p class="text-[#464646]">Merma:</p>
+                            <p class="col-span-2">{{
+                                (selectedProduction.inspection_scrap)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }}
+                                ({{ getScrapPercentage(selectedProduction.inspection_scrap,
+                                    selectedProduction.quality_quantity)
+                                }}% de los {{ selectedProduction.quality_quantity }} recibidos)</p>
+
+                            <p class="text-[#464646]">Diferencia:</p>
+                            <p class="col-span-2">
+                                {{
+                                    parseFloat(selectedProduction.inspection_shortage)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
+                                        ",") }}
+                            </p>
+
+                            <p class="text-[#464646]">Notas:</p>
+                            <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.inspection_notes
+                                ??
+                                '-'
+                            }}</p>
                         </div>
                     </div>
 
                     <section v-for="(partial, index) in selectedProduction.partials" :key="index" class="mt-3">
                         <div class="bg-white py-1 px-3 rounded-full flex justify-between items-center">
                             <span>Parcialidad {{ index + 1 }}</span>
-                            <span v-if="index === selectedProduction.partials.length - 1"
-                                class="text-xs text-gray-500">(Última entrega)</span>
+                            <span v-if="partial.is_last_delivery" class="text-xs text-gray-500">(Última entrega)</span>
                         </div>
                         <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
-                            <p class="text-[#464646] justify-self-end">Fecha de entrega:</p>
+                            <p class="text-[#464646]">Fecha de entrega:</p>
                             <p class="col-span-2">{{ formatDateTime(partial.date) }}</p>
 
-                            <p class="text-[#464646] justify-self-end">Cantidad entregada:</p>
-                            <p class="col-span-2">{{ partial.quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                            }}</p>
+                            <p class="text-[#464646]">Cantidad entregada:</p>
+                            <p class="col-span-2">{{ partial.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                                }}</p>
 
-                            <p class="text-[#464646] justify-self-end">Merma:</p>
-                            <p class="col-span-2">{{ partial.scrap?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") ??
-                                '0' }}</p>
-
-                            <p class="text-[#464646] justify-self-end">Diferencia:</p>
-                            <p class="col-span-2">{{ partial.difference?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,
-                                ",") ?? '0' }}</p>
-
-                            <p class="text-[#464646] justify-self-end">Notas:</p>
+                            <p class="text-[#464646]">Notas:</p>
                             <p class="col-span-2">{{ partial.notes ?? '-' }}</p>
                         </div>
                     </section>
                     <div v-if="selectedProduction.partials?.length"
                         class="grid grid-cols-3 gap-x-2 gap-y-1 pt-2 mt-2 border-t border-gray-300">
-                        <p class="font-semibold text-[#464646] justify-self-end">Cantidad total entregada:</p>
+                        <p class="font-semibold text-[#464646]">Cantidad total entregada:</p>
                         <p class="col-span-2 font-semibold">{{
-                            selectedProduction.current_quantity?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+                            selectedProduction.current_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
 
-                        <p class="font-semibold text-[#464646] justify-self-end">Cantidad restante:</p>
+                        <p class="font-semibold text-[#464646]">Cantidad restante:</p>
                         <p class="col-span-2 font-semibold">{{ (selectedProduction.quantity -
-                            selectedProduction.current_quantity)?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            selectedProduction.current_quantity)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                        </p>
+
+                        <p class="text-[#464646]">Merma:</p>
+                        <p class="col-span-2">{{
+                            (selectedProduction.inspection_scrap)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            ({{ getScrapPercentage(selectedProduction.inspection_scrap,
+                                selectedProduction.quality_quantity)
+                            }}% de los {{ selectedProduction.quality_quantity }} recibidos)</p>
+
+                        <p class="text-[#464646]">Diferencia:</p>
+                        <p class="col-span-2">
+                            {{
+                                parseFloat(selectedProduction.inspection_shortage)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
+                                    ",") }}
                         </p>
                     </div>
                 </div>
@@ -503,7 +538,7 @@
                 <div class="border rounded-lg p-4 mt-2">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
                         <!-- Columna Izquierda -->
-                        <div class="grid grid-cols-2">
+                        <div class="grid grid-cols-2 *:border-b *:py-px">
                             <p class="text-[#464646]">Material:</p>
                             <p>{{ selectedProduction.material ?? '-' }}</p>
                             <p class="text-[#464646]">Con Barníz:</p>
@@ -525,7 +560,7 @@
                             <p>{{ selectedProduction.gauge ?? '-' }}</p>
                         </div>
                         <!-- Columna Derecha -->
-                        <div class="grid grid-cols-2">
+                        <div class="grid grid-cols-2 *:border-b *:py-px">
                             <p class="text-[#464646]">Hojas:</p>
                             <p>{{ selectedProduction.sheets }}</p>
                             <p class="text-[#464646]">Ajuste:</p>
@@ -659,15 +694,14 @@
                 <template v-if="form.production_close_type === 'Única'">
                     <div>
                         <InputLabel value="Cantidad a entregar" />
-                        <el-input-number v-model="form.close_quantity" :min="0" class="!w-full" />
-                        <InputError :message="form.errors.close_quantity" />
+                        <el-input-number v-model="form.quantity" :min="0" class="!w-full" />
+                        <InputError :message="form.errors.quantity" />
                     </div>
                     <div>
                         <InputLabel value="Fecha de entrega" />
-                        <el-date-picker class="!w-full" v-model="form.close_production_date" type="datetime"
-                            placeholder="dd/mm/aa hh:mm" value-format="YYYY-MM-DD HH:mm:ss"
-                            format="DD/MM/YYYY hh:mm A" />
-                        <InputError :message="form.errors.close_production_date" />
+                        <el-date-picker class="!w-full" v-model="form.date" type="datetime" placeholder="dd/mm/aa hh:mm"
+                            value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
+                        <InputError :message="form.errors.date" />
                     </div>
                     <div>
                         <InputLabel value="Merma" />
@@ -739,13 +773,16 @@
                         value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
                     <InputError :message="form.errors.date" />
                 </div>
-                <div>
-                    <InputLabel value="Merma" />
+                <div class="col-span-full">
+                    <el-checkbox v-model="form.is_last_delivery" label="Última entrega" size="large" />
+                </div>
+                <div v-if="form.is_last_delivery">
+                    <InputLabel value="Merma total en inspección" />
                     <el-input-number v-model="form.scrap_quantity" :min="0" class="!w-full" />
                     <InputError :message="form.errors.scrap_quantity" />
                 </div>
-                <div>
-                    <InputLabel value="Diferencia" />
+                <div v-if="form.is_last_delivery">
+                    <InputLabel value="Diferencia total en inspección" />
                     <el-input-number v-model="form.shortage_quantity" :min="0" class="!w-full" />
                     <InputError :message="form.errors.shortage_quantity" />
                 </div>
@@ -754,9 +791,6 @@
                     <el-input v-model="form.notes" :rows="2" type="textarea"
                         placeholder="Específica la razón de la diferencia, la cantidad de merma o cualquier nota relacionada con la entrega." />
                     <InputError :message="form.errors.notes" />
-                </div>
-                <div class="col-span-full">
-                    <el-checkbox v-model="form.is_last_delivery" label="Última entrega" size="large" />
                 </div>
             </div>
         </template>
@@ -1074,14 +1108,14 @@ export default {
         totalScrap() {
             if (!this.selectedProduction) return 0;
             return (this.selectedProduction.production_scrap ?? 0) +
-                   (this.selectedProduction.quality_scrap ?? 0) +
-                   (this.selectedProduction.inspection_scrap ?? 0);
+                (this.selectedProduction.quality_scrap ?? 0) +
+                (this.selectedProduction.inspection_scrap ?? 0);
         },
         totalShortage() {
             if (!this.selectedProduction) return 0;
             return (this.selectedProduction.production_shortage ?? 0) +
-                   (this.selectedProduction.quality_shortage ?? 0) +
-                   (this.selectedProduction.inspection_shortage ?? 0);
+                (this.selectedProduction.quality_shortage ?? 0) +
+                (this.selectedProduction.inspection_shortage ?? 0);
         },
         filteredStations() {
             if (this.currentStation === 'Terminadas') {
@@ -1272,9 +1306,14 @@ export default {
                 },
             });
         },
-        handleInspectionReleaseTypeChange() {
-            // this.form.reset(); // resetear el form para limpiar datos de otros tipos de entrega
-            // this.form.production_close_type = 'Parcialidades'; // Restaurar el valor
+        handleInspectionReleaseTypeChange(newVal) {
+            if (newVal == 'Parcialidades') {
+                this.form.quantity = 0;
+                this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+            } else {
+                this.form.quantity = this.selectedProduction.quality_quantity;
+                this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+            }
         },
         returnStation() {
             this.returnForm.post(route('productions.return-station', this.selectedProduction.id), {
@@ -1335,7 +1374,8 @@ export default {
                     });
                     this.updateDetails();
                 },
-                onError: () => {
+                onError: (err) => {
+                    console.log(err)
                     this.$notify({
                         title: "Error al registrar entrega",
                         type: "error",
@@ -1370,6 +1410,7 @@ export default {
             this.tempStation = this.selectedProduction.station;
             this.currentStation = this.selectedProduction.station;
             this.updatingDetails = false;
+            this.form.reset();
         },
         async updateStation() {
             if (this.currentStation === 'Calidad') {

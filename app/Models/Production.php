@@ -54,8 +54,11 @@ class Production extends Model
         'look',
         'changes',
         'sheets',
+
         'close_production_notes',
         'quality_notes',
+        'inspection_notes',
+        
         'ha',
         'pf',
         'ts',
