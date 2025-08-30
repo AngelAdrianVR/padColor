@@ -7,7 +7,8 @@
                     <h2 class="font-semibold text-black">Importaciones</h2>
                     <span class="text-gray-500 text-sm">Gestiona y monitorea todas tus operaciones de importación</span>
                 </div>
-                <el-dropdown split-button type="primary" trigger="click" @click="$inertia.get(route('imports.create'))"
+                <el-dropdown v-if="$page.props.auth.user.permissions.includes('Crear importaciones')" split-button
+                    type="primary" trigger="click" @click="$inertia.get(route('imports.create'))"
                     @command="handleCommand">
                     <PlusIcon class="size-4 mr-1" />
                     Crear importación
@@ -45,7 +46,7 @@
                         <!-- Iteramos sobre las columnas definidas en 'data' -->
                         <div v-for="column in columns" :key="column.title"
                             class="rounded-[10px] p-2 transition-colors duration-300 border"
-                            :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : column.borderColor, }">
+                            :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : null, }">
                             <!-- Encabezado de la columna -->
                             <div class="flex items-center justify-between text-sm mb-2 pb-1 border-b border-grayD9"
                                 :class="column.iconColor">
@@ -59,14 +60,14 @@
                             </div>
 
                             <!-- Zona de Arrastre (Draggable) -->
-                            <draggable :list="localImports[column.title] || []" group="imports" @add="handleDrop"
-                                @start="isDragging = true" @end="isDragging = false" :animation="300" :id="column.title"
-                                item-key="id" class="space-y-2 min-h-[60vh]">
+                            <draggable :disabled="!canDragCards" :list="localImports[column.title] || []"
+                                group="imports" @add="handleDrop" @start="isDragging = true" @end="isDragging = false"
+                                :animation="300" :id="column.title" item-key="id" class="space-y-2 min-h-[60vh]">
                                 <template #item="{ element }">
                                     <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
-                                            :class="true ? 'bg-[#27A416]' : 'bg-[#C1202A]'"></div>
+                                            :style="{backgroundColor: column.borderColor}"></div>
                                         <div class="flex justify-between items-start text-sm mb-2">
                                             <span class="font-light text-gray66">ID. {{ element.id }}</span>
                                             <span class="text-gray3F font-semibold">
@@ -80,7 +81,8 @@
                                         <div class="text-sm text-gray-600 mt-2 h-10 overflow-hidden">
                                             <p v-if="element.raw_materials && element.raw_materials.length"
                                                 class="leading-tight text-xs">
-                                                <span v-for="(item, index) in element.raw_materials" :key="index" class="block">
+                                                <span v-for="(item, index) in element.raw_materials" :key="index"
+                                                    class="block">
                                                     • {{ item.name }}
                                                 </span>
                                             </p>
@@ -171,11 +173,11 @@ export default {
                 dates: this.filters.dates || [],
             },
             columns: [
-                { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#D9D9D9' },
-                { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#FFFB7B' },
-                { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#FDD192' },
-                { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#A5CCFE' },
-                { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#84FC59' },
+                { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#3f3f3f' },
+                { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#645E20' },
+                { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#C06102' },
+                { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#004C7B' },
+                { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#448734' },
             ],
             localImports: {}, // Se inicializa vacío y se llena en 'created'
         };
@@ -286,6 +288,12 @@ export default {
     },
     created() {
         this.initializeLocalImports();
+    },
+    computed: {
+        canDragCards() {
+            // Esta propiedad devolverá true o false dependiendo de si el usuario tiene el permiso.
+            return this.$page.props.auth.user.permissions.includes('Cambiar status de importaciones mediante kanban');
+        },
     },
     watch: {
         // Este watcher es crucial: actualiza los datos locales cuando las props cambian

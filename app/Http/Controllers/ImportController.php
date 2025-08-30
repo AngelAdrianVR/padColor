@@ -15,17 +15,14 @@ use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Exports\ImportsReportExport;
-use App\Models\NotificationEvent;
-use App\Models\User;
 use App\Notifications\ImportArrivedAtDestination;
 use App\Traits\NotifiesViaEvents;
-use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportController extends Controller
 {
     use NotifiesViaEvents;
-    
+
     public function index(Request $request)
     {
         // 1. Validamos los filtros que vienen de la URL
@@ -135,6 +132,10 @@ class ImportController extends Controller
     {
         // 1. Validación de los datos del formulario
         $validatedData = $request->validate([
+            'client' => 'nullable|string|max:255',
+            'cedis' => 'nullable|string|max:255',
+            'arrival_port' => 'nullable|string|max:255',
+            'warehouse' => 'nullable|string|max:255',
             'supplier_id' => 'required',
             'customs_agent_id' => 'required',
             'incoterm' => 'required|string|max:255',
@@ -227,6 +228,10 @@ class ImportController extends Controller
     {
         // 1. Validación (similar a store, pero permite campos opcionales para no forzar re-subir archivos)
         $validatedData = $request->validate([
+            'client' => 'nullable|string|max:255',
+            'cedis' => 'nullable|string|max:255',
+            'arrival_port' => 'nullable|string|max:255',
+            'warehouse' => 'nullable|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
             'customs_agent_id' => 'nullable|exists:customs_agents,id',
             'incoterm' => 'required|string|max:255',
@@ -346,7 +351,7 @@ class ImportController extends Controller
                     $notificationInstance = new ImportArrivedAtDestination($import);
                     $this->sendNotification('import.new-status.destination-port', $notificationInstance);
                 }
-                
+
                 break;
 
             case 'Entregado':
@@ -425,6 +430,13 @@ class ImportController extends Controller
                 ->withProperties(['import_cost' => $cost->concept, 'amount' => $cost->amount, 'payments' => $cost->payments])
                 ->log('eliminó un costo');
 
+            // limpiar los archivos de cada pago
+            foreach ($cost->payments as $payment) {
+                foreach ($payment->getMediaCollections() as $collection) {
+                    $payment->clearMediaCollection($collection->name);
+                }
+            }
+
             $cost->delete();
         });
 
@@ -442,6 +454,10 @@ class ImportController extends Controller
             ]);
 
             // Eliminar el pago
+            // Itera sobre cada colección de medios y la limpia
+            foreach ($payment->getMediaCollections() as $collection) {
+                $payment->clearMediaCollection($collection->name);
+            }
             $payment->delete();
 
             activity()

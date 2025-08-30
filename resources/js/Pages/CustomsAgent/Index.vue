@@ -3,7 +3,8 @@
         <main class="px-2 lg:px-14 py-2">
             <div class="flex justify-between items-center">
                 <h1 class="font-bold text-xl">Agentes aduanales</h1>
-                <PrimaryButton @click="$inertia.get(route('customs-agents.create'))">
+                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear agentes aduanales')"
+                    @click="$inertia.get(route('customs-agents.create'))">
                     <PlusIcon class="size-5 inline mr-1" />
                     Crear agente aduanal
                 </PrimaryButton>
@@ -14,7 +15,8 @@
             </div>
 
             <div class="mt-6">
-                <el-table :data="customs_agents.data" style="width: 100%" max-height="670" @row-click="handleRowClick" :row-class-name="tableRowClassName">
+                <el-table :data="customs_agents.data" style="width: 100%" max-height="670" @row-click="handleRowClick"
+                    :row-class-name="tableRowClassName">
                     <el-table-column prop="id" label="ID" width="100" />
                     <el-table-column prop="name" label="Nombre o razón social" />
                     <el-table-column prop="contact_person" label="Contacto" />
@@ -23,15 +25,18 @@
                     <el-table-column align="right" width="100">
                         <template #default="scope">
                             <el-dropdown trigger="click" @command="handleCommand">
-                                <button @click.stop class="el-dropdown-link justify-center items-center size-8 rounded-full text-gray-600 hover:bg-gray-200 transition-all">
+                                <button @click.stop
+                                    class="el-dropdown-link justify-center items-center size-8 rounded-full text-gray-600 hover:bg-gray-200 transition-all">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
                                 <template #dropdown>
-                                   <el-dropdown-menu>
+                                    <el-dropdown-menu>
                                         <el-dropdown-item :command="'show-' + scope.row.id" class="!text-xs">
                                             <EyeIcon class="size-4 mr-2" /> Ver
                                         </el-dropdown-item>
-                                        <el-dropdown-item :command="'edit-' + scope.row.id" class="!text-xs">
+                                        <el-dropdown-item
+                                            v-if="$page.props.auth.user.permissions.includes('Editar agentes aduanales')"
+                                            :command="'edit-' + scope.row.id" class="!text-xs">
                                             <PencilIcon class="size-4 mr-2" /> Editar
                                         </el-dropdown-item>
                                         <!-- <el-dropdown-item :command="'delete-' + scope.row.id" class="!text-xs">
@@ -50,8 +55,9 @@
                     :current-page="customs_agents.current_page" @current-change="handlePageChange" />
             </div>
         </main>
-        
-        <CustomsAgentDetails v-if="selectedAgent" :show="showDetailsModal" :agent-data="selectedAgent" @close="showDetailsModal = false" />
+
+        <CustomsAgentDetails v-if="selectedAgent" :show="showDetailsModal" :agent-data="selectedAgent"
+            @close="showDetailsModal = false" />
     </AppLayout>
 </template>
 
@@ -115,7 +121,7 @@ export default {
                     preserveScroll: true,
                     onSuccess: () => ElNotification({ title: 'Éxito', message: 'Agente aduanal eliminado', type: 'success' }),
                 });
-            }).catch(() => {});
+            }).catch(() => { });
         },
         handlePageChange(newPage) {
             router.get(route('customs-agents.index', { page: newPage, ...this.localFilters }));

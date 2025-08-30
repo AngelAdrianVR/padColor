@@ -43,6 +43,7 @@ class CustomsAgentController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
         ]);
 
         $validatedData['user_id'] = Auth::id();

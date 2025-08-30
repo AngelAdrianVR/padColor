@@ -34,6 +34,12 @@
                              placeholder="Dirección completa del proveedor" />
                          <InputError :message="form.errors.address" />
                     </div>
+                    <div>
+                         <InputLabel value="Notas" />
+                         <el-input v-model="form.notes" :autosize="{ minRows: 2, maxRows: 4 }" type="textarea"
+                             placeholder="Escribe comentarios relacionados con el proveedor" />
+                         <InputError :message="form.errors.notes" />
+                    </div>
                 </div>
 
                 <div class="text-right mt-6">
@@ -73,6 +79,7 @@ export default {
                 contact_person: this.supplier.contact_person,
                 email: this.supplier.email,
                 phone: this.supplier.phone,
+                notes: this.supplier.notes,
                 address: this.supplier.address,
             }),
         };
