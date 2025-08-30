@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductSheetTab;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
@@ -11,6 +13,31 @@ class ProductController extends Controller
     {
         return inertia('Product/Index', [
             'products' => Product::with('media')->latest('id')->paginate(30)
+        ]);
+    }
+
+    public function show(Product $product)
+    {
+        // Cargamos la estructura completa de la ficha técnica.
+        // Obtenemos las pestañas activas, ordenadas, y con sus campos correspondientes.
+        $sheetStructure = ProductSheetTab::where('is_active', true)
+            ->with(['fields' => function ($query) {
+                // Para cada pestaña, obtenemos sus campos activos y ordenados.
+                $query->where('is_active', true)->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get()
+            // Ahora, agrupamos los campos por la columna 'section' que propusimos.
+            // Esto es clave para poder renderizar las tarjetas en el frontend fácilmente.
+            ->map(function ($tab) {
+                $tab->fields_by_section = $tab->fields->groupBy('section');
+                return $tab;
+            });
+
+        // Retornamos la vista de Inertia con los datos necesarios.
+        return Inertia::render('Product/Show', [
+            'product' => $product,
+            'sheetStructure' => $sheetStructure,
         ]);
     }
 
@@ -54,11 +81,6 @@ class ProductController extends Controller
         }
 
         return to_route('products.index');
-    }
-
-    public function show(Product $product)
-    {
-        //
     }
 
     public function edit(Product $product)

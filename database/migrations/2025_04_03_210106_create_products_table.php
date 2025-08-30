@@ -24,6 +24,7 @@ return new class extends Migration
             $table->unsignedFloat('min_stock', 11, 2)->nullable();
             $table->unsignedFloat('max_stock', 11, 2)->nullable();
             $table->unsignedFloat('price', 11, 2)->nullable();
+            $table->json('sheet_data')->nullable();
             $table->timestamps();
         });
     }
