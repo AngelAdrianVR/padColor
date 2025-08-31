@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('section')->nullable()->comment('Slug para agrupar campos en una tarjeta visual');
             $table->string('label')->comment('Etiqueta del campo (ej. "Material de las Tapas")');
             $table->string('slug')->unique()->comment('Identificador para usar como key en el JSON de datos');
-            $table->enum('type', ['text', 'textarea', 'number', 'select', 'multiselect', 'checklist', 'boolean'])->default('text');
+            $table->string('type')->default('text');
             $table->json('options')->nullable()->comment('Opciones para campos select, multiselect, etc.');
             $table->unsignedSmallInteger('order')->default(0);
             $table->boolean('is_required')->default(false);

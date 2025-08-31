@@ -40,12 +40,10 @@ class ProductSheetField extends Model
     }
 
     /**
-     * Get all of the options for the ProductSheetField
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Un campo puede tener muchas opciones (para selects, checkboxes, etc.).
      */
-    public function fieldOptions(): HasMany
+    public function options(): HasMany
     {
-        return $this->hasMany(ProductSheetFieldOption::class, 'field_id');
+        return $this->hasMany(ProductSheetFieldOption::class, 'field_id')->orderBy('order');
     }
 }

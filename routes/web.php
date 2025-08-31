@@ -144,6 +144,7 @@ Route::get('products-clone/{product}', [ProductController::class, 'clone'])->nam
 Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
 Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
+Route::put('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
 
 
 //machines routes---------------------------------------------------------------------------

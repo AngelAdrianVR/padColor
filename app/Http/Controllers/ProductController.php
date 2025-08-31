@@ -18,27 +18,35 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        // Cargamos la estructura completa de la ficha técnica.
-        // Obtenemos las pestañas activas, ordenadas, y con sus campos correspondientes.
-        $sheetStructure = ProductSheetTab::where('is_active', true)
-            ->with(['fields' => function ($query) {
-                // Para cada pestaña, obtenemos sus campos activos y ordenados.
-                $query->where('is_active', true)->orderBy('order');
-            }])
+        $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
+            $query->orderBy('order');
+        }])
+            ->where('is_active', true)
             ->orderBy('order')
             ->get()
-            // Ahora, agrupamos los campos por la columna 'section' que propusimos.
-            // Esto es clave para poder renderizar las tarjetas en el frontend fácilmente.
             ->map(function ($tab) {
-                $tab->fields_by_section = $tab->fields->groupBy('section');
+                $activeFields = $tab->fields->where('is_active', true);
+                $tab->fields_by_section = $activeFields->groupBy('section');
+                unset($tab->fields); // Remove original fields collection to avoid redundancy
                 return $tab;
             });
 
-        // Retornamos la vista de Inertia con los datos necesarios.
         return Inertia::render('Product/Show', [
             'product' => $product,
             'sheetStructure' => $sheetStructure,
         ]);
+    }
+
+    public function updateSheetData(Request $request, Product $product)
+    {
+        $request->validate([
+            'sheet_data' => 'required|array'
+        ]);
+
+        $product->sheet_data = $request->input('sheet_data');
+        $product->save();
+
+        return back()->with('success', 'Ficha técnica actualizada correctamente.');
     }
 
     public function create()
