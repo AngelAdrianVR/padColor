@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChangeRequest;
 use App\Models\Product;
 use App\Models\ProductSheetTab;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,6 +20,9 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        // Eager load de la relación de media
+        $product->load('media');
+
         $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
             $query->orderBy('order');
         }])
@@ -39,14 +44,34 @@ class ProductController extends Controller
 
     public function updateSheetData(Request $request, Product $product)
     {
-        $request->validate([
-            'sheet_data' => 'required|array'
+        // 1. Validar los datos entrantes, incluyendo los archivos.
+        $validated = $request->validate([
+            'sheet_data' => 'nullable|array',
+            'new_documents' => 'nullable|array',
+            'new_documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,dwg,step|max:10240' // max 10MB
         ]);
 
-        $product->sheet_data = $request->input('sheet_data');
-        $product->save();
+        // 2. Crear la solicitud de cambio con los datos validados.
+        $changeRequest = ChangeRequest::create([
+            'product_id' => $product->id,
+            'user_id' => auth()->id(), // El usuario que está haciendo la solicitud.
+            'data' => $validated['sheet_data'] ?? [], // Guarda los datos del formulario en el campo 'data'.
+            'status' => 'pending',
+        ]);
 
-        return back()->with('success', 'Ficha técnica actualizada correctamente.');
+        // 3. Si hay nuevos documentos, adjuntarlos a la SOLICITUD DE CAMBIO (no al producto).
+        if ($request->hasFile('new_documents')) {
+            foreach ($request->file('new_documents') as $document) {
+                $changeRequest->addMedia($document)->toMediaCollection('pending_documents');
+            }
+        }
+
+        // 4. (Opcional) Asignar revisores automáticamente.
+        $reviewers = User::whereIn('id', [3,4,5])->pluck('id'); // Ejemplo simple
+        $changeRequest->reviewers()->attach($reviewers);
+
+        // 5. Redirigir de vuelta a la página del producto con un mensaje de éxito.
+        return back()->with('success', 'Solicitud de cambio enviada para aprobación.');
     }
 
     public function create()
@@ -59,29 +84,21 @@ class ProductController extends Controller
         $request->validate([
             'code' => 'nullable|string|max:255',
             'season' => 'required|string|max:255',
-            // 'branch' => 'required|string|max:255',
-            // 'measure_unit' => 'required|string|max:255',
-            // 'width' => 'required|numeric|min:0',
-            // 'large' => 'required|numeric|min:0',
-            // 'height' => 'required|numeric|min:0',
             'material' => 'nullable|string|max:255',
             'stock' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            // 'price' => 'required|numeric|min:0',
             'created_at' => 'nullable|date',
         ]);
 
         $product = Product::create($request->all());
 
-        // Guardar el archivo de portada de producto en la colección 'image'
         if ($request->hasFile('image')) {
             $product->addMediaFromRequest('image')->toMediaCollection('image');
         }
 
-        // Guardar los archivos en la colección 'files'
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $uploadedFile) {
                 $product->addMedia($uploadedFile)->toMediaCollection('files');
@@ -94,7 +111,6 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $product->load('media');
-
         return inertia('Product/Edit', [
             'product' => $product,
         ]);
@@ -105,25 +121,17 @@ class ProductController extends Controller
         $request->validate([
             'code' => 'nullable|string|max:255',
             'season' => 'required|string|max:255',
-            // 'branch' => 'required|string|max:255',
-            // 'measure_unit' => 'required|string|max:255',
-            // 'width' => 'required|numeric|min:0',
-            // 'large' => 'required|numeric|min:0',
-            // 'height' => 'required|numeric|min:0',
             'material' => 'nullable|string|max:255',
             'stock' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            // 'price' => 'required|numeric|min:0',
             'created_at' => 'nullable|date',
         ]);
 
         $product->update($request->all());
 
-        // media
-        // Eliminar imágenes antiguas solo si se borró desde el input y no se agregó una nueva
         if ($request->imageCleared) {
             $product->clearMediaCollection('image');
         }
@@ -136,31 +144,22 @@ class ProductController extends Controller
         $request->validate([
             'code' => 'nullable|string|max:255',
             'season' => 'required|string|max:255',
-            // 'branch' => 'required|string|max:255',
-            // 'measure_unit' => 'required|string|max:255',
-            // 'width' => 'required|numeric|min:0',
-            // 'large' => 'required|numeric|min:0',
-            // 'height' => 'required|numeric|min:0',
             'material' => 'nullable|string|max:255',
             'stock' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            // 'price' => 'required|numeric|min:0',
             'created_at' => 'nullable|date',
         ]);
 
         $product->update($request->all());
 
-        // media ------------
-        // Eliminar imágenes antiguas solo si se proporcionan nuevas imágenes
         if ($request->hasFile('image')) {
             $product->clearMediaCollection('image');
             $product->addMediaFromRequest('image')->toMediaCollection('image');
         }
 
-        // Guardar los archivos en la colección 'files'
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $uploadedFile) {
                 $product->addMedia($uploadedFile)->toMediaCollection('files');
@@ -175,29 +174,12 @@ class ProductController extends Controller
         $product->delete();
     }
 
-    public function deleteFile(Request $request, $id, $fileId)
-    {
-        $product = Product::findOrFail($id);
-
-        $media = $product->media()->where('id', $fileId)->first();
-
-        if (!$media) {
-            return response()->json(['message' => 'Archivo no encontrado.'], 404);
-        }
-
-        $media->delete();
-    }
-
     public function clone(Product $product)
     {
         $clonedProduct = $product->replicate();
-
-        // Si necesitas modificar el nombre, por ejemplo para evitar duplicados
         $clonedProduct->name = $product->name . ' (Copia)';
-
         $clonedProduct->save();
 
-        // Clonar media
         foreach ($product->media as $mediaItem) {
             $mediaItem->copy($clonedProduct, $mediaItem->collection_name);
         }
@@ -206,7 +188,6 @@ class ProductController extends Controller
     public function getAll()
     {
         $items = Product::latest('id')->get(['name', 'id', 'material'])->take(100);
-
         return response()->json(compact('items'));
     }
 
@@ -216,13 +197,11 @@ class ProductController extends Controller
             ->where('name', 'like', "%$query%")
             ->get(['name', 'id', 'material'])
             ->take(100);
-
         return response()->json(compact('items'));
     }
 
     public function getMatches($query)
     {
-        // Realiza la búsqueda correctamente
         $products = Product::where(function ($q) use ($query) {
             $q->where('code', 'like', "%{$query}%")
                 ->orWhere('name', 'like', "%{$query}%")
@@ -231,7 +210,6 @@ class ProductController extends Controller
         })
             ->paginate(200);
 
-        // Devuelve los items encontrados
         return response()->json(['items' => $products], 200);
     }
 }

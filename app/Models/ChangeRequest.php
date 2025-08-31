@@ -4,42 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class ChangeRequest extends Model
+class ChangeRequest extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
-    protected $fillable = [
-        'requester_id',
-        'product_id',
-        'status',
-        'data_before',
-        'data_after',
-        'justification',
-        'rejection_reason',
-        'approved_at',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
-        'data_before' => 'array',
-        'data_after' => 'array',
-        'approved_at' => 'datetime',
+        'data' => 'array',
+        'decided_at' => 'datetime',
     ];
 
-    public function requester(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'requester_id');
-    }
-
-    public function product(): BelongsTo
+    /**
+     * El producto al que se le quieren aplicar los cambios.
+     */
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function votes(): HasMany
+    /**
+     * El usuario que solicitó los cambios.
+     */
+    public function requester()
     {
-        return $this->hasMany(ChangeRequestVote::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * El usuario que tomó la decisión final.
+     */
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Los usuarios asignados para revisar esta solicitud.
+     */
+    public function reviewers()
+    {
+        return $this->belongsToMany(User::class, 'change_request_user')
+                    ->withPivot('status', 'comments')
+                    ->withTimestamps();
     }
 }

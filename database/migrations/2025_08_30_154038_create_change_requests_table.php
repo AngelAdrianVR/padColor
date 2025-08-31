@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('change_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('requester_id')->constrained('users')->comment('Usuario que solicita el cambio');
-            $table->foreignId('product_id')->constrained('products')->comment('Producto que se quiere modificar');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'processing'])->default('pending');
-            $table->json('data_before')->comment('Estado del dato antes de los cambios');
-            $table->json('data_after')->comment('Estado del dato con los cambios propuestos');
-            $table->text('justification');
-            $table->text('rejection_reason')->nullable();
-            $table->timestamp('approved_at')->nullable();
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // El usuario que solicita el cambio
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->json('data'); // Aquí guardaremos el 'sheet_data' con los cambios propuestos
+            $table->text('comments')->nullable(); // Comentarios del solicitante
+            $table->foreignId('approved_by')->nullable()->constrained('users'); // Quién aprobó/rechazó finalmente
+            $table->timestamp('decided_at')->nullable(); // Cuándo se tomó la decisión
             $table->timestamps();
         });
     }

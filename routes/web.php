@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CustomsAgentController;
@@ -22,6 +23,7 @@ use App\Models\Production;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -144,7 +146,7 @@ Route::get('products-clone/{product}', [ProductController::class, 'clone'])->nam
 Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
 Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
-Route::put('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
+Route::post('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
 
 
 //machines routes---------------------------------------------------------------------------
@@ -233,4 +235,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Controlador de Recursos para el CRUD principal de Importaciones
     // Gestiona: index, create, store, show, edit, update, destroy
     Route::resource('imports', ImportController::class);
+
+    Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+    Route::post('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-requests.approve');
+    Route::post('/change-requests/{changeRequest}/reject', [ChangeRequestController::class, 'reject'])->name('change-requests.reject');
 });
