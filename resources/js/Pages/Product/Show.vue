@@ -307,7 +307,6 @@ export default {
             }
             return new Date(dateString).toLocaleDateString('es-MX', options);
         },
-
         getTabDescription(tabSlug) {
             const descriptions = {
                 diseno: 'En esta pestaña se visualiza la estructura completa del diseño del producto.',
@@ -316,7 +315,6 @@ export default {
             };
             return descriptions[tabSlug] || '';
         },
-
         editGeneralData() {
             this.$inertia.get(route('products.edit', this.product.id));
         },
@@ -326,7 +324,6 @@ export default {
             this.form.clearErrors();
             this.isEditing = false;
         },
-
         translateStatus(status) {
             const map = {
                 pending: 'Pendiente',
@@ -335,7 +332,6 @@ export default {
             };
             return map[status] || status;
         },
-
         getReviewerStatusTag(status) {
             const map = {
                 pending: 'info',
@@ -344,13 +340,11 @@ export default {
             };
             return map[status] || 'info';
         },
-
         // --- LÓGICA DEL SOLICITANTE ---
         openRequesterCommentsModal() {
             this.requesterComments = '';
             this.requesterCommentsModalVisible = true;
         },
-        
         confirmAndSendRequest() {
             this.form.comments = this.requesterComments;
             this.form.post(route('products.sheet.update', this.product.id), {
@@ -366,14 +360,12 @@ export default {
                 }
             });
         },
-
         // --- LÓGICA DEL REVISOR ---
         openDecisionDialog(isApproving) {
             this.isApproving = isApproving;
             this.decisionComments = '';
             this.decisionModalVisible = true;
         },
-
         confirmDecision() {
             const decision = this.isApproving ? 'approved' : 'rejected';
             if (decision === 'rejected' && !this.decisionComments) {
@@ -382,7 +374,6 @@ export default {
             }
             this.submitDecision(decision, this.decisionComments);
         },
-
         submitDecision(decision, comments = '') {
             if (!this.pendingChangeRequest) return;
             const requestId = this.pendingChangeRequest.id;

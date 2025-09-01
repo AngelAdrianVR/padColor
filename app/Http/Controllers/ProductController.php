@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChangeRequest;
+use App\Models\NotificationEvent;
 use App\Models\Product;
 use App\Models\ProductSheetTab;
 use App\Models\User;
+use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -42,9 +45,9 @@ class ProductController extends Controller
         $changeDetails = null;
         if ($pendingChangeRequest) {
             $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
-            
+
             $isReviewer = Auth::check() ? $pendingChangeRequest->reviewers->contains(Auth::user()) : false;
-            
+
             // Busca el voto específico del usuario actual en la tabla pivote.
             $currentUserVote = $isReviewer ? $pendingChangeRequest->reviewers()->where('user_id', Auth::id())->first()->pivot : null;
 
@@ -53,13 +56,15 @@ class ProductController extends Controller
                 'requester_name' => $pendingChangeRequest->requester->name,
                 'requester_comments' => $pendingChangeRequest->comments,
                 'created_at' => $pendingChangeRequest->created_at,
-                'reviewers' => $pendingChangeRequest->reviewers->map(fn ($reviewer) => [
+                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
                     'name' => $reviewer->name,
                     'status' => $reviewer->pivot->status,
                     'comments' => $reviewer->pivot->comments,
                 ]),
-                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn ($media) => [
-                    'name' => $media->file_name, 'size' => $media->size, 'url' => $media->getUrl()
+                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
+                    'name' => $media->file_name,
+                    'size' => $media->size,
+                    'url' => $media->getUrl()
                 ]),
                 'changes' => $changes,
                 'is_reviewer' => $isReviewer,
@@ -93,12 +98,12 @@ class ProductController extends Controller
                 }
             }
         }
-        
+
         // 2. Comparar los datos viejos y nuevos.
         $oldData = $product->sheet_data ?? [];
         $newData = $changeRequest->data;
         $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
-        
+
         $changes = [];
 
         foreach ($allKeys as $key) {
@@ -116,18 +121,18 @@ class ProductController extends Controller
                 $label = $fieldInfo['label'] ?? str_replace('_', ' ', ucfirst($key));
                 $tabName = $fieldInfo['tab_name'] ?? 'General';
                 $sectionName = $fieldInfo['section_name'] ?? 'N/A';
-                
+
                 // Convertir valores de 'value' a 'label' para que sean legibles si hay opciones.
                 if ($fieldInfo && !empty($fieldInfo['options'])) {
                     $options = collect($fieldInfo['options']);
                     // Función auxiliar para buscar etiquetas
-                    $getLabels = function($values) use ($options) {
+                    $getLabels = function ($values) use ($options) {
                         if (empty($values)) return 'Vacío';
-                        return collect($values)->map(function($value) use ($options) {
+                        return collect($values)->map(function ($value) use ($options) {
                             return $options->firstWhere('value', $value)['label'] ?? $value;
                         })->implode(', ');
                     };
-                    
+
                     $oldDisplay = $getLabels(Arr::wrap($oldValue));
                     $newDisplay = $getLabels(Arr::wrap($newValue));
                 } else {
@@ -158,35 +163,49 @@ class ProductController extends Controller
 
     public function updateSheetData(Request $request, Product $product)
     {
-        // 1. Validar los datos entrantes, incluyendo los archivos.
         $validated = $request->validate([
             'sheet_data' => 'nullable|array',
-            'comments' => 'nullable|string',
             'new_documents' => 'nullable|array',
-            'new_documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,dwg,step|max:10240' // max 10MB
+            'new_documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,dwg,step|max:10240',
+            'comments' => 'nullable|string|max:2000',
         ]);
 
-        // 2. Crear la solicitud de cambio con los datos validados.
+        // --- LÓGICA DE NOTIFICACIÓN BASADA EN PERMISOS ---
+        $permissionName = 'Revisar cambios de fichas técnicas';
+        $reviewerUsers = User::permission($permissionName)->get();
+
+        // Si no se encuentran usuarios con el permiso, detener el proceso y notificar al usuario.
+        if ($reviewerUsers->isEmpty()) {
+            return back()->with('error', 'No se pudo crear la solicitud. Actualmente no hay revisores asignados para aprobar los cambios. Por favor, contacta a un administrador.');
+        }
+
+        // --- CREACIÓN DE LA SOLICITUD (solo si hay revisores) ---
         $changeRequest = ChangeRequest::create([
             'product_id' => $product->id,
-            'user_id' => auth()->id(), // El usuario que está haciendo la solicitud.
-            'data' => $validated['sheet_data'] ?? [], // Guarda los datos del formulario en el campo 'data'.
+            'user_id' => Auth::id(),
+            'data' => $validated['sheet_data'] ?? [],
+            'comments' => $validated['comments'] ?? null,
             'status' => 'pending',
-            'comments' => $validated['comments'],
         ]);
 
-        // 3. Si hay nuevos documentos, adjuntarlos a la SOLICITUD DE CAMBIO (no al producto).
         if ($request->hasFile('new_documents')) {
             foreach ($request->file('new_documents') as $document) {
                 $changeRequest->addMedia($document)->toMediaCollection('pending_documents');
             }
         }
 
-        // 4. (Opcional) Asignar revisores automáticamente.
-        $reviewers = User::whereIn('id', [3, 4, 5])->pluck('id'); // Ejemplo simple
-        $changeRequest->reviewers()->attach($reviewers);
+        // 1. Asignar los usuarios con el permiso como revisores.
+        $changeRequest->reviewers()->attach($reviewerUsers->pluck('id'));
 
-        // 5. Redirigir de vuelta a la página del producto con un mensaje de éxito.
+        // 2. Preparar y enviar la notificación a esos usuarios.
+        $requester = Auth::user();
+        $subject = "Nueva solicitud de cambio para \"{$product->name}\"";
+        $description = "ha solicitado tu revisión para cambios en la ficha técnica del producto.";
+        $url = route('products.show', $product);
+        $notificationInstance = new BasicNotification($subject, $description, $requester->name, $requester->profile_photo_url, $url);
+
+        Notification::send($reviewerUsers, $notificationInstance);
+
         return back()->with('success', 'Solicitud de cambio enviada para aprobación.');
     }
 

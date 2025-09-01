@@ -5,55 +5,63 @@ namespace App\Http\Controllers;
 use App\Models\ChangeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Notifications\BasicNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class ChangeRequestController extends Controller
 {
-    /**
-     * Registra la decisión de un revisor (aprobar/rechazar) para una solicitud.
-     * Si es el último voto, finaliza la solicitud basándose en la mayoría.
-     */
     public function decide(Request $request, ChangeRequest $changeRequest)
     {
-        // 1. Validar la entrada (la decisión y los comentarios opcionales).
         $validated = $request->validate([
             'decision' => 'required|in:approved,rejected',
             'comments' => 'nullable|string|max:1000',
         ]);
 
-        // 2. Actualizar el voto del revisor actual en la tabla pivote.
         $changeRequest->reviewers()->updateExistingPivot(Auth::id(), [
             'status' => $validated['decision'],
             'comments' => $validated['comments'],
         ]);
 
-        // 3. Comprobar si todos los revisores asignados ya han votado.
+        $product = $changeRequest->product;
+        $reviewer = Auth::user();
+
+        // --- NOTIFICACIÓN 2: Notificar que un revisor ha votado ---
+        $decisionText = $validated['decision'] === 'approved' ? 'aprobado' : 'rechazado';
+        $subject = "Un revisor ha votado en la solicitud para \"{$product->name}\"";
+        $description = "ha {$decisionText} los cambios propuestos.";
+        $url = route('products.show', $product);
+
+        // Notificar al solicitante
+        $changeRequest->requester->notify(new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
+        
+        // Notificar a los OTROS revisores
+        $otherReviewers = $changeRequest->reviewers()->where('user_id', '!=', $reviewer->id)->get();
+        if ($otherReviewers->isNotEmpty()) {
+            Notification::send($otherReviewers, new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
+        }
+
+        // --- LÓGICA DE DECISIÓN FINAL ---
         $totalReviewers = $changeRequest->reviewers()->count();
         $votedReviewers = $changeRequest->reviewers()->wherePivot('status', '!=', 'pending')->count();
 
-        // Si el número de votos es igual al total de revisores, es hora de decidir.
         if ($totalReviewers > 0 && $totalReviewers === $votedReviewers) {
             $approvals = $changeRequest->reviewers()->wherePivot('status', 'approved')->count();
             $rejections = $totalReviewers - $approvals;
 
             if ($approvals > $rejections) {
-                // Ganan las aprobaciones.
                 $this->finalizeApproval($changeRequest);
                 return back()->with('success', 'Voto registrado. ¡La solicitud ha sido APROBADA por mayoría y los cambios han sido aplicados!');
             } else {
-                // Ganan los rechazos o hay un empate.
                 $this->finalizeRejection($changeRequest, 'Rechazada por mayoría de votos.');
                 return back()->with('info', 'Voto registrado. La solicitud ha sido RECHAZADA por mayoría.');
             }
         }
 
-        // Si aún no han votado todos, simplemente se registra el voto.
         return back()->with('success', 'Tu voto ha sido registrado. Esperando a los demás revisores.');
     }
 
-    /**
-     * Lógica interna para aplicar los cambios de una solicitud aprobada.
-     */
     private function finalizeApproval(ChangeRequest $changeRequest)
     {
         DB::transaction(function () use ($changeRequest) {
@@ -68,15 +76,19 @@ class ChangeRequestController extends Controller
             }
 
             $changeRequest->status = 'approved';
-            $changeRequest->approved_by = Auth::id(); // Registra al último votante como el que cerró la solicitud.
+            $changeRequest->approved_by = Auth::id();
             $changeRequest->decided_at = now();
             $changeRequest->save();
+            
+            // --- NOTIFICACIÓN 3.1: Notificar al solicitante que se APROBARON los cambios ---
+            $finalizer = Auth::user();
+            $subject = "¡Solicitud Aprobada! Cambios aplicados para \"{$product->name}\"";
+            $description = "ha emitido el voto final: Aprobando por mayoría. Los cambios ya están visibles en la ficha técnica.";
+            $url = route('products.show', $product);
+            $changeRequest->requester->notify(new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url));
         });
     }
 
-    /**
-     * Lógica interna para descartar los cambios de una solicitud rechazada.
-     */
     private function finalizeRejection(ChangeRequest $changeRequest, string $comments = '')
     {
         DB::transaction(function () use ($changeRequest, $comments) {
@@ -87,6 +99,14 @@ class ChangeRequestController extends Controller
             $changeRequest->decided_at = now();
             $changeRequest->comments = $comments;
             $changeRequest->save();
+
+            // --- NOTIFICACIÓN 3.2: Notificar al solicitante que se RECHAZARON los cambios ---
+            $product = $changeRequest->product;
+            $finalizer = Auth::user();
+            $subject = "Solicitud Rechazada para \"{$product->name}\"";
+            $description = "ha emitido el voto final: Rechazando por mayoría. No se ha aplicado ninguna modificación.";
+            $url = route('products.show', $product);
+            $changeRequest->requester->notify(new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url));
         });
     }
 }
