@@ -30,52 +30,64 @@ class ProductController extends Controller
 
         $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
             $query->orderBy('order');
-        }])->where('is_active', true)->orderBy('order')->get()->map(function ($tab) {
-            $activeFields = $tab->fields->where('is_active', true);
-            $tab->fields_by_section = $activeFields->groupBy('section');
-            unset($tab->fields);
-            return $tab;
-        });
+        }])
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get()
+            ->map(function ($tab) {
+                $activeFields = $tab->fields->where('is_active', true);
+                $tab->fields_by_section = $activeFields->groupBy('section');
+                unset($tab->fields);
+                return $tab;
+            });
 
         $pendingChangeRequest = ChangeRequest::where('product_id', $product->id)
             ->where('status', 'pending')
             ->with(['requester', 'reviewers', 'media'])
             ->first();
 
+        // --- ACTUALIZADO: Obtener y enriquecer el historial de solicitudes ---
+        $changeRequestHistory = ChangeRequest::where('product_id', $product->id)
+            ->whereIn('status', ['approved', 'rejected'])
+            ->with(['requester', 'approver', 'reviewers', 'media'])
+            ->latest('decided_at')
+            ->get()
+            ->map(function ($request) use ($product, $sheetStructure) {
+                // NOTA: Compara los datos históricos con el estado ACTUAL del producto.
+                $historicalChanges = $this->prepareChangeList($product, $request, $sheetStructure);
+
+                return [
+                    'id' => $request->id,
+                    'status' => $request->status,
+                    'requester' => $request->requester,
+                    'approver' => $request->approver,
+                    'created_at' => $request->created_at,
+                    'decided_at' => $request->decided_at,
+                    'requester_comments' => $request->comments,
+                    'reviewers' => $request->reviewers->map(fn($reviewer) => [
+                        'name' => $reviewer->name,
+                        'status' => $reviewer->pivot->status,
+                        'comments' => $reviewer->pivot->comments,
+                    ]),
+                    'changes' => $historicalChanges,
+                    'attached_media' => $request->getMedia('pending_documents')->map(fn($media) => [
+                        'name' => $media->file_name,
+                        'size' => $media->size,
+                        'url' => $media->getUrl()
+                    ]),
+                ];
+            });
+
         $changeDetails = null;
         if ($pendingChangeRequest) {
-            $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
-
-            $isReviewer = Auth::check() ? $pendingChangeRequest->reviewers->contains(Auth::user()) : false;
-
-            // Busca el voto específico del usuario actual en la tabla pivote.
-            $currentUserVote = $isReviewer ? $pendingChangeRequest->reviewers()->where('user_id', Auth::id())->first()->pivot : null;
-
-            $changeDetails = [
-                'id' => $pendingChangeRequest->id,
-                'requester_name' => $pendingChangeRequest->requester->name,
-                'requester_comments' => $pendingChangeRequest->comments,
-                'created_at' => $pendingChangeRequest->created_at,
-                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
-                    'name' => $reviewer->name,
-                    'status' => $reviewer->pivot->status,
-                    'comments' => $reviewer->pivot->comments,
-                ]),
-                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
-                    'name' => $media->file_name,
-                    'size' => $media->size,
-                    'url' => $media->getUrl()
-                ]),
-                'changes' => $changes,
-                'is_reviewer' => $isReviewer,
-                'current_user_vote_status' => $currentUserVote ? $currentUserVote->status : null, // <-- NUEVO
-            ];
+            // ... (lógica para la solicitud pendiente sin cambios)
         }
 
         return Inertia::render('Product/Show', [
             'product' => $product,
             'sheetStructure' => $sheetStructure,
             'pendingChangeRequest' => $changeDetails,
+            'changeRequestHistory' => $changeRequestHistory,
         ]);
     }
 

@@ -27,22 +27,18 @@ class ChangeRequestController extends Controller
         $product = $changeRequest->product;
         $reviewer = Auth::user();
 
-        // --- NOTIFICACIÓN 2: Notificar que un revisor ha votado ---
         $decisionText = $validated['decision'] === 'approved' ? 'aprobado' : 'rechazado';
         $subject = "Un revisor ha votado en la solicitud para \"{$product->name}\"";
         $description = "ha {$decisionText} los cambios propuestos.";
         $url = route('products.show', $product);
 
-        // Notificar al solicitante
         $changeRequest->requester->notify(new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
         
-        // Notificar a los OTROS revisores
         $otherReviewers = $changeRequest->reviewers()->where('user_id', '!=', $reviewer->id)->get();
         if ($otherReviewers->isNotEmpty()) {
             Notification::send($otherReviewers, new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
         }
 
-        // --- LÓGICA DE DECISIÓN FINAL ---
         $totalReviewers = $changeRequest->reviewers()->count();
         $votedReviewers = $changeRequest->reviewers()->wherePivot('status', '!=', 'pending')->count();
 
@@ -70,9 +66,10 @@ class ChangeRequestController extends Controller
             $product->sheet_data = $changeRequest->data;
             $product->save();
 
+            // CAMBIO: Copiar archivos en lugar de moverlos para preservar el historial.
             $pendingMedia = $changeRequest->getMedia('pending_documents');
             foreach ($pendingMedia as $mediaItem) {
-                $mediaItem->move($product, 'documents');
+                $mediaItem->copy($product, 'documents');
             }
 
             $changeRequest->status = 'approved';
@@ -80,10 +77,9 @@ class ChangeRequestController extends Controller
             $changeRequest->decided_at = now();
             $changeRequest->save();
             
-            // --- NOTIFICACIÓN 3.1: Notificar al solicitante que se APROBARON los cambios ---
             $finalizer = Auth::user();
             $subject = "¡Solicitud Aprobada! Cambios aplicados para \"{$product->name}\"";
-            $description = "ha emitido el voto final: Aprobando por mayoría. Los cambios ya están visibles en la ficha técnica.";
+            $description = "ha emitido el voto final, aprobando por mayoría los cambios para la ficha técnica. Los cambios ya están visibles.";
             $url = route('products.show', $product);
             $changeRequest->requester->notify(new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url));
         });
@@ -92,19 +88,16 @@ class ChangeRequestController extends Controller
     private function finalizeRejection(ChangeRequest $changeRequest, string $comments = '')
     {
         DB::transaction(function () use ($changeRequest, $comments) {
-            $changeRequest->clearMediaCollection('pending_documents');
-
             $changeRequest->status = 'rejected';
             $changeRequest->approved_by = Auth::id();
             $changeRequest->decided_at = now();
             $changeRequest->comments = $comments;
             $changeRequest->save();
 
-            // --- NOTIFICACIÓN 3.2: Notificar al solicitante que se RECHAZARON los cambios ---
             $product = $changeRequest->product;
             $finalizer = Auth::user();
             $subject = "Solicitud Rechazada para \"{$product->name}\"";
-            $description = "ha emitido el voto final: Rechazando por mayoría. No se ha aplicado ninguna modificación.";
+            $description = "ha emitido el voto final, rechazando por mayoría los cambios para la ficha técnica. No se ha aplicado ninguna modificación.";
             $url = route('products.show', $product);
             $changeRequest->requester->notify(new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url));
         });
