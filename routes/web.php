@@ -236,7 +236,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Gestiona: index, create, store, show, edit, update, destroy
     Route::resource('imports', ImportController::class);
 
-    Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+    // rutas de change requests
     Route::post('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-requests.approve');
     Route::post('/change-requests/{changeRequest}/reject', [ChangeRequestController::class, 'reject'])->name('change-requests.reject');
 });

@@ -119,7 +119,6 @@ export default {
         // Filtra los campos por una lista de slugs.
         getFieldsBySlugs(slugs) {
             const allFields = this.getAllFields();
-            console.log(allFields)
             return slugs.map(slug => allFields.find(f => f.slug === slug)).filter(Boolean);
         },
         // Crea un placeholder dinámico para los selects.

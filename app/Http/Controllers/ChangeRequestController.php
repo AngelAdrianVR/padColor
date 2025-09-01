@@ -11,21 +11,6 @@ use Illuminate\Support\Facades\DB;
 class ChangeRequestController extends Controller
 {
     /**
-     * Muestra una lista de todas las solicitudes de cambio.
-     */
-    public function index()
-    {
-        // Cargar las solicitudes con sus relaciones para mostrar información útil en el frontend.
-        $changeRequests = ChangeRequest::with(['product', 'requester'])
-            ->latest()
-            ->paginate(20);
-
-        return Inertia::render('ChangeRequest/Index', [
-            'changeRequests' => $changeRequests,
-        ]);
-    }
-
-    /**
      * Aprueba una solicitud de cambio y aplica los datos al producto.
      */
     public function approve(ChangeRequest $changeRequest)

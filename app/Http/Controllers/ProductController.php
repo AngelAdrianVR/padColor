@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\ProductSheetTab;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -20,7 +22,6 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        // Eager load de la relación de media
         $product->load('media');
 
         $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
@@ -32,14 +33,124 @@ class ProductController extends Controller
             ->map(function ($tab) {
                 $activeFields = $tab->fields->where('is_active', true);
                 $tab->fields_by_section = $activeFields->groupBy('section');
-                unset($tab->fields); // Remove original fields collection to avoid redundancy
+                unset($tab->fields);
                 return $tab;
             });
+
+        $pendingChangeRequest = ChangeRequest::where('product_id', $product->id)
+            ->where('status', 'pending')
+            ->with(['requester', 'reviewers', 'media'])
+            ->first();
+
+        $changeDetails = null;
+        if ($pendingChangeRequest) {
+            $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
+
+            // Determina si el usuario actual es uno de los revisores asignados.
+            $isReviewer = $pendingChangeRequest->reviewers->contains(auth()->user());
+
+            $changeDetails = [
+                'id' => $pendingChangeRequest->id,
+                'requester_name' => $pendingChangeRequest->requester->name,
+                'created_at' => $pendingChangeRequest->created_at,
+                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
+                    'name' => $reviewer->name,
+                    'status' => $reviewer->pivot->status,
+                    'comments' => $reviewer->pivot->comments,
+                ]),
+                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
+                    'name' => $media->file_name,
+                    'size' => $media->size,
+                    'url' => $media->getUrl()
+                ]),
+                'changes' => $changes,
+                'is_reviewer' => $isReviewer,
+            ];
+        }
 
         return Inertia::render('Product/Show', [
             'product' => $product,
             'sheetStructure' => $sheetStructure,
+            'pendingChangeRequest' => $changeDetails,
         ]);
+    }
+
+    /**
+     * Helper para comparar datos y generar una lista con contexto de pestaña/sección.
+     */
+    private function prepareChangeList($product, $changeRequest, $sheetStructure)
+    {
+        // 1. Construir un mapa de campos (fieldMap) robusto y detallado.
+        $fieldMap = collect();
+        foreach ($sheetStructure as $tab) {
+            if (empty($tab->fields_by_section)) continue;
+
+            foreach ($tab->fields_by_section as $sectionName => $fields) {
+                foreach ($fields as $field) {
+                    // Convertimos el modelo a un array para añadirle datos de forma segura.
+                    $fieldData = $field->toArray();
+                    $fieldData['tab_name'] = $tab->name;
+                    $fieldData['section_name'] = $this->formatSectionName($sectionName);
+
+                    // Usamos el slug del campo como clave para una búsqueda rápida.
+                    $fieldMap->put($field->slug, $fieldData);
+                }
+            }
+        }
+
+        // 2. Comparar los datos viejos y nuevos.
+        $oldData = $product->sheet_data ?? [];
+        $newData = $changeRequest->data;
+        $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
+
+        $changes = [];
+
+        foreach ($allKeys as $key) {
+            $oldValue = Arr::get($oldData, $key);
+            $newValue = Arr::get($newData, $key);
+
+            $oldString = is_array($oldValue) ? implode(', ', $oldValue) : (string) $oldValue;
+            $newString = is_array($newValue) ? implode(', ', $newValue) : (string) $newValue;
+
+            if ($oldString !== $newString) {
+                // Ahora, la búsqueda en $fieldMap será exitosa.
+                $fieldInfo = $fieldMap->get($key);
+
+                $label = $fieldInfo['label'] ?? str_replace('_', ' ', ucfirst($key));
+                $tabName = $fieldInfo['tab_name'] ?? 'General';
+                $sectionName = $fieldInfo['section_name'] ?? 'N/A';
+
+                // Formatear valores si el campo tiene opciones predefinidas.
+                if ($fieldInfo && !empty($fieldInfo['options'])) {
+                    $options = collect($fieldInfo['options']);
+                    $oldString = is_array($oldValue)
+                        ? $options->whereIn('value', $oldValue)->pluck('label')->implode(', ')
+                        : ($options->firstWhere('value', $oldValue)['label'] ?? $oldValue);
+
+                    $newString = is_array($newValue)
+                        ? $options->whereIn('value', $newValue)->pluck('label')->implode(', ')
+                        : ($options->firstWhere('value', $newValue)['label'] ?? $newValue);
+                }
+
+                $changes[] = [
+                    'tab' => $tabName,
+                    'section' => $sectionName,
+                    'label' => $label,
+                    'old' => $oldString ?: 'Vacío',
+                    'new' => $newString ?: 'Vacío',
+                ];
+            }
+        }
+        return $changes;
+    }
+
+    /**
+     * Formatea un slug a un nombre legible.
+     */
+    private function formatSectionName($slug)
+    {
+        if (!$slug) return '';
+        return str_replace('_', ' ', ucfirst($slug));
     }
 
     public function updateSheetData(Request $request, Product $product)
@@ -67,7 +178,7 @@ class ProductController extends Controller
         }
 
         // 4. (Opcional) Asignar revisores automáticamente.
-        $reviewers = User::whereIn('id', [3,4,5])->pluck('id'); // Ejemplo simple
+        $reviewers = User::whereIn('id', [3, 4, 5])->pluck('id'); // Ejemplo simple
         $changeRequest->reviewers()->attach($reviewers);
 
         // 5. Redirigir de vuelta a la página del producto con un mensaje de éxito.
