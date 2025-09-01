@@ -1,15 +1,14 @@
 <template>
     <AppLayout title="Detalles del Producto">
         <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-
-            <!-- 1. Detalles del Producto (Datos Maestros) -->
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles del producto</h2>
+            
+            <!-- 1. Detalles del Producto -->
+             <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles del producto</h2>
             <div class="bg-white shadow-sm rounded-xl p-6 mb-8">
-                <div class="flex flex-col sm:flex-row items-start justify-between">
+                 <div class="flex flex-col sm:flex-row items-start justify-between">
                     <div class="flex items-center space-x-6 w-full">
                         <!-- Imagen del producto -->
-                        <div
-                            class="w-28 h-28 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-28 h-28 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                             <PhotoIcon class="w-12 h-12 text-gray-400" />
                         </div>
 
@@ -24,10 +23,10 @@
                             </div>
                             <div>
                                 <span class="text-sm text-gray-500 block">Fecha de creación</span>
-                                <p class="font-medium text-gray-800">{{ formattedCreatedAt }}</p>
+                                <p class="font-medium text-gray-800">{{ formatDate(product.created_at) }}</p>
                             </div>
                             <div></div> <!-- Celda vacía para alinear -->
-                            <div>
+                             <div>
                                 <span class="text-sm text-gray-500 block">Descripción</span>
                                 <p class="font-medium text-gray-800">{{ product.description || '-' }}</p>
                             </div>
@@ -35,7 +34,7 @@
                                 <span class="text-sm text-gray-500 block">Temporada</span>
                                 <p class="font-medium text-gray-800">{{ product.season || '-' }}</p>
                             </div>
-                            <div>
+                             <div>
                                 <span class="text-sm text-gray-500 block">Material</span>
                                 <p class="font-medium text-gray-800">{{ product.material || '-' }}</p>
                             </div>
@@ -52,17 +51,16 @@
                 </div>
             </div>
 
+
             <!-- 2. Ficha Técnica del Producto -->
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Ficha técnica del producto</h2>
             <div class="bg-white shadow-sm rounded-xl p-6">
-                <!-- Alerta de Solicitud Pendiente -->
-                <div v-if="pendingChangeRequest"
-                    class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 flex items-center justify-between">
+                 <!-- Banner de Solicitud Pendiente -->
+                <div v-if="pendingChangeRequest" class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 flex items-center justify-between">
                     <div>
                         <h4 class="font-bold text-blue-800">Hay una solicitud de cambio pendiente</h4>
                         <p class="text-sm text-blue-700 mt-1">
-                            El usuario <strong>{{ pendingChangeRequest.requester_name }}</strong> solicitó cambios el
-                            <strong>{{ formatDate(pendingChangeRequest.created_at) }}</strong>.
+                            El usuario <strong>{{ pendingChangeRequest.requester_name }}</strong> solicitó cambios el <strong>{{ formatDate(pendingChangeRequest.created_at) }}</strong>.
                         </p>
                     </div>
                     <el-button type="primary" plain @click="isModalVisible = true">
@@ -73,20 +71,18 @@
 
                 <!-- Botones de Acción de Ficha Técnica -->
                 <div class="flex justify-end mb-4">
-                    <div v-if="isEditing">
+                     <div v-if="isEditing">
                         <el-button @click="cancelEdit">Cancelar</el-button>
-                        <el-button type="primary" @click="saveSheetData" :loading="form.processing">Enviar
-                            Solicitud</el-button>
+                        <el-button type="primary" @click="openRequesterCommentsModal" :loading="form.processing">Enviar Solicitud</el-button>
                     </div>
-                    <div v-else>
-                        <el-tooltip content="Hay una solicitud pendiente de aprobación"
-                            :disabled="!pendingChangeRequest" placement="top">
-                            <span class="inline-block"> <!-- Wrapper para tooltip en botón deshabilitado -->
-                                <el-button @click="isEditing = true" :disabled="!!pendingChangeRequest">
-                                    <PencilSquareIcon class="w-4 h-4 mr-2" />
-                                    Editar ficha técnica
+                     <div v-else>
+                        <el-tooltip content="Hay una solicitud pendiente de aprobación" :disabled="!pendingChangeRequest" placement="top">
+                           <span class="inline-block">
+                                 <el-button @click="isEditing = true" :disabled="!!pendingChangeRequest">
+                                     <PencilSquareIcon class="w-4 h-4 mr-2" />
+                                     Editar ficha técnica
                                 </el-button>
-                            </span>
+                           </span>
                         </el-tooltip>
                     </div>
                 </div>
@@ -94,106 +90,141 @@
                 <!-- Pestañas -->
                 <el-tabs v-model="activeTab" class="product-sheet-tabs">
                     <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
-                        <Component :is="tabs[tab.slug]" v-if="activeTab === tab.slug" :product="product"
-                            :fields-by-section="tab.fields_by_section" :description="getTabDescription(tab.slug)"
-                            :is-editing="isEditing" :form="form" />
+                         <Component 
+                            :is="tabs[tab.slug]" 
+                            v-if="activeTab === tab.slug"
+                            :product="product"
+                            :fields-by-section="tab.fields_by_section"
+                            :description="getTabDescription(tab.slug)"
+                            :is-editing="isEditing"
+                            :form="form"
+                         />
                     </el-tab-pane>
                 </el-tabs>
             </div>
         </div>
 
-
-
         <!-- MODAL PARA VER SOLICITUD DE CAMBIO -->
         <el-dialog v-model="isModalVisible" :title="'Solicitud de Cambio para ' + product.name" width="70%" top="5vh">
             <div v-if="pendingChangeRequest" class="space-y-6">
                 <!-- Información General -->
-                <div class="grid grid-cols-3 gap-4 text-sm">
-                    <div><span class="font-semibold text-gray-600">Solicitante:</span> {{
-                        pendingChangeRequest.requester_name }}</div>
-                    <div><span class="font-semibold text-gray-600">Fecha:</span> {{
-                        formatDate(pendingChangeRequest.created_at, true) }}</div>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm p-4 bg-gray-50 rounded-lg">
                     <div>
-                        <span class="font-semibold text-gray-600">Revisores:</span>
-                        <span v-if="!pendingChangeRequest.reviewers.length" class="text-gray-500"> Ninguno
-                            asignado</span>
-                        <div v-else>
-                            <el-tag v-for="reviewer in pendingChangeRequest.reviewers" :key="reviewer.name" size="small"
-                                class="mr-1" :type="getReviewerStatusTag(reviewer.status)">
-                                {{ reviewer.name }} ({{ reviewer.status }})
-                            </el-tag>
-                        </div>
+                        <span class="font-semibold text-gray-600 block">Solicitante:</span>
+                        <span class="mt-1 inline-block">{{ pendingChangeRequest.requester_name }}</span>
                     </div>
+                    <div>
+                        <span class="font-semibold text-gray-600 block">Fecha:</span>
+                        <span class="mt-1 inline-block">{{ formatDate(pendingChangeRequest.created_at, true) }}</span>
+                    </div>
+                    <!-- SECCIÓN DE COMENTARIOS DEL SOLICITANTE CORREGIDA -->
+                    <div v-if="pendingChangeRequest.requester_comments" class="md:col-span-3 lg:col-span-1">
+                        <span class="font-semibold text-gray-600 block">Comentarios del Solicitante:</span>
+                        <p class="text-gray-700 bg-white border border-gray-200 rounded-md p-2 text-xs mt-1 italic whitespace-pre-wrap">"{{ pendingChangeRequest.requester_comments }}"</p>
+                    </div>
+                </div>
+
+                <!-- Revisores -->
+                <div>
+                     <h4 class="font-semibold text-gray-700 mb-2">Revisores y Votos</h4>
+                     <div class="space-y-3">
+                         <div v-for="reviewer in pendingChangeRequest.reviewers" :key="reviewer.name">
+                             <el-tag size="small" class="mr-1" :type="getReviewerStatusTag(reviewer.status)">
+                                 {{ reviewer.name }} ({{ translateStatus(reviewer.status) }})
+                             </el-tag>
+                             <p v-if="reviewer.comments" class="text-xs text-gray-500 italic mt-1 pl-2 border-l-2 ml-2">"{{ reviewer.comments }}"</p>
+                         </div>
+                     </div>
                 </div>
 
                 <!-- Pestañas del Modal -->
                 <el-tabs v-model="modalActiveTab">
                     <el-tab-pane label="Cambios Propuestos" name="changes">
-                        <div class="max-h-[50vh] overflow-y-auto pr-2">
-                            <!-- TABLA DE CAMBIOS ACTUALIZADA -->
-                            <el-table :data="pendingChangeRequest.changes" stripe size="small" border>
+                         <div class="max-h-[50vh] overflow-y-auto pr-2">
+                             <el-table :data="pendingChangeRequest.changes" stripe size="small" border>
                                 <el-table-column prop="tab" label="Pestaña" width="140" />
                                 <el-table-column prop="section" label="Sección" width="180" />
                                 <el-table-column prop="label" label="Campo" width="180" />
                                 <el-table-column prop="old" label="Valor Anterior">
-                                    <template #default="scope">
+                                     <template #default="scope">
                                         <span class="text-gray-500 italic">{{ scope.row.old }}</span>
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="new" label="Nuevo Valor">
-                                    <template #default="scope">
+                                     <template #default="scope">
                                         <span class="font-semibold text-blue-600">{{ scope.row.new }}</span>
                                     </template>
                                 </el-table-column>
                             </el-table>
-                        </div>
+                         </div>
                     </el-tab-pane>
-
-                    <el-tab-pane name="files">
+                     <el-tab-pane name="files">
                         <template #label>
                             <span>Nuevos Archivos</span>
                             <el-badge :value="pendingChangeRequest.pending_media.length" class="ml-2" type="primary" />
                         </template>
-                        <div v-if="pendingChangeRequest.pending_media.length > 0"
-                            class="max-h-[50vh] overflow-y-auto pr-2 space-y-2">
-                            <div v-for="doc in pendingChangeRequest.pending_media" :key="doc.name"
+                        <div v-if="pendingChangeRequest.pending_media.length > 0" class="max-h-[50vh] overflow-y-auto pr-2 space-y-2">
+                             <div v-for="doc in pendingChangeRequest.pending_media" :key="doc.name"
                                 class="flex items-center p-2 border rounded-md">
                                 <PaperClipIcon class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
                                 <div class="min-w-0">
-                                    <a :href="doc.url" target="_blank"
-                                        class="text-sm font-medium text-blue-600 hover:underline truncate">{{
-                                            doc.name }}</a>
+                                    <a :href="doc.url" target="_blank" class="text-sm font-medium text-blue-600 hover:underline truncate">{{ doc.name }}</a>
                                     <p class="text-xs text-gray-500">{{ (doc.size / 1024).toFixed(2) }} KB</p>
                                 </div>
                             </div>
                         </div>
-                        <p v-else class="text-center text-gray-500 py-8">No se adjuntaron nuevos archivos en esta
-                            solicitud.</p>
+                        <p v-else class="text-center text-gray-500 py-8">No se adjuntaron nuevos archivos en esta solicitud.</p>
                     </el-tab-pane>
                 </el-tabs>
             </div>
 
-            <template #footer>
+             <template #footer>
                 <div class="flex justify-between items-center w-full">
                     <el-button @click="isModalVisible = false" :disabled="!!processingRequest">Cerrar</el-button>
-
-                    <!-- BOTONES DE ACCIÓN CONDICIONALES -->
-                    <div v-if="pendingChangeRequest && pendingChangeRequest.is_reviewer" class="space-x-2">
-                        <el-button type="danger" @click="openRejectDialog(pendingChangeRequest)"
-                            :loading="processingRequest === pendingChangeRequest.id && isRejecting"
-                            :disabled="!!processingRequest">Rechazar</el-button>
-                        <el-button type="success" @click="approveRequest(pendingChangeRequest)"
-                            :loading="processingRequest === pendingChangeRequest.id && !isRejecting"
-                            :disabled="!!processingRequest">Aprobar Cambios</el-button>
+                    
+                    <div v-if="pendingChangeRequest && pendingChangeRequest.is_reviewer">
+                        <div v-if="userHasVoted" class="text-sm text-gray-500 italic">
+                            Ya has votado en esta solicitud (tu voto fue: <span class="font-semibold">{{ translateStatus(pendingChangeRequest.current_user_vote_status) }}</span>).
+                        </div>
+                        <div v-else class="space-x-2">
+                            <el-button type="danger" @click="openDecisionDialog(false)" :loading="processingRequest === pendingChangeRequest.id && isRejecting" :disabled="!!processingRequest">Rechazar</el-button>
+                            <el-button type="success" @click="openDecisionDialog(true)" :loading="processingRequest === pendingChangeRequest.id && !isRejecting" :disabled="!!processingRequest">Aprobar</el-button>
+                        </div>
                     </div>
                 </div>
+            </template>
+        </el-dialog>
+
+        <!-- MODAL PARA COMENTARIOS DEL SOLICITANTE -->
+        <el-dialog v-model="requesterCommentsModalVisible" title="Enviar Solicitud de Cambio" width="40%">
+            <span>Opcionalmente, añade un comentario para describir los cambios que propones.</span>
+            <el-input v-model="requesterComments" type="textarea" :rows="4" placeholder="Ej: Se actualizó el costo de producción y se añadieron los planos finales." class="mt-4" />
+            <template #footer>
+                <el-button @click="requesterCommentsModalVisible = false">Cancelar</el-button>
+                <el-button type="primary" @click="confirmAndSendRequest" :loading="form.processing">Confirmar y Enviar</el-button>
+            </template>
+        </el-dialog>
+
+
+        <!-- MODAL GENÉRICO PARA DECISIÓN DEL REVISOR (APROBAR/RECHAZAR) -->
+        <el-dialog v-model="decisionModalVisible" :title="isApproving ? 'Aprobar Solicitud' : 'Rechazar Solicitud'" width="30%">
+            <span v-if="isApproving">Puedes añadir un comentario opcional con tu aprobación.</span>
+            <span v-else>Por favor, escribe el motivo del rechazo. Este comentario es obligatorio.</span>
+            <el-input v-model="decisionComments" type="textarea" :rows="3" :placeholder="isApproving ? 'Comentario opcional...' : 'Motivo del rechazo...'" class="mt-4" />
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="decisionModalVisible = false">Cancelar</el-button>
+                    <el-button :type="isApproving ? 'success' : 'primary'" @click="confirmDecision()" :loading="processingRequest === (pendingChangeRequest && pendingChangeRequest.id)">
+                        {{ isApproving ? 'Confirmar Aprobación' : 'Confirmar Rechazo' }}
+                    </el-button>
+                </span>
             </template>
         </el-dialog>
     </AppLayout>
 </template>
 
 <script>
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, Link, router } from '@inertiajs/vue3';
 import { shallowRef } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Design from './Tabs/Design.vue';
@@ -206,6 +237,7 @@ export default {
     name: 'ProductsShow',
     components: {
         AppLayout,
+        Link,
         Design,
         Finishes,
         CostsAndPrices,
@@ -214,18 +246,20 @@ export default {
         PencilSquareIcon,
         EyeIcon,
         PaperClipIcon,
-        Link,
+        ElDialog,
+        ElBadge,
         ElTooltip
     },
     props: {
         product: { type: Object, required: true },
         sheetStructure: { type: Array, required: true },
-        pendingChangeRequest: { type: Object, default: null }, // Prop para recibir la solicitud
+        pendingChangeRequest: { type: Object, default: null },
     },
     setup(props) {
         const form = useForm({
-            sheet_data: props.product.sheet_data || {},
+            sheet_data: JSON.parse(JSON.stringify(props.product.sheet_data || {})),
             new_documents: [],
+            comments: '', // Campo para los comentarios del solicitante
         });
 
         const tabs = shallowRef({
@@ -240,25 +274,40 @@ export default {
         return {
             activeTab: this.sheetStructure.length > 0 ? this.sheetStructure[0].slug : '',
             isEditing: false,
+            // Modal principal
             isModalVisible: false,
             modalActiveTab: 'changes',
+            // Lógica de aprobación/rechazo
             processingRequest: null,
             isRejecting: false,
-            rejectDialogVisible: false,
-            rejectionComments: '',
+            // Modal de comentarios del solicitante
+            requesterCommentsModalVisible: false,
+            requesterComments: '',
+            // Modal de decisión del revisor
+            decisionModalVisible: false,
+            isApproving: false,
+            decisionComments: '',
         };
     },
     computed: {
-        formattedCreatedAt() {
-            return this.formatDate(this.product.created_at);
+        userHasVoted() {
+            if (!this.pendingChangeRequest || !this.pendingChangeRequest.is_reviewer) {
+                return true;
+            }
+            return this.pendingChangeRequest.current_user_vote_status !== 'pending';
         }
     },
     methods: {
-        formatDate(dateString) {
+        formatDate(dateString, withTime = false) {
             if (!dateString) return '-';
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            if (withTime) {
+                options.hour = '2-digit';
+                options.minute = '2-digit';
+            }
             return new Date(dateString).toLocaleDateString('es-MX', options);
         },
+
         getTabDescription(tabSlug) {
             const descriptions = {
                 diseno: 'En esta pestaña se visualiza la estructura completa del diseño del producto.',
@@ -267,14 +316,49 @@ export default {
             };
             return descriptions[tabSlug] || '';
         },
+
         editGeneralData() {
             this.$inertia.get(route('products.edit', this.product.id));
         },
-        saveSheetData() {
+
+        cancelEdit() {
+            this.form.reset();
+            this.form.clearErrors();
+            this.isEditing = false;
+        },
+
+        translateStatus(status) {
+            const map = {
+                pending: 'Pendiente',
+                approved: 'Aprobado',
+                rejected: 'Rechazado',
+            };
+            return map[status] || status;
+        },
+
+        getReviewerStatusTag(status) {
+            const map = {
+                pending: 'info',
+                approved: 'success',
+                rejected: 'danger',
+            };
+            return map[status] || 'info';
+        },
+
+        // --- LÓGICA DEL SOLICITANTE ---
+        openRequesterCommentsModal() {
+            this.requesterComments = '';
+            this.requesterCommentsModalVisible = true;
+        },
+        
+        confirmAndSendRequest() {
+            this.form.comments = this.requesterComments;
             this.form.post(route('products.sheet.update', this.product.id), {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.isEditing = false;
+                    this.requesterCommentsModalVisible = false;
+                    this.form.reset();
                 },
                 onError: (errors) => {
                     console.error("Errores al enviar solicitud: ", errors);
@@ -282,68 +366,43 @@ export default {
                 }
             });
         },
-        cancelEdit() {
-            this.form.reset();
-            this.form.clearErrors();
-            this.isEditing = false;
+
+        // --- LÓGICA DEL REVISOR ---
+        openDecisionDialog(isApproving) {
+            this.isApproving = isApproving;
+            this.decisionComments = '';
+            this.decisionModalVisible = true;
         },
-        // ---- MÉTODOS PARA EL MODAL ----
-        getReviewerStatusTag(status) {
-            if (status === 'approved') return 'success';
-            if (status === 'rejected') return 'danger';
-            return 'info';
+
+        confirmDecision() {
+            const decision = this.isApproving ? 'approved' : 'rejected';
+            if (decision === 'rejected' && !this.decisionComments) {
+                ElMessage.warning('Debes proporcionar un motivo para el rechazo.');
+                return;
+            }
+            this.submitDecision(decision, this.decisionComments);
         },
-        // --- LÓGICA DE APROBACIÓN ---
-        approveRequest(request) {
-            ElMessageBox.confirm(
-                `¿Estás seguro de que quieres aprobar los cambios para el producto "${request.product.name}"? Esta acción aplicará los cambios y no se puede deshacer.`,
-                'Confirmar Aprobación',
-                {
-                    confirmButtonText: 'Sí, aprobar',
-                    cancelButtonText: 'Cancelar',
-                    type: 'success',
-                }
-            ).then(() => {
-                router.post(route('change-requests.approve', request.id), {}, {
-                    preserveScroll: true,
-                    onStart: () => {
-                        this.processingRequest = request.id;
-                        this.isRejecting = false;
-                    },
-                    onSuccess: () => {
-                        ElMessage.success('Solicitud aprobada con éxito.');
-                        this.isModalVisible = false;
-                    },
-                    onFinish: () => { this.processingRequest = null; },
-                });
-            }).catch(() => {
-                ElMessage.info('Aprobación cancelada.');
-            });
-        },
-        // --- LÓGICA DE RECHAZO ---
-        openRejectDialog(request) {
-            this.rejectionComments = '';
-            this.rejectDialogVisible = true;
-        },
-        confirmReject() {
+
+        submitDecision(decision, comments = '') {
             if (!this.pendingChangeRequest) return;
             const requestId = this.pendingChangeRequest.id;
 
-            router.post(route('change-requests.reject', requestId), {
-                comments: this.rejectionComments
+            router.post(route('change-requests.decide', requestId), {
+                decision: decision,
+                comments: comments,
             }, {
                 preserveScroll: true,
                 onStart: () => {
                     this.processingRequest = requestId;
-                    this.isRejecting = true;
+                    this.isRejecting = (decision === 'rejected');
                 },
                 onSuccess: () => {
-                    ElMessage.info('La solicitud ha sido rechazada.');
-                    this.rejectDialogVisible = false;
+                    this.decisionModalVisible = false;
                     this.isModalVisible = false;
                 },
-                onError: () => {
-                    ElMessage.error('Hubo un error al procesar el rechazo.');
+                onError: (errors) => {
+                     console.error("Error al registrar voto:", errors);
+                     ElMessage.error('Hubo un error al registrar tu voto.');
                 },
                 onFinish: () => { this.processingRequest = null; },
             });
@@ -351,3 +410,4 @@ export default {
     }
 };
 </script>
+

@@ -237,6 +237,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('imports', ImportController::class);
 
     // rutas de change requests
-    Route::post('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-requests.approve');
-    Route::post('/change-requests/{changeRequest}/reject', [ChangeRequestController::class, 'reject'])->name('change-requests.reject');
+    Route::post('/change-requests/{changeRequest}/decide', [ChangeRequestController::class, 'decide'])->name('change-requests.decide');
 });

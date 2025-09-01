@@ -65,7 +65,7 @@ class ProductSeeder extends Seeder
                     'finish_notes' => 'Sin notas',
 
                     // --- Pestaña: Costos y precios ---
-                    'total_production_cost' => '10.5.00',
+                    'total_production_cost' => '10.5',
                     'unit_sale_price' => '25.5',
                 ]
             ]

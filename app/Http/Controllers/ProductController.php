@@ -8,6 +8,7 @@ use App\Models\ProductSheetTab;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -26,16 +27,12 @@ class ProductController extends Controller
 
         $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
             $query->orderBy('order');
-        }])
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get()
-            ->map(function ($tab) {
-                $activeFields = $tab->fields->where('is_active', true);
-                $tab->fields_by_section = $activeFields->groupBy('section');
-                unset($tab->fields);
-                return $tab;
-            });
+        }])->where('is_active', true)->orderBy('order')->get()->map(function ($tab) {
+            $activeFields = $tab->fields->where('is_active', true);
+            $tab->fields_by_section = $activeFields->groupBy('section');
+            unset($tab->fields);
+            return $tab;
+        });
 
         $pendingChangeRequest = ChangeRequest::where('product_id', $product->id)
             ->where('status', 'pending')
@@ -45,26 +42,28 @@ class ProductController extends Controller
         $changeDetails = null;
         if ($pendingChangeRequest) {
             $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
-
-            // Determina si el usuario actual es uno de los revisores asignados.
-            $isReviewer = $pendingChangeRequest->reviewers->contains(auth()->user());
+            
+            $isReviewer = Auth::check() ? $pendingChangeRequest->reviewers->contains(Auth::user()) : false;
+            
+            // Busca el voto específico del usuario actual en la tabla pivote.
+            $currentUserVote = $isReviewer ? $pendingChangeRequest->reviewers()->where('user_id', Auth::id())->first()->pivot : null;
 
             $changeDetails = [
                 'id' => $pendingChangeRequest->id,
                 'requester_name' => $pendingChangeRequest->requester->name,
+                'requester_comments' => $pendingChangeRequest->comments,
                 'created_at' => $pendingChangeRequest->created_at,
-                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
+                'reviewers' => $pendingChangeRequest->reviewers->map(fn ($reviewer) => [
                     'name' => $reviewer->name,
                     'status' => $reviewer->pivot->status,
                     'comments' => $reviewer->pivot->comments,
                 ]),
-                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
-                    'name' => $media->file_name,
-                    'size' => $media->size,
-                    'url' => $media->getUrl()
+                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn ($media) => [
+                    'name' => $media->file_name, 'size' => $media->size, 'url' => $media->getUrl()
                 ]),
                 'changes' => $changes,
                 'is_reviewer' => $isReviewer,
+                'current_user_vote_status' => $currentUserVote ? $currentUserVote->status : null, // <-- NUEVO
             ];
         }
 
@@ -87,57 +86,61 @@ class ProductController extends Controller
 
             foreach ($tab->fields_by_section as $sectionName => $fields) {
                 foreach ($fields as $field) {
-                    // Convertimos el modelo a un array para añadirle datos de forma segura.
                     $fieldData = $field->toArray();
                     $fieldData['tab_name'] = $tab->name;
                     $fieldData['section_name'] = $this->formatSectionName($sectionName);
-
-                    // Usamos el slug del campo como clave para una búsqueda rápida.
                     $fieldMap->put($field->slug, $fieldData);
                 }
             }
         }
-
+        
         // 2. Comparar los datos viejos y nuevos.
         $oldData = $product->sheet_data ?? [];
         $newData = $changeRequest->data;
         $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
-
+        
         $changes = [];
 
         foreach ($allKeys as $key) {
             $oldValue = Arr::get($oldData, $key);
             $newValue = Arr::get($newData, $key);
 
-            $oldString = is_array($oldValue) ? implode(', ', $oldValue) : (string) $oldValue;
-            $newString = is_array($newValue) ? implode(', ', $newValue) : (string) $newValue;
+            // Normalizar valores para una comparación consistente
+            $oldString = is_array($oldValue) ? json_encode(Arr::sort($oldValue)) : (string) $oldValue;
+            $newString = is_array($newValue) ? json_encode(Arr::sort($newValue)) : (string) $newValue;
 
             if ($oldString !== $newString) {
-                // Ahora, la búsqueda en $fieldMap será exitosa.
+                // La búsqueda en $fieldMap ahora será exitosa.
                 $fieldInfo = $fieldMap->get($key);
 
                 $label = $fieldInfo['label'] ?? str_replace('_', ' ', ucfirst($key));
                 $tabName = $fieldInfo['tab_name'] ?? 'General';
                 $sectionName = $fieldInfo['section_name'] ?? 'N/A';
-
-                // Formatear valores si el campo tiene opciones predefinidas.
+                
+                // Convertir valores de 'value' a 'label' para que sean legibles si hay opciones.
                 if ($fieldInfo && !empty($fieldInfo['options'])) {
                     $options = collect($fieldInfo['options']);
-                    $oldString = is_array($oldValue)
-                        ? $options->whereIn('value', $oldValue)->pluck('label')->implode(', ')
-                        : ($options->firstWhere('value', $oldValue)['label'] ?? $oldValue);
-
-                    $newString = is_array($newValue)
-                        ? $options->whereIn('value', $newValue)->pluck('label')->implode(', ')
-                        : ($options->firstWhere('value', $newValue)['label'] ?? $newValue);
+                    // Función auxiliar para buscar etiquetas
+                    $getLabels = function($values) use ($options) {
+                        if (empty($values)) return 'Vacío';
+                        return collect($values)->map(function($value) use ($options) {
+                            return $options->firstWhere('value', $value)['label'] ?? $value;
+                        })->implode(', ');
+                    };
+                    
+                    $oldDisplay = $getLabels(Arr::wrap($oldValue));
+                    $newDisplay = $getLabels(Arr::wrap($newValue));
+                } else {
+                    $oldDisplay = !is_null($oldValue) && $oldValue !== '' ? (is_array($oldValue) ? implode(', ', $oldValue) : $oldValue) : 'Vacío';
+                    $newDisplay = !is_null($newValue) && $newValue !== '' ? (is_array($newValue) ? implode(', ', $newValue) : $newValue) : 'Vacío';
                 }
 
                 $changes[] = [
                     'tab' => $tabName,
                     'section' => $sectionName,
                     'label' => $label,
-                    'old' => $oldString ?: 'Vacío',
-                    'new' => $newString ?: 'Vacío',
+                    'old' => $oldDisplay,
+                    'new' => $newDisplay,
                 ];
             }
         }
@@ -158,6 +161,7 @@ class ProductController extends Controller
         // 1. Validar los datos entrantes, incluyendo los archivos.
         $validated = $request->validate([
             'sheet_data' => 'nullable|array',
+            'comments' => 'nullable|string',
             'new_documents' => 'nullable|array',
             'new_documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,dwg,step|max:10240' // max 10MB
         ]);
@@ -168,6 +172,7 @@ class ProductController extends Controller
             'user_id' => auth()->id(), // El usuario que está haciendo la solicitud.
             'data' => $validated['sheet_data'] ?? [], // Guarda los datos del formulario en el campo 'data'.
             'status' => 'pending',
+            'comments' => $validated['comments'],
         ]);
 
         // 3. Si hay nuevos documentos, adjuntarlos a la SOLICITUD DE CAMBIO (no al producto).
