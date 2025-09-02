@@ -1,5 +1,5 @@
 <template>
-    <div class="pt-1">
+    <div class="p-1">
         <div v-if="history && history.length > 0">
             <el-timeline>
                 <el-timeline-item v-for="item in history" :key="item.id" :timestamp="formatDate(item.decided_at, true)"
@@ -7,28 +7,33 @@
                     <el-card shadow="hover">
                         <template #header>
                             <div class="flex justify-between items-center">
-                                <span class="font-bold text-lg"
-                                    :class="item.status === 'approved' ? 'text-green-600' : 'text-red-600'">
+                                <span class="font-semibold"
+                                    :class="item.status === 'approved' ? 'text-green-700' : 'text-red-700'">
                                     Solicitud {{ translateStatus(item.status) }}
                                 </span>
-                                <span class="text-sm text-gray-500">
+                                <span class="text-xs text-gray-500">
                                     Decisión por: {{ item.approver?.name || 'Sistema' }}
                                 </span>
                             </div>
                         </template>
                         <div class="text-sm space-y-2">
-                            <p><span class="font-semibold text-gray-600">Solicitado por:</span> {{ item.requester.name
-                                }}</p>
-                            <p><span class="font-semibold text-gray-600">Fecha de solicitud:</span> {{
-                                formatDate(item.created_at, true) }}</p>
-                            <div v-if="item.requester_comments" class="mt-2 pt-2 border-t">
-                                <p class="font-semibold text-gray-600">Comentarios de la solicitud:</p>
-                                <p class="text-gray-700 italic whitespace-pre-wrap">"{{ item.requester_comments }}"</p>
+                            <p class="flex space-x-2">
+                                <span class="font-semibold text-gray3F w-[20%]">Solicitado por:</span>
+                                {{ item.requester.name }}
+                            </p>
+                            <p class="flex space-x-2">
+                                <span class="font-semibold text-gray3F w-[20%]">Fecha de solicitud:</span>
+                                {{ formatDate(item.created_at, true) }}
+                            </p>
+                            <div v-if="item.requester_comments" class="mt-2 pt-2 border-t flex">
+                                <span class="font-semibold text-gray3F w-[20%]">Comentarios de la solicitud:</span>
+                                <p class="text-gray-700 italic whitespace-pre-wrap">{{ item.requester_comments }}</p>
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t flex justify-end">
-                            <el-button type="primary" plain size="small" @click="showDetails(item)">Ver
-                                Detalles</el-button>
+                            <button @click="showDetails(item)" class="text-blue-700 text-sm italic">
+                                Ver detalles
+                            </button>
                         </div>
                     </el-card>
                 </el-timeline-item>
@@ -39,22 +44,22 @@
         </div>
 
         <!-- MODAL PARA DETALLES DEL HISTORIAL -->
-        <el-dialog v-model="detailsModalVisible" :title="'Detalles de Solicitud Histórica'" width="70%" top="5vh">
-            <div v-if="selectedItem" class="space-y-6">
+        <el-dialog v-model="detailsModalVisible" :title="'Detalles de Solicitud Histórica'" width="65%" top="5vh">
+            <div v-if="selectedItem" class="space-y-3">
                 <!-- Información General -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm p-4 bg-gray-50 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-[13px] p-4 bg-gray-50 rounded-lg">
                     <div>
-                        <span class="font-semibold text-gray-600 block">Solicitante:</span>
+                        <span class="font-semibold text-gray3F block">Solicitante:</span>
                         <span class="mt-1 inline-block">{{ selectedItem.requester.name }}</span>
                     </div>
                     <div>
-                        <span class="font-semibold text-gray-600 block">Fecha de Solicitud:</span>
+                        <span class="font-semibold text-gray3F block">Fecha de Solicitud:</span>
                         <span class="mt-1 inline-block">{{ formatDate(selectedItem.created_at, true) }}</span>
                     </div>
                     <div v-if="selectedItem.requester_comments" class="md:col-span-3 lg:col-span-1">
-                        <span class="font-semibold text-gray-600 block">Comentarios del Solicitante:</span>
+                        <span class="font-semibold text-gray3F block">Comentarios del Solicitante:</span>
                         <p
-                            class="text-gray-700 bg-white border border-gray-200 rounded-md p-2 text-xs mt-1 italic whitespace-pre-wrap">
+                            class="text-gray-700 text-xs mt-1 italic whitespace-pre-wrap">
                             "{{ selectedItem.requester_comments }}"</p>
                     </div>
                 </div>
@@ -68,8 +73,8 @@
                                 {{ reviewer.name }} ({{ translateStatus(reviewer.status) }})
                             </el-tag>
                             <p v-if="reviewer.comments" class="text-xs text-gray-500 italic mt-1 pl-2 border-l-2 ml-2">
-                                "{{
-                                reviewer.comments }}"</p>
+                                "{{ reviewer.comments }}"
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -119,7 +124,7 @@
                 </el-tabs>
             </div>
             <template #footer>
-                <el-button @click="detailsModalVisible = false">Cerrar</el-button>
+                <el-button @click="detailsModalVisible = false" type="info" plain>Cerrar</el-button>
             </template>
         </el-dialog>
     </div>

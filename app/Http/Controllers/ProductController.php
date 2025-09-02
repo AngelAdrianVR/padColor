@@ -80,7 +80,29 @@ class ProductController extends Controller
 
         $changeDetails = null;
         if ($pendingChangeRequest) {
-            // ... (lógica para la solicitud pendiente sin cambios)
+            $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
+            $isReviewer = Auth::check() ? $pendingChangeRequest->reviewers->contains(Auth::user()) : false;
+            $currentUserVote = $isReviewer ? $pendingChangeRequest->reviewers()->where('user_id', Auth::id())->first()->pivot : null;
+
+            $changeDetails = [
+                'id' => $pendingChangeRequest->id,
+                'requester_name' => $pendingChangeRequest->requester->name,
+                'created_at' => $pendingChangeRequest->created_at,
+                'requester_comments' => $pendingChangeRequest->comments,
+                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
+                    'name' => $reviewer->name,
+                    'status' => $reviewer->pivot->status,
+                    'comments' => $reviewer->pivot->comments,
+                ]),
+                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
+                    'name' => $media->file_name,
+                    'size' => $media->size,
+                    'url' => $media->getUrl()
+                ]),
+                'changes' => $changes,
+                'is_reviewer' => $isReviewer,
+                'current_user_vote_status' => $currentUserVote ? $currentUserVote->status : null,
+            ];
         }
 
         return Inertia::render('Product/Show', [
@@ -252,7 +274,7 @@ class ProductController extends Controller
             }
         }
 
-        return to_route('products.index');
+        return to_route('products.show', $product->id);
     }
 
     public function edit(Product $product)
@@ -283,7 +305,7 @@ class ProductController extends Controller
             $product->clearMediaCollection('image');
         }
 
-        return to_route('products.index');
+        return to_route('products.show', $product->id);
     }
 
     public function updateWithMedia(Request $request, Product $product)
@@ -313,7 +335,7 @@ class ProductController extends Controller
             }
         }
 
-        return to_route('products.index');
+        return to_route('products.show', $product->id);
     }
 
     public function destroy(Product $product)

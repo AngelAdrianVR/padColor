@@ -3,20 +3,25 @@
         <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
 
             <!-- 1. Detalles del Producto -->
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles del producto</h2>
-            <div class="bg-white shadow-sm rounded-xl p-6 mb-8">
+            <div class="flex items-center space-x-6">
+                <Back :to="route('products.index')" />
+                <h2 class="text-base font-semibold text-black">Detalles del producto</h2>
+            </div>
+            <div class="bg-[#f2f2f2] border border-grayD9 rounded-3xl shadow-sm p-3 mt-4">
                 <div class="flex flex-col sm:flex-row items-start justify-between">
                     <div class="flex items-center space-x-6 w-full">
                         <!-- Imagen del producto -->
                         <div
-                            class="w-28 h-28 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <PhotoIcon class="w-12 h-12 text-gray-400" />
+                            class="size-40 bg-white border border-grayD9 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <img v-if="product.media.length" :src="product.media[0].original_url"
+                                class="w-full h-full object-contain rounded-2xl" />
+                            <PhotoIcon v-else class="w-12 h-12 text-gray-400" />
                         </div>
 
                         <!-- Información en columnas -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 w-full">
-                            <div>
-                                <h1 class="text-2xl font-bold text-gray-800">{{ product.name }}</h1>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-4 w-full">
+                            <div class="col-span-full">
+                                <h1 class="text-base font-bold text-gray-800">{{ product.name }}</h1>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-500 block">Código</span>
@@ -43,7 +48,7 @@
                     </div>
 
                     <!-- Botón de Editar -->
-                    <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
+                    <div v-if="hasPermition('Editar productos')" class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
                         <el-button @click="editGeneralData">
                             <PencilIcon class="w-4 h-4 mr-2" />
                             Editar datos generales
@@ -52,79 +57,86 @@
                 </div>
             </div>
 
-
             <!-- 2. Ficha Técnica del Producto -->
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Ficha técnica del producto</h2>
-            <div class="bg-white shadow-sm rounded-xl p-6">
-                <!-- Banner de Solicitud Pendiente -->
-                <div v-if="pendingChangeRequest"
-                    class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-blue-800">Hay una solicitud de cambio pendiente</h4>
-                        <p class="text-sm text-blue-700 mt-1">
-                            El usuario <strong>{{ pendingChangeRequest.requester_name }}</strong> solicitó cambios el
-                            <strong>{{ formatDate(pendingChangeRequest.created_at) }}</strong>.
-                        </p>
+            <section v-if="hasPermition('Ver información de diseño en fichas técnicas') ||
+                hasPermition('Ver información de acabados en fichas técnicas') ||
+                hasPermition('Ver información de costos y precios en fichas técnicas') ||
+                hasPermition('Ver historial en fichas técnicas')">
+                <h2 class="text-base font-bold text-black mt-8">Ficha técnica del producto</h2>
+                <div class="bg-white rounded-xl">
+                    <!-- Banner de Solicitud Pendiente -->
+                    <div v-if="pendingChangeRequest"
+                        class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-blue-800">Hay una solicitud de cambio pendiente</h4>
+                            <p class="text-sm text-blue-700 mt-1">
+                                El usuario <strong>{{ pendingChangeRequest.requester_name }}</strong> solicitó cambios
+                                el
+                                <strong>{{ formatDate(pendingChangeRequest.created_at) }}</strong>.
+                            </p>
+                        </div>
+                        <el-button @click="isModalVisible = true">
+                            <EyeIcon class="size-4 mr-2" />
+                            Revisar Solicitud
+                        </el-button>
                     </div>
-                    <el-button type="primary" plain @click="isModalVisible = true">
-                        <EyeIcon class="w-4 h-4 mr-2" />
-                        Revisar Solicitud
-                    </el-button>
-                </div>
 
-                <!-- Botones de Acción de Ficha Técnica -->
-                <div class="flex justify-end mb-4">
-                    <div v-if="isEditing">
-                        <el-button @click="cancelEdit">Cancelar</el-button>
-                        <el-button type="primary" @click="openRequesterCommentsModal" :loading="form.processing">Enviar
-                            Solicitud</el-button>
+                    <!-- Botones de Acción de Ficha Técnica -->
+                    <div class="flex justify-end">
+                        <div v-if="isEditing">
+                            <el-button @click="cancelEdit">Cancelar</el-button>
+                            <el-button type="primary" @click="openRequesterCommentsModal"
+                                :loading="form.processing">Enviar
+                                Solicitud</el-button>
+                        </div>
+                        <div v-else-if="hasPermition('Editar fichas técnicas')">
+                            <el-tooltip content="Hay una solicitud pendiente de aprobación"
+                                :disabled="!pendingChangeRequest" placement="top">
+                                <span class="inline-block">
+                                    <el-button @click="isEditing = true" :disabled="!!pendingChangeRequest">
+                                        <PencilSquareIcon class="size-4 mr-2" />
+                                        Editar ficha técnica
+                                    </el-button>
+                                </span>
+                            </el-tooltip>
+                        </div>
                     </div>
-                    <div v-else>
-                        <el-tooltip content="Hay una solicitud pendiente de aprobación"
-                            :disabled="!pendingChangeRequest" placement="top">
-                            <span class="inline-block">
-                                <el-button @click="isEditing = true" :disabled="!!pendingChangeRequest">
-                                    <PencilSquareIcon class="w-4 h-4 mr-2" />
-                                    Editar ficha técnica
-                                </el-button>
-                            </span>
-                        </el-tooltip>
-                    </div>
-                </div>
 
-                <!-- Pestañas -->
-                <el-tabs v-model="activeTab" class="product-sheet-tabs">
-                    <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
-                        <Component :is="tabs[tab.slug]" v-if="activeTab === tab.slug" :product="product"
-                            :fields-by-section="tab.fields_by_section" :description="getTabDescription(tab.slug)"
-                            :is-editing="isEditing" :form="form" />
-                    </el-tab-pane>
-                    <!-- PESTAÑA DE HISTORIAL AHORA USA EL NUEVO COMPONENTE -->
-                    <el-tab-pane label="Historial" name="history">
-                        <HistoryTab :history="changeRequestHistory" />
-                    </el-tab-pane>
-                </el-tabs>
-            </div>
+                    <!-- Pestañas -->
+                    <el-tabs v-model="activeTab" class="product-sheet-tabs">
+                        <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
+                            <Component :is="tabs[tab.slug]"
+                                v-if="activeTab === tab.slug && hasPermition('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
+                                :product="product" :fields-by-section="tab.fields_by_section"
+                                :description="getTabDescription(tab.slug)" :is-editing="isEditing" :form="form" />
+                        </el-tab-pane>
+                        <!-- PESTAÑA DE HISTORIAL AHORA USA EL NUEVO COMPONENTE -->
+                        <el-tab-pane label="Historial" name="history">
+                            <HistoryTab v-if="hasPermition('Ver historial en fichas técnicas')"
+                                :history="changeRequestHistory" />
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
+            </section>
         </div>
 
         <!-- MODAL PARA VER SOLICITUD DE CAMBIO -->
         <el-dialog v-model="isModalVisible" :title="'Solicitud de Cambio para ' + product.name" width="70%" top="5vh">
             <div v-if="pendingChangeRequest" class="space-y-6">
                 <!-- Información General -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm p-4 bg-gray-50 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6  text-[13px] p-4 bg-gray-50 rounded-lg">
                     <div>
-                        <span class="font-semibold text-gray-600 block">Solicitante:</span>
+                        <span class="font-semibold text-gray3F block">Solicitante:</span>
                         <span class="mt-1 inline-block">{{ pendingChangeRequest.requester_name }}</span>
                     </div>
                     <div>
-                        <span class="font-semibold text-gray-600 block">Fecha:</span>
+                        <span class="font-semibold text-gray3F block">Fecha de Solicitud:</span>
                         <span class="mt-1 inline-block">{{ formatDate(pendingChangeRequest.created_at, true) }}</span>
                     </div>
-                    <!-- SECCIÓN DE COMENTARIOS DEL SOLICITANTE CORREGIDA -->
                     <div v-if="pendingChangeRequest.requester_comments" class="md:col-span-3 lg:col-span-1">
-                        <span class="font-semibold text-gray-600 block">Comentarios del Solicitante:</span>
+                        <span class="font-semibold text-gray3F block">Comentarios del Solicitante:</span>
                         <p
-                            class="text-gray-700 bg-white border border-gray-200 rounded-md p-2 text-xs mt-1 italic whitespace-pre-wrap">
+                            class="text-gray-700 text-xs mt-1 italic whitespace-pre-wrap">
                             "{{ pendingChangeRequest.requester_comments }}"</p>
                     </div>
                 </div>
@@ -177,7 +189,7 @@
                                 <div class="min-w-0">
                                     <a :href="doc.url" target="_blank"
                                         class="text-sm font-medium text-blue-600 hover:underline truncate">{{
-                                        doc.name }}</a>
+                                            doc.name }}</a>
                                     <p class="text-xs text-gray-500">{{ (doc.size / 1024).toFixed(2) }} KB</p>
                                 </div>
                             </div>
@@ -190,7 +202,9 @@
 
             <template #footer>
                 <div class="flex justify-between items-center w-full">
-                    <el-button @click="isModalVisible = false" :disabled="!!processingRequest">Cerrar</el-button>
+                    <el-button @click="isModalVisible = false" :disabled="!!processingRequest" plain type="info">
+                        Cerrar
+                    </el-button>
 
                     <div v-if="pendingChangeRequest && pendingChangeRequest.is_reviewer">
                         <div v-if="userHasVoted" class="text-sm text-gray-500 italic">
@@ -253,12 +267,14 @@ import CostsAndPrices from './Tabs/CostsAndPrices.vue';
 import HistoryTab from './Tabs/History.vue';
 import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon } from '@heroicons/vue/24/outline';
 import { ElMessage, ElDialog, ElBadge, ElTooltip } from 'element-plus';
+import Back from '@/Components/MyComponents/Back.vue';
 
 export default {
     name: 'ProductsShow',
     components: {
         AppLayout,
         Link,
+        Back,
         Design,
         Finishes,
         CostsAndPrices,
@@ -321,6 +337,9 @@ export default {
         }
     },
     methods: {
+        hasPermition(permission) {
+            return this.$page.props.auth.user.permissions.includes(permission);
+        },
         formatDate(dateString, withTime = false) {
             if (!dateString) return '-';
             const options = { year: 'numeric', month: 'long', day: 'numeric' };

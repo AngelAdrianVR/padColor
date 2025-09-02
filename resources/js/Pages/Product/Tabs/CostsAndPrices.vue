@@ -1,19 +1,19 @@
 <template>
-    <div class="pt-1">
+    <div class="p-1">
         <!-- ==================================================== -->
         <!-- MODO EDICIÓN                                         -->
         <!-- ==================================================== -->
         <template v-if="isEditing">
             <p class="text-gray-600 text-sm mb-6">{{ description }}</p>
             <div v-for="(fields, sectionName) in fieldsBySection" :key="sectionName"
-                class="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 class="font-semibold text-gray-700 mb-4 capitalize flex items-center">
-                    <BanknotesIcon class="w-5 h-5 mr-2 text-gray-500" />
+                class="bg-white rounded-[14px] shadow-md border border-grayD9 p-4 text-[13px]">
+                <h3 class="font-semibold text-gray-700 mb-4 capitalize flex items-center text-base">
+                    <BanknotesIcon class="w-5 h-5 mr-2" />
                     {{ formatSectionName(sectionName) }}
                 </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
                     <div v-for="field in fields" :key="field.slug">
-                        <label class="el-form-item__label">{{ field.label }}</label>
+                        <label class="text-gray3F font-semibold block">{{ field.label }}</label>
                         <el-input-number v-model="form.sheet_data[field.slug]" :precision="2" :step="0.01" :min="0"
                             controls-position="right" class="w-full">
                             <template #prefix>$</template>
@@ -22,23 +22,22 @@
                 </div>
             </div>
         </template>
-
         <!-- ==================================================== -->
         <!-- MODO VISTA                                           -->
         <!-- ==================================================== -->
         <template v-else>
             <p class="text-gray-600 text-sm mb-6">{{ description }}</p>
             <div v-for="(fields, sectionName) in fieldsBySection" :key="sectionName"
-                class="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 class="font-semibold text-gray-700 mb-4 capitalize flex items-center">
-                    <BanknotesIcon class="w-5 h-5 mr-2 text-gray-500" />
+                class="bg-white rounded-[14px] shadow-md border border-grayD9 p-4 text-[13px]">
+                <h3 class="font-semibold text-black mb-4 capitalize flex items-center text-base">
+                    <BanknotesIcon class="w-5 h-5 mr-2" />
                     {{ formatSectionName(sectionName) }}
                 </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                     <div v-for="field in fields" :key="field.slug"
-                        class="flex justify-between items-start text-sm border-b pb-2">
-                        <span class="text-gray-500 mr-2">{{ field.label }}</span>
-                        <span class="text-gray-800 font-medium text-right">{{
+                        class="flex items-start space-x-2 border-b pb-2">
+                        <span class="text-gray3F font-semibold w-1/2 mr-2">{{ field.label }}</span>
+                        <span class="text-black text-right">{{
                             formatCurrency(product.sheet_data[field.slug]) }}</span>
                     </div>
                 </div>

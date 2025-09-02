@@ -1,22 +1,25 @@
 <template>
-    <div class="pt-1">
+    <div class="p-1">
         <!-- ==================================================== -->
         <!-- MODO EDICIÓN                                         -->
         <!-- ==================================================== -->
         <template v-if="isEditing">
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 class="font-semibold text-gray-700 mb-2 flex items-center">
-                    <SparklesIcon class="w-5 h-5 mr-2 text-gray-500" />Procesos
+            <div class="bg-white rounded-[14px] shadow-md border border-grayD9 p-4 text-[13px]">
+                <h3 class="font-semibold text-black mb-2 flex items-center text-base">
+                    <SparklesIcon class="w-5 h-5 mr-2" />
+                    Procesos
                 </h3>
-                <p class="text-sm text-gray-500 mb-6">Agrega información de los procesos de acabado que se le da al
-                    producto.</p>
+                <p class="text-sm text-gray-500 mb-6">
+                    Agrega información de los procesos de acabado que se le da al
+                    producto.
+                </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10">
                     <!-- Columna Izquierda: Selects y Textarea -->
                     <div>
                         <div v-for="field in getFieldsBySlugs(['eyeleting', 'bagging', 'heat_sealling', 'boxing'])"
                             :key="field.slug">
-                            <label class="el-form-item__label">{{ field.label }}</label>
+                            <label class="text-gray3F font-semibold block mt-2">{{ field.label }}</label>
                             <el-select v-model="form.sheet_data[field.slug]" class="w-full"
                                 :placeholder="getPlaceholder(field.label)" clearable>
                                 <el-option v-for="option in field.options" :key="option.value" :label="option.label"
@@ -24,7 +27,7 @@
                             </el-select>
                         </div>
                         <div>
-                            <label class="el-form-item__label">Notas</label>
+                            <label class="text-gray3F font-semibold block mt-2">Notas</label>
                             <el-input v-model="form.sheet_data['acabado_notas']" type="textarea" :rows="4"
                                 placeholder="Escribe las notas relevantes para los procesos de acabado" />
                         </div>
@@ -32,7 +35,7 @@
 
                     <!-- Columna Derecha: Checkboxes -->
                     <div>
-                        <label class="el-form-item__label">Adicionales</label>
+                        <label class="text-gray3F font-semibold block mt-2">Adicionales</label>
                         <el-checkbox-group v-model="form.sheet_data['adicionales']" class="flex flex-col">
                             <el-checkbox v-for="option in getFieldOptionsBySlug('finish_extras')" :key="option.value"
                                 :label="option.value" :value="option.value">
@@ -43,39 +46,39 @@
                 </div>
             </div>
         </template>
-
         <!-- ==================================================== -->
         <!-- MODO VISTA                                           -->
         <!-- ==================================================== -->
         <template v-else>
             <p class="text-gray-600 text-sm mb-6">{{ description }}</p>
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 class="font-semibold text-gray-700 mb-4 flex items-center">
-                    <SparklesIcon class="w-5 h-5 mr-2 text-gray-500" />Procesos de Acabado
+            <div class="bg-white rounded-[14px] border border-grayD9 shadow-md p-4 text-[13px]">
+                <h3 class="font-semibold text-black mb-4 flex items-center text-base">
+                    <SparklesIcon class="w-5 h-5 mr-2" />Procesos de Acabado
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4">
                     <div class="space-y-3">
                         <div v-for="field in getFieldsBySlugs(['eyeleting', 'bagging', 'heat_sealling', 'boxing'])"
-                            :key="field.slug" class="flex justify-between border-b pb-2">
-                            <span class="text-gray-500">{{ field.label }}:</span>
-                            <span class="text-gray-800 font-medium text-right">{{ getDisplayValue(field.slug,
+                            :key="field.slug" class="flex space-x-2 border-b border-grayD9 pb-2">
+                            <span class="text-gray3F font-semibold w-1/2">{{ field.label }}:</span>
+                            <span class="text-black text-right">{{ getDisplayValue(field.slug,
                                 field.options) || '-' }}</span>
                         </div>
                     </div>
-                    <div>
-                        <h4 class="text-gray-500 font-medium mb-2">Adicionales:</h4>
+                    <div class="border border-grayD9 p-2 flex items-start space-x-2">
+                        <span class="text-gray3F font-semibold w-1/2">Adicionales:</span>
                         <div v-if="product.sheet_data.adicionales && product.sheet_data.adicionales.length > 0">
                             <p v-for="item in product.sheet_data.adicionales" :key="item"
-                                class="flex items-center text-gray-800">
-                                <CheckCircleIcon class="h-5 w-5 text-blue-500 mr-2" /> {{ getOptionLabel('finish_extras',
+                                class="flex items-center text-black">
+                                <CheckCircleIcon class="h-5 w-5 text-[#1155FF] mr-2" /> {{
+                                    getOptionLabel('finish_extras',
                                 item) }}
                             </p>
                         </div>
                         <p v-else class="text-gray-400 italic">N/A</p>
                     </div>
                     <div class="md:col-span-2 mt-4">
-                        <h4 class="text-gray-500 font-medium">Notas:</h4>
-                        <p class="text-gray-800 whitespace-pre-wrap mt-1">{{ product.sheet_data.acabado_notas || '-' }}
+                        <h4 class="text-gray3F font-semibold">Notas:</h4>
+                        <p class="text-gray-700 whitespace-pre-wrap italic mt-1">{{ product.sheet_data.acabado_notas || 'Sin notas' }}
                         </p>
                     </div>
                 </div>
