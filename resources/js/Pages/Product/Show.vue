@@ -58,10 +58,7 @@
             </div>
 
             <!-- 2. Ficha Técnica del Producto -->
-            <section v-if="hasPermission('Ver información de diseño en fichas técnicas') ||
-                hasPermission('Ver información de acabados en fichas técnicas') ||
-                hasPermission('Ver información de costos y precios en fichas técnicas') ||
-                hasPermission('Ver historial en fichas técnicas')">
+            <section v-if="sheetStructure.length > 0 || canViewHistory">
                 <h2 class="text-base font-bold text-black mt-8">Ficha técnica del producto</h2>
                 <div class="bg-white rounded-xl">
                     <!-- Banner de Solicitud Pendiente -->
@@ -103,23 +100,23 @@
                     </div>
 
                     <!-- Pestañas -->
-                    <el-tabs v-model="activeTab" class="product-sheet-tabs">
+                    <el-tabs v-model="activeTab" class="product-sheet-tabs !min-h-80">
                         <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
-                            <Component :is="tabs[tab.slug]"
-                                v-if="activeTab === tab.slug && hasPermission('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
+                            <DynamicTab
+                                v-if="activeTab === tab.slug &&
+                                hasPermission('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
                                 :product="product" :fields-by-section="tab.fields_by_section"
                                 :description="getTabDescription(tab.slug)" :is-editing="isEditing" :form="form" />
+                                <p v-else class="italic text-gray-500 text-center my-6">No tienes acceso a esta información</p>
                         </el-tab-pane>
-                        <!-- PESTAÑA DE HISTORIAL AHORA USA EL NUEVO COMPONENTE -->
-                        <el-tab-pane label="Historial" name="history">
-                            <HistoryTab v-if="hasPermission('Ver historial en fichas técnicas')"
-                                :history="changeRequestHistory" />
+                        <el-tab-pane v-if="canViewHistory" label="Historial"
+                            name="history">
+                            <HistoryTab :history="changeRequestHistory" />
                         </el-tab-pane>
                     </el-tabs>
                 </div>
                 <button @click="$inertia.get(route('product-sheet-structure.index'))"
-                    v-if="hasPermission('Gestionar estructura de ficha técnica')"
-                    class="mt-4 text-xs text-primary flex items-center">
+                    v-if="$page.props.auth.user.id === 156" class="mt-4 text-xs text-primary flex items-center">
                     <Cog8ToothIcon class="size-4 mr-1" />
                     Gestionar estructura de ficha técnica
                 </button>
@@ -181,7 +178,7 @@
                             </el-table>
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane name="files">
+                    <!-- <el-tab-pane name="files">
                         <template #label>
                             <span>Nuevos Archivos</span>
                             <el-badge :value="pendingChangeRequest.pending_media.length" class="ml-2" type="primary" />
@@ -201,7 +198,7 @@
                         </div>
                         <p v-else class="text-center text-gray-500 py-8">No se adjuntaron nuevos archivos en esta
                             solicitud.</p>
-                    </el-tab-pane>
+                    </el-tab-pane> -->
                 </el-tabs>
             </div>
 
@@ -265,10 +262,8 @@
 import { useForm, Link, router } from '@inertiajs/vue3';
 import { shallowRef } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import Design from './Tabs/Design.vue';
-import Finishes from './Tabs/Finishes.vue';
-import CostsAndPrices from './Tabs/CostsAndPrices.vue';
 import HistoryTab from './Tabs/History.vue';
+import DynamicTab from './Tabs/DynamicTab.vue';
 import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon, Cog8ToothIcon } from '@heroicons/vue/24/outline';
 import { ElMessage, ElDialog, ElBadge, ElTooltip } from 'element-plus';
 import Back from '@/Components/MyComponents/Back.vue';
@@ -279,10 +274,8 @@ export default {
         AppLayout,
         Link,
         Back,
-        Design,
-        Finishes,
-        CostsAndPrices,
         HistoryTab,
+        DynamicTab,
         PhotoIcon,
         PencilIcon,
         PencilSquareIcon,
@@ -297,6 +290,7 @@ export default {
         product: { type: Object, required: true },
         sheetStructure: { type: Array, required: true },
         pendingChangeRequest: { type: Object, default: null },
+        canViewHistory: Boolean,
         changeRequestHistory: { type: Array, default: () => [] },
     },
     setup(props) {
@@ -306,13 +300,7 @@ export default {
             comments: '',
         });
 
-        const tabs = shallowRef({
-            diseno: Design,
-            acabados: Finishes,
-            costos_y_precios: CostsAndPrices,
-        });
-
-        return { form, tabs };
+        return { form };
     },
     data() {
         return {

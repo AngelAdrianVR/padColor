@@ -33,7 +33,7 @@ class ChangeRequestController extends Controller
         $url = route('products.show', $product);
 
         $changeRequest->requester->notify(new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
-        
+
         $otherReviewers = $changeRequest->reviewers()->where('user_id', '!=', $reviewer->id)->get();
         if ($otherReviewers->isNotEmpty()) {
             Notification::send($otherReviewers, new BasicNotification($subject, $description, $reviewer->name, $reviewer->profile_photo_url, $url));
@@ -66,17 +66,20 @@ class ChangeRequestController extends Controller
             $product->sheet_data = $changeRequest->data;
             $product->save();
 
-            // CAMBIO: Copiar archivos en lugar de moverlos para preservar el historial.
             $pendingMedia = $changeRequest->getMedia('pending_documents');
             foreach ($pendingMedia as $mediaItem) {
-                $mediaItem->copy($product, 'documents');
+                // 1. Obtener el slug del campo guardado en las propiedades personalizadas.
+                $fieldSlug = $mediaItem->getCustomProperty('field_slug', 'documents'); // 'documents' como fallback
+
+                // 2. Usar el slug del campo como el nombre de la colección de destino.
+                $mediaItem->copy($product, $fieldSlug);
             }
 
             $changeRequest->status = 'approved';
             $changeRequest->approved_by = Auth::id();
             $changeRequest->decided_at = now();
             $changeRequest->save();
-            
+
             $finalizer = Auth::user();
             $subject = "¡Solicitud Aprobada! Cambios aplicados para \"{$product->name}\"";
             $description = "ha emitido el voto final, aprobando por mayoría los cambios para la ficha técnica. Los cambios ya están visibles.";

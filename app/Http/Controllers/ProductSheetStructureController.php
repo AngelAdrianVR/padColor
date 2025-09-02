@@ -7,16 +7,17 @@ use App\Models\ProductSheetTab;
 use App\Models\ProductSheetField;
 use App\Models\ProductSheetFieldOption;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
 
 class ProductSheetStructureController extends Controller
 {
-    /**
-     * Proteger todas las rutas de este controlador con el permiso.
-     */
-    public function __construct()
-    {
-        $this->middleware('can:Gestionar estructura de ficha técnica');
-    }
+    // /**
+    //  * Proteger todas las rutas de este controlador con el permiso.
+    //  */
+    // public function __construct()
+    // {
+    //     $this->middleware('can:Gestionar estructura de ficha técnica');
+    // }
 
     /**
      * Muestra la página principal de gestión de la estructura.
@@ -36,30 +37,55 @@ class ProductSheetStructureController extends Controller
 
     public function storeTab(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:product_sheet_tabs,slug',
         ]);
-        ProductSheetTab::create($request->all());
-        return back()->with('success', 'Pestaña creada correctamente.');
+
+        $tab = ProductSheetTab::create($validated);
+
+        // Crear el permiso asociado
+        Permission::create([
+            'name' => 'Ver información de ' . strtolower($tab->name) . ' en fichas técnicas',
+            'category' => 'Productos',
+            'guard_name' => 'web',
+        ]);
+
+        return back()->with('success', 'Pestaña y permiso creados correctamente.');
     }
 
     public function updateTab(Request $request, ProductSheetTab $tab)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:product_sheet_tabs,slug,' . $tab->id,
             'is_active' => 'boolean',
             'order' => 'integer',
         ]);
-        $tab->update($request->all());
-        return back()->with('success', 'Pestaña actualizada correctamente.');
+
+        // Buscar el permiso antiguo antes de actualizar el nombre de la pestaña
+        $oldPermissionName = 'Ver información de ' . strtolower($tab->name) . ' en fichas técnicas';
+        $permission = Permission::where('name', $oldPermissionName)->first();
+
+        $tab->update($validated);
+
+        // Actualizar el nombre del permiso si se encontró
+        if ($permission) {
+            $permission->name = 'Ver información de ' . strtolower($tab->name) . ' en fichas técnicas';
+            $permission->save();
+        }
+
+        return back()->with('success', 'Pestaña y permiso actualizados correctamente.');
     }
 
     public function destroyTab(ProductSheetTab $tab)
     {
+        // Eliminar el permiso asociado antes de eliminar la pestaña
+        $permissionName = 'Ver información de ' . strtolower($tab->name) . ' en fichas técnicas';
+        Permission::where('name', $permissionName)->delete();
+
         $tab->delete();
-        return back()->with('success', 'Pestaña eliminada correctamente.');
+        return back()->with('success', 'Pestaña y permiso eliminados correctamente.');
     }
 
     // --- MÉTODOS PARA GESTIONAR CAMPOS (FIELDS) ---
@@ -71,7 +97,8 @@ class ProductSheetStructureController extends Controller
             'label' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:product_sheet_fields,slug',
             'section' => 'required|string|max:255',
-            'type' => 'required|string|in:text,textarea,select,radio,multicheckbox,checklist',
+            'type' => 'required|string|in:text,textarea,select,radio,multicheckbox,checklist,file',
+            'icon' => 'nullable|string|max:255', // <-- NUEVO
         ]);
         ProductSheetField::create($request->all());
         return back()->with('success', 'Campo creado correctamente.');
@@ -83,9 +110,10 @@ class ProductSheetStructureController extends Controller
             'label' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:product_sheet_fields,slug,' . $field->id,
             'section' => 'required|string|max:255',
-            'type' => 'required|string|in:text,textarea,select,radio,multicheckbox,checklist',
+            'type' => 'required|string|in:text,textarea,select,radio,multicheckbox,checklist,file',
             'is_active' => 'boolean',
             'order' => 'integer',
+            'icon' => 'nullable|string|max:255', // <-- NUEVO
         ]);
         $field->update($request->all());
         return back()->with('success', 'Campo actualizado correctamente.');

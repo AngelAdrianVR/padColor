@@ -15,6 +15,7 @@ class ChangeRequest extends Model implements HasMedia
 
     protected $casts = [
         'data' => 'array',
+        'previous_data' => 'array',
         'decided_at' => 'datetime',
     ];
 

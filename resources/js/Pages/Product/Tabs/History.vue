@@ -100,7 +100,7 @@
                             </el-table>
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane>
+                    <!-- <el-tab-pane>
                         <template #label>
                             <span>Archivos Adjuntos</span>
                             <el-badge :value="selectedItem.attached_media.length" class="ml-2" type="primary" />
@@ -120,7 +120,7 @@
                         </div>
                         <p v-else class="text-center text-gray-500 py-8">No se adjuntaron archivos en esta solicitud.
                         </p>
-                    </el-tab-pane>
+                    </el-tab-pane> -->
                 </el-tabs>
             </div>
             <template #footer>

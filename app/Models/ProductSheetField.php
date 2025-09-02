@@ -17,6 +17,7 @@ class ProductSheetField extends Model
         'label',
         'slug',
         'type',
+        'icon',
         'options',
         'order',
         'is_required',

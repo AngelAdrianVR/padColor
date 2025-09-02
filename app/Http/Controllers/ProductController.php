@@ -9,6 +9,7 @@ use App\Models\ProductSheetTab;
 use App\Models\User;
 use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -26,14 +27,12 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        $user = Auth::user();
         $product->load('media');
 
-        $sheetStructure = ProductSheetTab::with(['fields.options' => function ($query) {
-            $query->orderBy('order');
-        }])
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get()
+        // 1. Obtener TODA la estructura de pestañas.
+        $allSheetStructure = ProductSheetTab::with(['fields.options' => fn($q) => $q->orderBy('order')])
+            ->where('is_active', true)->orderBy('order')->get()
             ->map(function ($tab) {
                 $activeFields = $tab->fields->where('is_active', true);
                 $tab->fields_by_section = $activeFields->groupBy('section');
@@ -41,21 +40,26 @@ class ProductController extends Controller
                 return $tab;
             });
 
-        $pendingChangeRequest = ChangeRequest::where('product_id', $product->id)
-            ->where('status', 'pending')
-            ->with(['requester', 'reviewers', 'media'])
-            ->first();
+        // 2. Filtrar la estructura basándose en los permisos del usuario.
+        $sheetStructure = $allSheetStructure->filter(function ($tab) use ($user) {
+            return $user->can('Ver información de ' . strtolower($tab->name) . ' en fichas técnicas');
+        })->values();
 
-        // --- ACTUALIZADO: Obtener y enriquecer el historial de solicitudes ---
+        // 3. Comprobar el permiso para el historial.
+        $canViewHistory = $user->can('Ver historial en fichas técnicas');
+
+        // --- LÓGICA DE HISTORIAL ACTUALIZADA ---
         $changeRequestHistory = ChangeRequest::where('product_id', $product->id)
             ->whereIn('status', ['approved', 'rejected'])
             ->with(['requester', 'approver', 'reviewers', 'media'])
-            ->latest('decided_at')
-            ->get()
-            ->map(function ($request) use ($product, $sheetStructure) {
-                // NOTA: Compara los datos históricos con el estado ACTUAL del producto.
-                $historicalChanges = $this->prepareChangeList($product, $request, $sheetStructure);
-
+            ->latest('decided_at')->get()
+            ->map(function ($request) use ($sheetStructure) {
+                // Ahora comparamos los datos de la solicitud con su PROPIA copia de los datos antiguos.
+                $historicalChanges = $this->prepareChangeList(
+                    $request->previous_data ?? [], // <-- USA LOS DATOS ANTIGUOS GUARDADOS
+                    $request->data,
+                    $sheetStructure
+                );
                 return [
                     'id' => $request->id,
                     'status' => $request->status,
@@ -64,41 +68,28 @@ class ProductController extends Controller
                     'created_at' => $request->created_at,
                     'decided_at' => $request->decided_at,
                     'requester_comments' => $request->comments,
-                    'reviewers' => $request->reviewers->map(fn($reviewer) => [
-                        'name' => $reviewer->name,
-                        'status' => $reviewer->pivot->status,
-                        'comments' => $reviewer->pivot->comments,
-                    ]),
+                    'reviewers' => $request->reviewers->map(fn($r) => ['name' => $r->name, 'status' => $r->pivot->status, 'comments' => $r->pivot->comments]),
                     'changes' => $historicalChanges,
-                    'attached_media' => $request->getMedia('pending_documents')->map(fn($media) => [
-                        'name' => $media->file_name,
-                        'size' => $media->size,
-                        'url' => $media->getUrl()
-                    ]),
+                    'attached_media' => $request->getMedia('pending_documents')->map(fn($m) => ['name' => $m->file_name, 'size' => $m->size, 'url' => $m->getUrl()]),
                 ];
             });
 
+        // La lógica para la solicitud pendiente se mantiene igual, comparando con el producto actual.
+        $pendingChangeRequest = ChangeRequest::where('product_id', $product->id)->where('status', 'pending')
+            ->with(['requester', 'reviewers', 'media'])->first();
+
         $changeDetails = null;
         if ($pendingChangeRequest) {
-            $changes = $this->prepareChangeList($product, $pendingChangeRequest, $sheetStructure);
+            $changes = $this->prepareChangeList($product->sheet_data ?? [], $pendingChangeRequest->data, $sheetStructure);
             $isReviewer = Auth::check() ? $pendingChangeRequest->reviewers->contains(Auth::user()) : false;
             $currentUserVote = $isReviewer ? $pendingChangeRequest->reviewers()->where('user_id', Auth::id())->first()->pivot : null;
-
             $changeDetails = [
                 'id' => $pendingChangeRequest->id,
                 'requester_name' => $pendingChangeRequest->requester->name,
                 'created_at' => $pendingChangeRequest->created_at,
                 'requester_comments' => $pendingChangeRequest->comments,
-                'reviewers' => $pendingChangeRequest->reviewers->map(fn($reviewer) => [
-                    'name' => $reviewer->name,
-                    'status' => $reviewer->pivot->status,
-                    'comments' => $reviewer->pivot->comments,
-                ]),
-                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($media) => [
-                    'name' => $media->file_name,
-                    'size' => $media->size,
-                    'url' => $media->getUrl()
-                ]),
+                'reviewers' => $pendingChangeRequest->reviewers->map(fn($r) => ['name' => $r->name, 'status' => $r->pivot->status, 'comments' => $r->pivot->comments]),
+                'pending_media' => $pendingChangeRequest->getMedia('pending_documents')->map(fn($m) => ['name' => $m->file_name, 'size' => $m->size, 'url' => $m->getUrl()]),
                 'changes' => $changes,
                 'is_reviewer' => $isReviewer,
                 'current_user_vote_status' => $currentUserVote ? $currentUserVote->status : null,
@@ -108,6 +99,7 @@ class ProductController extends Controller
         return Inertia::render('Product/Show', [
             'product' => $product,
             'sheetStructure' => $sheetStructure,
+            'canViewHistory' => $canViewHistory,
             'pendingChangeRequest' => $changeDetails,
             'changeRequestHistory' => $changeRequestHistory,
         ]);
@@ -116,13 +108,11 @@ class ProductController extends Controller
     /**
      * Helper para comparar datos y generar una lista con contexto de pestaña/sección.
      */
-    private function prepareChangeList($product, $changeRequest, $sheetStructure)
+    private function prepareChangeList(array $oldData, array $newData, $sheetStructure)
     {
-        // 1. Construir un mapa de campos (fieldMap) robusto y detallado.
         $fieldMap = collect();
         foreach ($sheetStructure as $tab) {
             if (empty($tab->fields_by_section)) continue;
-
             foreach ($tab->fields_by_section as $sectionName => $fields) {
                 foreach ($fields as $field) {
                     $fieldData = $field->toArray();
@@ -133,46 +123,43 @@ class ProductController extends Controller
             }
         }
 
-        // 2. Comparar los datos viejos y nuevos.
-        $oldData = $product->sheet_data ?? [];
-        $newData = $changeRequest->data;
         $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
 
         $changes = [];
-
         foreach ($allKeys as $key) {
             $oldValue = Arr::get($oldData, $key);
             $newValue = Arr::get($newData, $key);
-
-            // Normalizar valores para una comparación consistente
             $oldString = is_array($oldValue) ? json_encode(Arr::sort($oldValue)) : (string) $oldValue;
             $newString = is_array($newValue) ? json_encode(Arr::sort($newValue)) : (string) $newValue;
-
             if ($oldString !== $newString) {
-                // La búsqueda en $fieldMap ahora será exitosa.
                 $fieldInfo = $fieldMap->get($key);
-
                 $label = $fieldInfo['label'] ?? str_replace('_', ' ', ucfirst($key));
                 $tabName = $fieldInfo['tab_name'] ?? 'General';
                 $sectionName = $fieldInfo['section_name'] ?? 'N/A';
 
-                // Convertir valores de 'value' a 'label' para que sean legibles si hay opciones.
-                if ($fieldInfo && !empty($fieldInfo['options'])) {
+                // Comprobar si el campo es de tipo 'file' para manejarlo de forma especial.
+                if ($fieldInfo && $fieldInfo['type'] === 'file') {
+                    $oldDisplay = !empty($oldValue) ? '[Archivo(s) existente(s)]' : 'Vacío';
+                    $newDisplay = !empty($newValue) ? '[Nuevos archivo(s) adjunto(s)]' : 'Sin archivos';
+                }
+                // Manejar campos con opciones (select, radio, etc.)
+                else if ($fieldInfo && !empty($fieldInfo['options'])) {
                     $options = collect($fieldInfo['options']);
-                    // Función auxiliar para buscar etiquetas
                     $getLabels = function ($values) use ($options) {
                         if (empty($values)) return 'Vacío';
                         return collect($values)->map(function ($value) use ($options) {
                             return $options->firstWhere('value', $value)['label'] ?? $value;
                         })->implode(', ');
                     };
-
                     $oldDisplay = $getLabels(Arr::wrap($oldValue));
                     $newDisplay = $getLabels(Arr::wrap($newValue));
-                } else {
+                }
+                // Manejar todos los demás tipos de campos (texto, textarea, etc.)
+                else {
                     $oldDisplay = !is_null($oldValue) && $oldValue !== '' ? (is_array($oldValue) ? implode(', ', $oldValue) : $oldValue) : 'Vacío';
                     $newDisplay = !is_null($newValue) && $newValue !== '' ? (is_array($newValue) ? implode(', ', $newValue) : $newValue) : 'Vacío';
                 }
+                // --- FIN DE LA CORRECCIÓN ---
 
                 $changes[] = [
                     'tab' => $tabName,
@@ -186,9 +173,6 @@ class ProductController extends Controller
         return $changes;
     }
 
-    /**
-     * Formatea un slug a un nombre legible.
-     */
     private function formatSectionName($slug)
     {
         if (!$slug) return '';
@@ -199,39 +183,48 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'sheet_data' => 'nullable|array',
-            'new_documents' => 'nullable|array',
-            'new_documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,dwg,step|max:10240',
             'comments' => 'nullable|string|max:2000',
         ]);
 
-        // --- LÓGICA DE NOTIFICACIÓN BASADA EN PERMISOS ---
         $permissionName = 'Revisar cambios de fichas técnicas';
         $reviewerUsers = User::permission($permissionName)->get();
-
-        // Si no se encuentran usuarios con el permiso, detener el proceso y notificar al usuario.
         if ($reviewerUsers->isEmpty()) {
-            return back()->with('error', 'No se pudo crear la solicitud. Actualmente no hay revisores asignados para aprobar los cambios. Por favor, contacta a un administrador.');
+            return back()->with('error', 'No se pudo crear la solicitud. No hay revisores asignados.');
         }
 
-        // --- CREACIÓN DE LA SOLICITUD (solo si hay revisores) ---
+        // --- LÓGICA PARA SEPARAR DATOS Y ARCHIVOS ---
+        $sheetDataInput = $validated['sheet_data'] ?? [];
+        $dataForJson = [];
+        $filesForMedia = [];
+
+        foreach ($sheetDataInput as $slug => $value) {
+            if (is_array($value) && !empty($value) && $value[0] instanceof UploadedFile) {
+                $filesForMedia[$slug] = $value;
+            } else {
+                $dataForJson[$slug] = $value;
+            }
+        }
+
         $changeRequest = ChangeRequest::create([
             'product_id' => $product->id,
             'user_id' => Auth::id(),
-            'data' => $validated['sheet_data'] ?? [],
+            'previous_data' => $product->sheet_data ?? [],
+            'data' => $dataForJson, // <-- Guardar solo los datos que no son archivos.
             'comments' => $validated['comments'] ?? null,
             'status' => 'pending',
         ]);
 
-        if ($request->hasFile('new_documents')) {
-            foreach ($request->file('new_documents') as $document) {
-                $changeRequest->addMedia($document)->toMediaCollection('pending_documents');
+        // Guardar cada archivo con una propiedad que indica a qué campo pertenece.
+        foreach ($filesForMedia as $slug => $files) {
+            foreach ($files as $file) {
+                $changeRequest->addMedia($file)
+                    ->withCustomProperties(['field_slug' => $slug])
+                    ->toMediaCollection('pending_documents');
             }
         }
 
-        // 1. Asignar los usuarios con el permiso como revisores.
         $changeRequest->reviewers()->attach($reviewerUsers->pluck('id'));
 
-        // 2. Preparar y enviar la notificación a esos usuarios.
         $requester = Auth::user();
         $subject = "Nueva solicitud de cambio para \"{$product->name}\"";
         $description = "ha solicitado tu revisión para cambios en la ficha técnica del producto.";
@@ -240,7 +233,7 @@ class ProductController extends Controller
 
         Notification::send($reviewerUsers, $notificationInstance);
 
-        return back()->with('success', 'Solicitud de cambio enviada para aprobación.');
+        return to_route('products.show', $product)->with('success', 'Solicitud de cambio enviada para aprobación.');
     }
 
     public function create()

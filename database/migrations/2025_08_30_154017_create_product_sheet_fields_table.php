@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('label')->comment('Etiqueta del campo (ej. "Material de las Tapas")');
             $table->string('slug')->unique()->comment('Identificador para usar como key en el JSON de datos');
             $table->string('type')->default('text');
+            $table->string('icon')->nullable();
             $table->json('options')->nullable()->comment('Opciones para campos select, multiselect, etc.');
             $table->unsignedSmallInteger('order')->default(0);
             $table->boolean('is_required')->default(false);

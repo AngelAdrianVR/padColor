@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // El usuario que solicita el cambio
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->json('data'); // Aquí guardaremos el 'sheet_data' con los cambios propuestos
+            $table->json('previous_data')->nullable(); // Aquí guardaremos el 'sheet_data' previo al cambio
             $table->text('comments')->nullable(); // Comentarios del solicitante
             $table->foreignId('approved_by')->nullable()->constrained('users'); // Quién aprobó/rechazó finalmente
             $table->timestamp('decided_at')->nullable(); // Cuándo se tomó la decisión
