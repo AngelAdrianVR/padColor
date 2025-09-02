@@ -62,7 +62,8 @@
                                 <span class="text-gray-500 block mb-1">{{ field.label }}</span>
                                 <div v-if="product.media.filter(m => m.collection_name === field.slug).length > 0"
                                     class="space-y-2">
-                                    <FileView v-for="media in product.media.filter(m => m.collection_name === field.slug)"
+                                    <FileView
+                                        v-for="media in product.media.filter(m => m.collection_name === field.slug)"
                                         :key="media.id" :file="media" />
                                 </div>
                                 <span v-else class="text-gray-800 font-medium">-</span>
@@ -119,7 +120,9 @@ export default {
             return HeroIcons[iconName] || QuestionMarkCircleIcon;
         },
         getDisplayValue(field) {
-            const value = this.product.sheet_data[field.slug];
+            // Comprobar si sheet_data existe antes de intentar acceder a él.
+            const value = this.product.sheet_data ? this.product.sheet_data[field.slug] : undefined;
+
             if (value === null || value === undefined || value === '') {
                 return '-';
             }

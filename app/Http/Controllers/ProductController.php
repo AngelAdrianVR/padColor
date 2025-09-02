@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChangeRequest;
 use App\Models\NotificationEvent;
 use App\Models\Product;
+use App\Models\ProductSheetField;
 use App\Models\ProductSheetTab;
 use App\Models\User;
 use App\Notifications\BasicNotification;
@@ -29,6 +30,27 @@ class ProductController extends Controller
     {
         $user = Auth::user();
         $product->load('media');
+
+        // Si sheet_data está vacío, lo inicializamos con los tipos de datos correctos.
+        if (empty($product->sheet_data)) {
+            // 1. Obtener todos los campos activos con su slug y tipo.
+            $allFields = ProductSheetField::where('is_active', true)->get(['slug', 'type']);
+
+            // 2. Crear un objeto donde cada slug es una clave y el valor depende del tipo.
+            $initializedData = $allFields->reduce(function ($carry, $field) {
+                // Los campos que manejan múltiples valores (o archivos) deben ser arrays.
+                $multiValueTypes = ['multicheckbox', 'checklist', 'file'];
+
+                if (in_array($field->type, $multiValueTypes)) {
+                    $carry[$field->slug] = []; // Inicializar como array vacío.
+                } else {
+                    $carry[$field->slug] = null; // Inicializar como nulo para los demás.
+                }
+                return $carry;
+            }, []);
+
+            $product->sheet_data = $initializedData;
+        }
 
         // 1. Obtener TODA la estructura de pestañas.
         $allSheetStructure = ProductSheetTab::with(['fields.options' => fn($q) => $q->orderBy('order')])
@@ -159,7 +181,6 @@ class ProductController extends Controller
                     $oldDisplay = !is_null($oldValue) && $oldValue !== '' ? (is_array($oldValue) ? implode(', ', $oldValue) : $oldValue) : 'Vacío';
                     $newDisplay = !is_null($newValue) && $newValue !== '' ? (is_array($newValue) ? implode(', ', $newValue) : $newValue) : 'Vacío';
                 }
-                // --- FIN DE LA CORRECCIÓN ---
 
                 $changes[] = [
                     'tab' => $tabName,
@@ -186,18 +207,24 @@ class ProductController extends Controller
             'comments' => 'nullable|string|max:2000',
         ]);
 
-        $permissionName = 'Revisar cambios de fichas técnicas';
-        $reviewerUsers = User::permission($permissionName)->get();
-        if ($reviewerUsers->isEmpty()) {
-            return back()->with('error', 'No se pudo crear la solicitud. No hay revisores asignados.');
+        // --- LÓGICA REFACTORIZADA PARA OBTENER Y SEPARAR DATOS ---
+        $sheetDataInput = $request->input('sheet_data', []);
+        $sheetFilesInput = $request->file('sheet_data', []);
+
+        // Si no se envían archivos, $sheetFilesInput puede ser null. Lo convertimos a array.
+        if (is_null($sheetFilesInput)) {
+            $sheetFilesInput = [];
         }
 
-        // --- LÓGICA PARA SEPARAR DATOS Y ARCHIVOS ---
-        $sheetDataInput = $validated['sheet_data'] ?? [];
+        // Se usa array_replace_recursive para que los archivos reales sobrescriban
+        // cualquier placeholder (ej. null) que pueda venir del formulario.
+        $mergedSheetData = array_replace_recursive($sheetDataInput, $sheetFilesInput);
+
         $dataForJson = [];
         $filesForMedia = [];
 
-        foreach ($sheetDataInput as $slug => $value) {
+        foreach ($mergedSheetData as $slug => $value) {
+            // Comprueba si el valor es un array que contiene un objeto UploadedFile.
             if (is_array($value) && !empty($value) && $value[0] instanceof UploadedFile) {
                 $filesForMedia[$slug] = $value;
             } else {
@@ -205,35 +232,56 @@ class ProductController extends Controller
             }
         }
 
-        $changeRequest = ChangeRequest::create([
-            'product_id' => $product->id,
-            'user_id' => Auth::id(),
-            'previous_data' => $product->sheet_data ?? [],
-            'data' => $dataForJson, // <-- Guardar solo los datos que no son archivos.
-            'comments' => $validated['comments'] ?? null,
-            'status' => 'pending',
-        ]);
+        // --- INICIO DE LA LÓGICA CONDICIONAL ---
+        $isFirstTimeSave = empty($product->sheet_data);
 
-        // Guardar cada archivo con una propiedad que indica a qué campo pertenece.
-        foreach ($filesForMedia as $slug => $files) {
-            foreach ($files as $file) {
-                $changeRequest->addMedia($file)
-                    ->withCustomProperties(['field_slug' => $slug])
-                    ->toMediaCollection('pending_documents');
+        if ($isFirstTimeSave) {
+            // --- FLUJO DE GUARDADO DIRECTO (SIN APROBACIÓN) ---
+            $product->sheet_data = $dataForJson;
+            $product->save();
+
+            foreach ($filesForMedia as $slug => $files) {
+                foreach ($files as $file) {
+                    $product->addMedia($file)->toMediaCollection($slug);
+                }
             }
+
+            return to_route('products.show', $product)->with('success', 'Ficha técnica guardada correctamente.');
+        } else {
+            // --- FLUJO DE SOLICITUD DE CAMBIO (EXISTENTE) ---
+            $permissionName = 'Revisar cambios de fichas técnicas';
+            $reviewerUsers = User::permission($permissionName)->get();
+            if ($reviewerUsers->isEmpty()) {
+                return back()->with('error', 'No se pudo crear la solicitud. No hay revisores asignados.');
+            }
+
+            $changeRequest = ChangeRequest::create([
+                'product_id' => $product->id,
+                'user_id' => Auth::id(),
+                'previous_data' => $product->sheet_data ?? [],
+                'data' => $dataForJson,
+                'comments' => $validated['comments'] ?? null,
+                'status' => 'pending',
+            ]);
+
+            foreach ($filesForMedia as $slug => $files) {
+                foreach ($files as $file) {
+                    $changeRequest->addMedia($file)
+                        ->withCustomProperties(['field_slug' => $slug])
+                        ->toMediaCollection('pending_documents');
+                }
+            }
+
+            $changeRequest->reviewers()->attach($reviewerUsers->pluck('id'));
+            $requester = Auth::user();
+            $subject = "Nueva solicitud de cambio para \"{$product->name}\"";
+            $description = "ha solicitado tu revisión para cambios en la ficha técnica del producto.";
+            $url = route('products.show', $product);
+            $notificationInstance = new BasicNotification($subject, $description, $requester->name, $requester->profile_photo_url, $url);
+            Notification::send($reviewerUsers, $notificationInstance);
+
+            return to_route('products.show', $product)->with('success', 'Solicitud de cambio enviada para aprobación.');
         }
-
-        $changeRequest->reviewers()->attach($reviewerUsers->pluck('id'));
-
-        $requester = Auth::user();
-        $subject = "Nueva solicitud de cambio para \"{$product->name}\"";
-        $description = "ha solicitado tu revisión para cambios en la ficha técnica del producto.";
-        $url = route('products.show', $product);
-        $notificationInstance = new BasicNotification($subject, $description, $requester->name, $requester->profile_photo_url, $url);
-
-        Notification::send($reviewerUsers, $notificationInstance);
-
-        return to_route('products.show', $product)->with('success', 'Solicitud de cambio enviada para aprobación.');
     }
 
     public function create()

@@ -13,8 +13,8 @@
                         <!-- Imagen del producto -->
                         <div
                             class="size-40 bg-white border border-grayD9 rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <img v-if="product.media.length" :src="product.media[0].original_url"
-                                class="w-full h-full object-contain rounded-2xl" />
+                            <img v-if="product.media.length && product.media.filter(m => m.collection_name == 'image').length"
+                                :src="product.media.filter(m => m.collection_name == 'image')[0].original_url" class="w-full h-full object-contain rounded-2xl" />
                             <PhotoIcon v-else class="w-12 h-12 text-gray-400" />
                         </div>
 
@@ -102,15 +102,14 @@
                     <!-- Pestañas -->
                     <el-tabs v-model="activeTab" class="product-sheet-tabs !min-h-80">
                         <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
-                            <DynamicTab
-                                v-if="activeTab === tab.slug &&
+                            <DynamicTab v-if="activeTab === tab.slug &&
                                 hasPermission('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
                                 :product="product" :fields-by-section="tab.fields_by_section"
                                 :description="getTabDescription(tab.slug)" :is-editing="isEditing" :form="form" />
-                                <p v-else class="italic text-gray-500 text-center my-6">No tienes acceso a esta información</p>
+                            <p v-else class="italic text-gray-500 text-center my-6">No tienes acceso a esta información
+                            </p>
                         </el-tab-pane>
-                        <el-tab-pane v-if="canViewHistory" label="Historial"
-                            name="history">
+                        <el-tab-pane v-if="canViewHistory" label="Historial" name="history">
                             <HistoryTab :history="changeRequestHistory" />
                         </el-tab-pane>
                     </el-tabs>
@@ -178,7 +177,7 @@
                             </el-table>
                         </div>
                     </el-tab-pane>
-                    <!-- <el-tab-pane name="files">
+                    <el-tab-pane name="files">
                         <template #label>
                             <span>Nuevos Archivos</span>
                             <el-badge :value="pendingChangeRequest.pending_media.length" class="ml-2" type="primary" />
@@ -198,7 +197,7 @@
                         </div>
                         <p v-else class="text-center text-gray-500 py-8">No se adjuntaron nuevos archivos en esta
                             solicitud.</p>
-                    </el-tab-pane> -->
+                    </el-tab-pane>
                 </el-tabs>
             </div>
 
