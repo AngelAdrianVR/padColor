@@ -48,7 +48,7 @@
                     </div>
 
                     <!-- Botón de Editar -->
-                    <div v-if="hasPermition('Editar productos')" class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
+                    <div v-if="hasPermission('Editar productos')" class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
                         <el-button @click="editGeneralData">
                             <PencilIcon class="w-4 h-4 mr-2" />
                             Editar datos generales
@@ -58,10 +58,10 @@
             </div>
 
             <!-- 2. Ficha Técnica del Producto -->
-            <section v-if="hasPermition('Ver información de diseño en fichas técnicas') ||
-                hasPermition('Ver información de acabados en fichas técnicas') ||
-                hasPermition('Ver información de costos y precios en fichas técnicas') ||
-                hasPermition('Ver historial en fichas técnicas')">
+            <section v-if="hasPermission('Ver información de diseño en fichas técnicas') ||
+                hasPermission('Ver información de acabados en fichas técnicas') ||
+                hasPermission('Ver información de costos y precios en fichas técnicas') ||
+                hasPermission('Ver historial en fichas técnicas')">
                 <h2 class="text-base font-bold text-black mt-8">Ficha técnica del producto</h2>
                 <div class="bg-white rounded-xl">
                     <!-- Banner de Solicitud Pendiente -->
@@ -89,7 +89,7 @@
                                 :loading="form.processing">Enviar
                                 Solicitud</el-button>
                         </div>
-                        <div v-else-if="hasPermition('Editar fichas técnicas')">
+                        <div v-else-if="hasPermission('Editar fichas técnicas')">
                             <el-tooltip content="Hay una solicitud pendiente de aprobación"
                                 :disabled="!pendingChangeRequest" placement="top">
                                 <span class="inline-block">
@@ -106,17 +106,23 @@
                     <el-tabs v-model="activeTab" class="product-sheet-tabs">
                         <el-tab-pane v-for="tab in sheetStructure" :key="tab.slug" :label="tab.name" :name="tab.slug">
                             <Component :is="tabs[tab.slug]"
-                                v-if="activeTab === tab.slug && hasPermition('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
+                                v-if="activeTab === tab.slug && hasPermission('Ver información de ' + tab.name.toLowerCase() + ' en fichas técnicas')"
                                 :product="product" :fields-by-section="tab.fields_by_section"
                                 :description="getTabDescription(tab.slug)" :is-editing="isEditing" :form="form" />
                         </el-tab-pane>
                         <!-- PESTAÑA DE HISTORIAL AHORA USA EL NUEVO COMPONENTE -->
                         <el-tab-pane label="Historial" name="history">
-                            <HistoryTab v-if="hasPermition('Ver historial en fichas técnicas')"
+                            <HistoryTab v-if="hasPermission('Ver historial en fichas técnicas')"
                                 :history="changeRequestHistory" />
                         </el-tab-pane>
                     </el-tabs>
                 </div>
+                <button @click="$inertia.get(route('product-sheet-structure.index'))"
+                    v-if="hasPermission('Gestionar estructura de ficha técnica')"
+                    class="mt-4 text-xs text-primary flex items-center">
+                    <Cog8ToothIcon class="size-4 mr-1" />
+                    Gestionar estructura de ficha técnica
+                </button>
             </section>
         </div>
 
@@ -135,8 +141,7 @@
                     </div>
                     <div v-if="pendingChangeRequest.requester_comments" class="md:col-span-3 lg:col-span-1">
                         <span class="font-semibold text-gray3F block">Comentarios del Solicitante:</span>
-                        <p
-                            class="text-gray-700 text-xs mt-1 italic whitespace-pre-wrap">
+                        <p class="text-gray-700 text-xs mt-1 italic whitespace-pre-wrap">
                             "{{ pendingChangeRequest.requester_comments }}"</p>
                     </div>
                 </div>
@@ -236,7 +241,6 @@
             </template>
         </el-dialog>
 
-
         <!-- MODAL GENÉRICO PARA DECISIÓN DEL REVISOR (APROBAR/RECHAZAR) -->
         <el-dialog v-model="decisionModalVisible" :title="isApproving ? 'Aprobar Solicitud' : 'Rechazar Solicitud'"
             width="30%">
@@ -265,7 +269,7 @@ import Design from './Tabs/Design.vue';
 import Finishes from './Tabs/Finishes.vue';
 import CostsAndPrices from './Tabs/CostsAndPrices.vue';
 import HistoryTab from './Tabs/History.vue';
-import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon } from '@heroicons/vue/24/outline';
+import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon, Cog8ToothIcon } from '@heroicons/vue/24/outline';
 import { ElMessage, ElDialog, ElBadge, ElTooltip } from 'element-plus';
 import Back from '@/Components/MyComponents/Back.vue';
 
@@ -284,6 +288,7 @@ export default {
         PencilSquareIcon,
         EyeIcon,
         PaperClipIcon,
+        Cog8ToothIcon,
         ElDialog,
         ElBadge,
         ElTooltip
@@ -337,7 +342,7 @@ export default {
         }
     },
     methods: {
-        hasPermition(permission) {
+        hasPermission(permission) {
             return this.$page.props.auth.user.permissions.includes(permission);
         },
         formatDate(dateString, withTime = false) {

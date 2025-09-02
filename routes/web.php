@@ -11,6 +11,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductSheetStructureController;
 use App\Http\Controllers\RawMaterialController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
@@ -239,3 +240,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // rutas de change requests
     Route::post('/change-requests/{changeRequest}/decide', [ChangeRequestController::class, 'decide'])->name('change-requests.decide');
 });
+
+
+Route::middleware(['auth:sanctum', 'verified'])
+    ->prefix('product-sheet-structure')
+    ->name('product-sheet-structure.')
+    ->group(function () {
+        // La página principal para gestionar la estructura
+        Route::get('/', [ProductSheetStructureController::class, 'index'])->name('index');
+
+        // Rutas para gestionar Pestañas (Tabs)
+        Route::post('/tabs', [ProductSheetStructureController::class, 'storeTab'])->name('tabs.store');
+        Route::put('/tabs/{tab}', [ProductSheetStructureController::class, 'updateTab'])->name('tabs.update');
+        Route::delete('/tabs/{tab}', [ProductSheetStructureController::class, 'destroyTab'])->name('tabs.destroy');
+
+        // Rutas para gestionar Campos (Fields)
+        Route::post('/fields', [ProductSheetStructureController::class, 'storeField'])->name('fields.store');
+        Route::put('/fields/{field}', [ProductSheetStructureController::class, 'updateField'])->name('fields.update');
+        Route::delete('/fields/{field}', [ProductSheetStructureController::class, 'destroyField'])->name('fields.destroy');
+
+        // Rutas para gestionar Opciones (Options)
+        Route::post('/options', [ProductSheetStructureController::class, 'storeOption'])->name('options.store');
+        Route::put('/options/{option}', [ProductSheetStructureController::class, 'updateOption'])->name('options.update');
+        Route::delete('/options/{option}', [ProductSheetStructureController::class, 'destroyOption'])->name('options.destroy');
+    });
