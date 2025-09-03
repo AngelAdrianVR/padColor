@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CustomsAgentController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductSheetStructureController;
 use App\Http\Controllers\RawMaterialController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
@@ -22,6 +24,7 @@ use App\Models\Production;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -144,6 +147,7 @@ Route::get('products-clone/{product}', [ProductController::class, 'clone'])->nam
 Route::post('products/get-matches', [ProductController::class, 'getMatches'])->name('products.get-matches');
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
 Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
+Route::post('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
 
 
 //machines routes---------------------------------------------------------------------------
@@ -232,4 +236,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Controlador de Recursos para el CRUD principal de Importaciones
     // Gestiona: index, create, store, show, edit, update, destroy
     Route::resource('imports', ImportController::class);
+
+    // rutas de change requests
+    Route::post('/change-requests/{changeRequest}/decide', [ChangeRequestController::class, 'decide'])->name('change-requests.decide');
 });
+
+
+Route::middleware(['auth:sanctum', 'verified'])
+    ->prefix('product-sheet-structure')
+    ->name('product-sheet-structure.')
+    ->group(function () {
+        // La página principal para gestionar la estructura
+        Route::get('/', [ProductSheetStructureController::class, 'index'])->name('index');
+
+        // Rutas para gestionar Pestañas (Tabs)
+        Route::post('/tabs', [ProductSheetStructureController::class, 'storeTab'])->name('tabs.store');
+        Route::put('/tabs/{tab}', [ProductSheetStructureController::class, 'updateTab'])->name('tabs.update');
+        Route::delete('/tabs/{tab}', [ProductSheetStructureController::class, 'destroyTab'])->name('tabs.destroy');
+
+        // Rutas para gestionar Campos (Fields)
+        Route::post('/fields', [ProductSheetStructureController::class, 'storeField'])->name('fields.store');
+        Route::put('/fields/{field}', [ProductSheetStructureController::class, 'updateField'])->name('fields.update');
+        Route::delete('/fields/{field}', [ProductSheetStructureController::class, 'destroyField'])->name('fields.destroy');
+
+        // Rutas para gestionar Opciones (Options)
+        Route::post('/options', [ProductSheetStructureController::class, 'storeOption'])->name('options.store');
+        Route::put('/options/{option}', [ProductSheetStructureController::class, 'updateOption'])->name('options.update');
+        Route::delete('/options/{option}', [ProductSheetStructureController::class, 'destroyOption'])->name('options.destroy');
+    });

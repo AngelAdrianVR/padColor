@@ -65,7 +65,7 @@
                         <InputLabel>
                             <div class="flex items-center justify-between">
                                 <span>Agente aduanal*</span>
-                                <button v-if="$page.props.auth.user.permissions.includes('Crear Agentes aduanales')"
+                                <button v-if="$page.props.auth.user.permissions.includes('Crear agentes aduanales')"
                                     @click="showFastAddModal = true; addingSupplier = false" type="button" class="mr-2">
                                     <PlusCircleIcon class="size-5" />
                                 </button>
