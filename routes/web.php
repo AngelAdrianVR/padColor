@@ -148,6 +148,7 @@ Route::post('products/get-matches', [ProductController::class, 'getMatches'])->n
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
 Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
 Route::post('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
+Route::get('/products/{product}/export-sheet', [ProductController::class, 'exportSheet'])->name('products.export-sheet');
 
 
 //machines routes---------------------------------------------------------------------------

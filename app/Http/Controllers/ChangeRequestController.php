@@ -7,11 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Notifications\BasicNotification;
+use App\Traits\NotifiesViaEvents;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class ChangeRequestController extends Controller
 {
+    use NotifiesViaEvents;
+
     public function decide(Request $request, ChangeRequest $changeRequest)
     {
         $validated = $request->validate([
@@ -84,7 +87,10 @@ class ChangeRequestController extends Controller
             $subject = "¡Solicitud Aprobada! Cambios aplicados para \"{$product->name}\"";
             $description = "ha emitido el voto final, aprobando por mayoría los cambios para la ficha técnica. Los cambios ya están visibles.";
             $url = route('products.show', $product);
-            $changeRequest->requester->notify(new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url));
+            $notificationInstance = new BasicNotification($subject, $description, $finalizer->name, $finalizer->profile_photo_url, $url);
+            $changeRequest->requester->notify($notificationInstance);
+
+            $this->sendNotification('product.sheet_data.changes_approved', $notificationInstance);
         });
     }
 

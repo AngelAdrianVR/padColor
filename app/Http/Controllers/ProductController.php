@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
+use App\Exports\ProductSheetExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -421,5 +423,29 @@ class ProductController extends Controller
             ->paginate(200);
 
         return response()->json(['items' => $products], 200);
+    }
+
+    public function exportSheet(Product $product)
+    {
+        $user = Auth::user();
+
+        // Obtener la estructura completa de la ficha.
+        $allSheetStructure = ProductSheetTab::with(['fields.options' => fn($q) => $q->orderBy('order')])
+            ->where('is_active', true)->orderBy('order')->get()
+            ->map(function ($tab) {
+                $activeFields = $tab->fields->where('is_active', true);
+                $tab->fields_by_section = $activeFields->groupBy('section');
+                unset($tab->fields);
+                return $tab;
+            });
+
+        // Filtrar la estructura basándose en los permisos del usuario actual.
+        $sheetStructure = $allSheetStructure->filter(function ($tab) use ($user) {
+            return $user->can('Ver información de ' . strtolower($tab->name) . ' en fichas técnicas');
+        })->values();
+
+        $fileName = 'ficha-tecnica-' . \Illuminate\Support\Str::slug($product->name) . '.xlsx';
+
+        return Excel::download(new ProductSheetExport($product, $sheetStructure), $fileName);
     }
 }
