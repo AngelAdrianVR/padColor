@@ -5,7 +5,7 @@
 
                 <!-- Encabezado -->
                 <div class="flex items-center space-x-2 mb-3">
-                    <Back />
+                    <Back :to="route('imports.index')" />
                     <h1 class="font-semibold">Crear nueva importación</h1>
                 </div>
 
@@ -39,7 +39,7 @@
                     <div>
                         <InputLabel value="Almacén*" />
                         <el-select v-model="form.warehouse" placeholder="Selecciona el incoterm" class="!w-full">
-                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C']" :key="item"
+                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C', 'Pendiente']" :key="item"
                                 :label="item" :value="item" />
                         </el-select>
                         <InputError :message="form.errors.warehouse" />
