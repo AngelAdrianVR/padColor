@@ -199,7 +199,7 @@ methods: {
             if (!this.search) {
                 this.filteredProducts = this.products;
             } else {
-                const response = await axios.post(route('products.get-matches', { query: this.search }));
+                const response = await axios.get(route('products.get-matches', { query: this.search }));
                 if (response.status === 200) {
                     this.filteredProducts = response.data.items;
                 }

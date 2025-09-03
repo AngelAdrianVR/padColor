@@ -4,7 +4,7 @@
     <i class="fa-solid fa-angle-left text-white text-xs"></i>
   </button> -->
 
-  <button @click="handleRedirection()" class="back-button">
+  <button @click="handleRedirection()" class="back-button" type="button">
     <div class="button-box">
       <span class="button-elem">
         <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">

@@ -403,14 +403,14 @@ class ProductController extends Controller
         return response()->json(compact('items'));
     }
 
-    public function getMatch($query)
-    {
-        $items = Product::latest('id')
-            ->where('name', 'like', "%$query%")
-            ->get(['name', 'id', 'material'])
-            ->take(100);
-        return response()->json(compact('items'));
-    }
+    // public function getMatch($query)
+    // {
+    //     $items = Product::latest('id')
+    //         ->where('name', 'like', "%$query%")
+    //         ->get(['name', 'id', 'material'])
+    //         ->take(100);
+    //     return response()->json(compact('items'));
+    // }
 
     public function getMatches($query)
     {
