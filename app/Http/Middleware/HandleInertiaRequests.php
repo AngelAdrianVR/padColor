@@ -44,6 +44,14 @@ class HandleInertiaRequests extends Middleware
                 }
                 return [];
             },
+            // Esto crea una propiedad 'flash' en tus props de Vue
+            // que contendrá los mensajes de éxito o error.
+            'flash' => function () use ($request) {
+                return [
+                    'success' => $request->session()->get('success'),
+                    'error' => $request->session()->get('error'),
+                ];
+            },
         ]);
     }
 }

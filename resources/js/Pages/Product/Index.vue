@@ -220,8 +220,10 @@ methods: {
         this.filteredProducts = this.products;
     },
     handleRowClick(row) {
-        this.showDetailsModal = true;
-        this.selectedProduct = row;
+        this.$inertia.get(route('products.show', row.id));
+        // this.showDetailsModal = true;
+        // this.selectedProduct = row;
+
     },
     tableRowClassName({ row, rowIndex }) {
         return 'cursor-pointer text-xs';

@@ -26,6 +26,11 @@ class Product extends Model implements HasMedia
         'min_stock',
         'max_stock',
         'price',
-        'created_at'
+        'sheet_data',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'sheet_data' => 'array',
     ];
 }

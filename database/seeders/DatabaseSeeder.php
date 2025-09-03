@@ -14,20 +14,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::factory(155)->create();
-
-        \App\Models\User::factory()->create([
-            'name' => 'Soporte DTW',
-            'email' => 'soporte@dtw.com.mx',
-            'phone' => '0000000000',
-            'password' => bcrypt('321321321'),
-            'employee_properties' => ["job_position" => "Soporte", "department" => "Desarrollo", "company" => "Papel diseño y color", "branch" => "Av. del Tigre"],
-        ]);
-
+        // Es importante llamar primero al seeder de la estructura
+        // y después al seeder de los productos que usan esa estructura.
         $this->call([
-            CategorySeeder::class,
-            TicketSeeder::class,
-            RolePermissionSeeder::class,
+            ProductSheetStructureSeeder::class,
+            ProductSeeder::class,
         ]);
+        // \App\Models\User::factory(155)->create();
+
+        // \App\Models\User::factory()->create([
+        //     'name' => 'Soporte DTW',
+        //     'email' => 'soporte@dtw.com.mx',
+        //     'phone' => '0000000000',
+        //     'password' => bcrypt('321321321'),
+        //     'employee_properties' => ["job_position" => "Soporte", "department" => "Desarrollo", "company" => "Papel diseño y color", "branch" => "Av. del Tigre"],
+        // ]);
+
+        // $this->call([
+        //     CategorySeeder::class,
+        //     TicketSeeder::class,
+        //     RolePermissionSeeder::class,
+        // ]);
     }
 }
