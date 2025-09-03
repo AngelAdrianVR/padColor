@@ -39,7 +39,7 @@
                     <div>
                         <InputLabel value="Almacén*" />
                         <el-select v-model="form.warehouse" placeholder="Selecciona el incoterm" class="!w-full">
-                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C']" :key="item"
+                            <el-option v-for="item in ['Tigre', 'Federalismo', 'Calle 2', 'Calle C', 'Pendiente']" :key="item"
                                 :label="item" :value="item" />
                         </el-select>
                         <InputError :message="form.errors.warehouse" />
