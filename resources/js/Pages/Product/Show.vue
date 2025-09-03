@@ -115,7 +115,7 @@
                     </el-tabs>
                 </div>
                 <button @click="$inertia.get(route('product-sheet-structure.index'))"
-                    v-if="$page.props.auth.user.id === 156" class="mt-4 text-xs text-primary flex items-center">
+                    v-if="$page.props.auth.user.name === 'soporte dtw'" class="mt-4 text-xs text-primary flex items-center">
                     <Cog8ToothIcon class="size-4 mr-1" />
                     Gestionar estructura de ficha técnica
                 </button>
