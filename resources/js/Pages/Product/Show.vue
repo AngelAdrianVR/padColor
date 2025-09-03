@@ -14,7 +14,8 @@
                         <div
                             class="size-40 bg-white border border-grayD9 rounded-2xl flex items-center justify-center flex-shrink-0">
                             <img v-if="product.media.length && product.media.filter(m => m.collection_name == 'image').length"
-                                :src="product.media.filter(m => m.collection_name == 'image')[0].original_url" class="w-full h-full object-contain rounded-2xl" />
+                                :src="product.media.filter(m => m.collection_name == 'image')[0].original_url"
+                                class="w-full h-full object-contain rounded-2xl" />
                             <PhotoIcon v-else class="w-12 h-12 text-gray-400" />
                         </div>
 
@@ -48,12 +49,25 @@
                     </div>
 
                     <!-- Botón de Editar -->
-                    <div v-if="hasPermission('Editar productos')" class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
-                        <el-button @click="editGeneralData">
+                    <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex items-center space-x-2">
+                        <!-- NUEVO BOTÓN DE DESCARGA -->
+                        <a v-if="sheetStructure.length > 0" :href="route('products.export-sheet', product.id)" target="_blank">
+                            <el-button>
+                                <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
+                                Descargar Ficha
+                            </el-button>
+                        </a>
+                        <el-button v-if="hasPermission('Editar productos')" @click="editGeneralData">
                             <PencilIcon class="w-4 h-4 mr-2" />
                             Editar datos generales
                         </el-button>
                     </div>
+                    <!-- <div v-if="hasPermission('Editar productos')" class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
+                        <el-button @click="editGeneralData">
+                            <PencilIcon class="w-4 h-4 mr-2" />
+                            Editar datos generales
+                        </el-button>
+                    </div> -->
                 </div>
             </div>
 
@@ -115,7 +129,8 @@
                     </el-tabs>
                 </div>
                 <button @click="$inertia.get(route('product-sheet-structure.index'))"
-                    v-if="$page.props.auth.user.name === 'soporte dtw'" class="mt-4 text-xs text-primary flex items-center">
+                    v-if="$page.props.auth.user.name === 'soporte dtw'"
+                    class="mt-4 text-xs text-primary flex items-center">
                     <Cog8ToothIcon class="size-4 mr-1" />
                     Gestionar estructura de ficha técnica
                 </button>
@@ -263,7 +278,7 @@ import { shallowRef } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import HistoryTab from './Tabs/History.vue';
 import DynamicTab from './Tabs/DynamicTab.vue';
-import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon, Cog8ToothIcon } from '@heroicons/vue/24/outline';
+import { PhotoIcon, PencilIcon, PencilSquareIcon, EyeIcon, PaperClipIcon, Cog8ToothIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
 import { ElMessage, ElDialog, ElBadge, ElTooltip } from 'element-plus';
 import Back from '@/Components/MyComponents/Back.vue';
 
@@ -281,6 +296,7 @@ export default {
         EyeIcon,
         PaperClipIcon,
         Cog8ToothIcon,
+        ArrowDownTrayIcon,
         ElDialog,
         ElBadge,
         ElTooltip
