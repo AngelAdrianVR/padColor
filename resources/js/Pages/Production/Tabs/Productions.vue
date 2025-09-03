@@ -386,7 +386,7 @@
                         <p class="col-span-2">{{
                             selectedProduction.close_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
 
-                        <p class="text-[#464646]">Merma:</p>
+                        <!-- <p class="text-[#464646]">Merma:</p>
                         <p class="col-span-2">{{
                             selectedProduction.production_scrap?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                             ({{ getScrapPercentage(selectedProduction.production_scrap, selectedProduction.quantity) }}%
@@ -401,7 +401,7 @@
 
                         <p class="text-[#464646]">Notas:</p>
                         <p class="col-span-2" style="white-space: pre-line;">{{
-                            selectedProduction.close_production_notes ?? '-' }}</p>
+                            selectedProduction.close_production_notes ?? '-' }}</p> -->
                     </div>
                 </div>
 
@@ -599,7 +599,7 @@
                         placeholder="dd/mm/aa hh:mm" value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
                     <InputError :message="form.errors.close_production_date" />
                 </div>
-                <div>
+                <!-- <div>
                     <InputLabel value="Merma" />
                     <el-input-number v-model="form.scrap_quantity" placeholder="Ej. 100" :min="0" class="!w-full" />
                     <InputError :message="form.errors.scrap_quantity" />
@@ -614,7 +614,7 @@
                     <el-input v-model="form.notes" :rows="2" type="textarea"
                         placeholder="Específica la razón de la diferencia, la cantidad de merma o cualquier nota relacionada con la entrega." />
                     <InputError :message="form.errors.notes" />
-                </div>
+                </div> -->
             </div>
         </template>
         <template #footer>
