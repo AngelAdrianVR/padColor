@@ -5,7 +5,7 @@
 
                 <!-- Encabezado -->
                 <div class="flex items-center space-x-2 mb-3">
-                    <Back />
+                    <Back :to="route('imports.index')" />
                     <h1 class="font-semibold">Crear nueva importación</h1>
                 </div>
 
