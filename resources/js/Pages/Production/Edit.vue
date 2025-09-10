@@ -60,8 +60,8 @@
                 </div>
                 <div>
                     <InputLabel value="Cantidad solicitada*" />
-                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad" :step="0.01"
-                        :min="0.01" class="!w-full" />
+                    <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad"
+                        :step="0.01" :min="0.01" class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
                 <div>
@@ -166,8 +166,8 @@
                 </div>
                 <div>
                     <InputLabel value="Pz/H" />
-                    <el-input-number v-model="form.pps" @change="handleSheet" :min="0.01" placeholder="Piezas por hoja" :step="0.01"
-                        class="!w-full" />
+                    <el-input-number v-model="form.pps" @change="handleSheet" :min="0.01" placeholder="Piezas por hoja"
+                        :step="0.01" class="!w-full" />
                     <InputError :message="form.errors.pps" />
                 </div>
                 <div>
@@ -208,7 +208,8 @@
                 </div>
                 <div>
                     <InputLabel value="P/F" />
-                    <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full" :step="0.01" />
+                    <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full"
+                        :step="0.01" />
                     <InputError :message="form.errors.pf" />
                 </div>
                 <div>
@@ -278,7 +279,7 @@ export default {
             ts: this.production.ts,
             ps: this.production.ps,
             tps: this.production.tps,
-            has_varnish: !! this.production.varnish_type,
+            has_varnish: !!this.production.varnish_type,
             varnish_type: this.production.varnish_type,
             start_date: this.production.start_date,
             estimated_date: this.production.estimated_date,
@@ -307,6 +308,30 @@ export default {
                     dark: '#00A9B5',
                     light: '#bef4f8',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" /></svg>',
+                },
+                {
+                    name: 'Maquila',
+                    dark: '#374151',
+                    light: '#ECECEC',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 6.75 6.75h2.018a5.25 5.25 0 0 0 3.712-1.538l1.732-1.732a5.25 5.25 0 0 0 1.538-3.712l.003-2.024a.668.668 0 0 1 .198-.471 1.575 1.575 0 1 0-2.228-2.228 3.818 3.818 0 0 0-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0 1 16.35 15m.002 0h-.002" /></svg>',
+                },
+                {
+                    name: 'Empaques',
+                    dark: '#98350F',
+                    light: '#F9E0D2',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-box-seam size-4" viewBox="0 0 16 16" id="Box-Seam--Streamline-Bootstrap" height="16" width="16"><desc>Box Seam Streamline Icon: https://streamlinehq.com</desc><path d="M8.186 1.113a0.5 0.5 0 0 0 -0.372 0L1.846 3.5l2.404 0.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7 -6.5 2.6v7.922l6.5 -2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443 0.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A0.5 0.5 0 0 1 16 3.5v8.662a1 1 0 0 1 -0.629 0.928l-7.185 2.874a0.5 0.5 0 0 1 -0.372 0L0.63 13.09a1 1 0 0 1 -0.63 -0.928V3.5a0.5 0.5 0 0 1 0.314 -0.464z" stroke-width="1"></path></svg>',
+                },
+                {
+                    name: 'En pausa',
+                    dark: '#851f1f',
+                    light: '#f4cbcb',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>',
+                },
+                {
+                    name: 'X Reproceso',
+                    dark: '#482150',
+                    light: '#EBD7FF',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>',
                 },
                 {
                     name: 'X Offset',
@@ -381,7 +406,7 @@ export default {
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" /></svg>',
                 },
                 {
-                    name: 'en X Estampado',
+                    name: 'X Estampado',
                     dark: '#D00A95',
                     light: '#FDCEEF',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>',
@@ -403,6 +428,12 @@ export default {
                     dark: '#3E8202',
                     light: '#E4FECD',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>',
+                },
+                {
+                    name: 'Semi terminadas',
+                    dark: '#097100',
+                    light: '#ccf1c8',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>',
                 },
                 {
                     name: 'Canceladas',
