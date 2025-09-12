@@ -67,12 +67,13 @@
                                     <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
-                                            :style="{backgroundColor: column.borderColor}"></div>
+                                            :style="{ backgroundColor: column.borderColor }"></div>
                                         <div class="flex justify-between items-start text-sm mb-2">
                                             <span class="font-light text-gray66">ID. {{ element.id }}</span>
-                                            <span class="text-gray3F font-semibold">
-                                                {{ element.incoterm.substring(0, 3) }}
-                                            </span>
+                                            <div class="flex items-center space-x-1 text-gray66 text-xs">
+                                                <CalendarIcon class="size-4" />
+                                                <span>{{ formatDate(element.estimated_arrival_date) }} (ETA)</span>
+                                            </div>
                                         </div>
                                         <p class="font-semibold text-gray3F">{{ element.supplier?.name }}</p>
                                         <!-- <p class="font-bold">
@@ -90,14 +91,19 @@
                                                 Sin productos asignados
                                             </p>
                                         </div>
-                                        <p class="text-gray3F font-semibold">
-                                            Agente: {{ element.customs_agent?.name }}
-                                        </p>
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-gray3F font-semibold">
+                                                Agente: {{ element.customs_agent?.name }}
+                                            </p>
+                                            <span class="text-gray3F font-semibold border-l border-grayD9 pl-1">
+                                                {{ element.incoterm.substring(0, 3) }}
+                                            </span>
+                                        </div>
                                         <div
                                             class="flex justify-between items-center pt-2 mt-2 border-t border-grayD9 text-xs text-gray66">
                                             <div class="flex items-center space-x-1">
                                                 <CalendarIcon class="size-4" />
-                                                <span>{{ formatDate(element.estimated_arrival_date) }} (ETA)</span>
+                                                <span>{{ formatDate(element.estimated_payment_date) }} (Pago)</span>
                                             </div>
                                             <div class="flex items-center space-x-1">
                                                 <PaperClipIcon class="size-4" />

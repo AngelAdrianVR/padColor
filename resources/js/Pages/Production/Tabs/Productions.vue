@@ -1146,7 +1146,7 @@ export default {
                 );
             }
 
-            return this.stations.filter(station => station.name !== 'Terminadas' && station.name !== 'Inspección' && station.name !== 'X Reproceso');
+            return this.stations.filter(station => station.name !== 'Inspección' && station.name !== 'X Reproceso');
         }
     },
     methods: {

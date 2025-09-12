@@ -98,6 +98,12 @@
                         <InputError :message="form.errors.estimated_arrival_date" />
                     </div>
                     <div>
+                        <InputLabel value="Fecha estimada de pago" />
+                        <el-date-picker class="!w-full" v-model="form.estimated_payment_date" type="date"
+                            placeholder="dd/mm/aa" value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
+                        <InputError :message="form.errors.estimated_payment_date" />
+                    </div>
+                    <div>
                         <InputLabel value="Moneda" />
                         <el-select v-model="form.currency" placeholder="Moneda">
                             <el-option label="USD" value="USD" />
@@ -300,6 +306,7 @@ export default {
             estimated_ship_date: null,
             currency: 'USD',
             estimated_arrival_date: null,
+            estimated_payment_date: null,
             notes: null,
             products: [],
             documents: [],

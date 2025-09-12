@@ -66,6 +66,11 @@
                             <span>{{ formatDate(importData.estimated_arrival_date)
                             }}</span>
                         </div>
+                        <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Fecha estimada de pago</span>
+                            <span>{{ formatDate(importData.estimated_payment_date)
+                            }}</span>
+                        </div>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane v-if="$page.props.auth.user.permissions.includes('Ver documentos de importaciones')"
