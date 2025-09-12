@@ -141,6 +141,7 @@ class ImportController extends Controller
             'incoterm' => 'required|string|max:255',
             'estimated_ship_date' => 'nullable|date',
             'estimated_arrival_date' => 'nullable|date',
+            'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'products' => 'required|array|min:1',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
@@ -156,11 +157,16 @@ class ImportController extends Controller
 
             // 3. Crear la importación principal
             $import = Import::create([
+                'client' => $validatedData['client'],
+                'cedis' => $validatedData['cedis'],
+                'arrival_port' => $validatedData['arrival_port'],
+                'warehouse' => $validatedData['warehouse'],
                 'supplier_id' => $validatedData['supplier_id'],
                 'customs_agent_id' => $validatedData['customs_agent_id'],
                 'incoterm' => $validatedData['incoterm'],
                 'estimated_ship_date' => $validatedData['estimated_ship_date'],
                 'estimated_arrival_date' => $validatedData['estimated_arrival_date'],
+                'estimated_payment_date' => $validatedData['estimated_payment_date'],
                 'notes' => $validatedData['notes'],
                 'user_id' => auth()->id(), // Asignar el usuario que la crea
                 'status' => 'Con proveedor', // Estado inicial del Kanban
@@ -237,6 +243,7 @@ class ImportController extends Controller
             'incoterm' => 'required|string|max:255',
             'estimated_ship_date' => 'nullable|date',
             'estimated_arrival_date' => 'nullable|date',
+            'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'products' => 'required|array|min:1',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',

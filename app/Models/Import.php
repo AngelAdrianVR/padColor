@@ -30,6 +30,7 @@ class Import extends Model implements HasMedia
         'estimated_ship_date',
         'estimated_arrival_date',
         'actual_arrival_date',
+        'estimated_payment_date',
         'warehouse_delivery_date',
         'notes',
         'currency',
@@ -38,6 +39,7 @@ class Import extends Model implements HasMedia
     protected $casts = [
         'estimated_ship_date' => 'date',
         'estimated_arrival_date' => 'date',
+        'estimated_payment_date' => 'date',
         'actual_arrival_date' => 'date',
         'warehouse_delivery_date' => 'date',
     ];

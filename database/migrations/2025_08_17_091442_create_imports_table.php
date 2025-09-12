@@ -30,6 +30,7 @@ return new class extends Migration
 
             $table->date('estimated_ship_date')->nullable();
             $table->date('estimated_arrival_date')->nullable();
+            $table->date('estimated_payment_date')->nullable();
             $table->date('actual_arrival_date')->nullable();
             $table->date('warehouse_delivery_date')->nullable();
             
