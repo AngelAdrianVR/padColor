@@ -75,7 +75,7 @@
                     </template>
                     <!-- Capacitacion visible para todos -->
                     <button v-if="small"
-                        @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
+                        @click='openNewTab("https://capacitacionpadcolor.my.canva.site/sitio-web-de-servicio-t-ctil-3d-en-morado-y-rosa")'
                         title="Capacitación"
                         class="w-full text-center py-1 justify-between rounded-[10px] mt-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <span>
@@ -87,7 +87,7 @@
                         </span>
                     </button>
                     <button v-else
-                        @click='openNewTab("https://padcolor.sharepoint.com/:l:/s/PapelDiseoyColorS.AdeC.V/FGCXpm_1M_1JmmAPw0DWjPMBPJI7JTLnd2Fykxg1aLDHcg?e=9CvpF6")'
+                        @click='openNewTab("https://capacitacionpadcolor.my.canva.site/sitio-web-de-servicio-t-ctil-3d-en-morado-y-rosa")'
                         title="Capacitación"
                         class="w-full text-start px-2 mt-2 flex justify-between text-xs rounded-md py-1 transition ease-linear duration-150 text-gray66 hover:text-primary hover:bg-grayD9">
                         <p class="w-full text-sm truncate">
