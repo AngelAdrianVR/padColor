@@ -7,7 +7,37 @@
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
                     <span class="text-sm font-bold text-gray-700">Nº {{ importData.id }}</span>
-                    <p class="px-2 py-1 text-xs flex space-x-1 items-center font-semibold rounded-full"
+                    
+                    <!-- Dropdown para cambiar estatus (NUEVO) -->
+                    <el-dropdown
+                        v-if="$page.props.auth.user.permissions.includes('Cambiar status de importaciones mediante kanban')"
+                        trigger="click"
+                        @command="updateStatus"
+                    >
+                        <p
+                            class="px-2 py-1 text-xs flex space-x-1 items-center font-semibold rounded-full cursor-pointer hover:scale-105 transition-transform"
+                            :style="statusClass(importData.status)"
+                        >
+                            <component :is="statuses[importData.status]" class="size-4" />
+                            <span>{{ formatStatus(importData.status) }}</span>
+                            <ChevronDownIcon class="size-3" />
+                        </p>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item
+                                    v-for="status in allStatuses"
+                                    :key="status"
+                                    :command="status"
+                                    :disabled="status === importData.status"
+                                >
+                                    <span class="text-xs">{{ formatStatus(status) }}</span>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+
+                    <!-- Muestra estatus estático si no hay permisos (Anterior) -->
+                    <p v-else class="px-2 py-1 text-xs flex space-x-1 items-center font-semibold rounded-full"
                         :style="statusClass(importData.status)">
                         <component :is="statuses[importData.status]" class="size-4" />
                         <span>
@@ -365,7 +395,7 @@ import { markRaw } from 'vue';
 import DialogModal from '@/Components/DialogModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import {
-    ArchiveBoxIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, PencilSquareIcon, CheckCircleIcon
+    ArchiveBoxIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, PencilSquareIcon, CheckCircleIcon, ChevronDownIcon
 } from '@heroicons/vue/24/outline';
 import { router } from '@inertiajs/vue3';
 import AnclaIcon from '@/Components/MyComponents/Icons/AnclaIcon.vue';
@@ -398,6 +428,7 @@ export default {
         CancelButton,
         InputLabel,
         InputError,
+        ChevronDownIcon,
     },
     emits: ['reload', 'close'],
     props: {
@@ -432,6 +463,13 @@ export default {
             activeTab: 'general',
             showCostModal: false,
             showPaymentModal: false,
+            allStatuses: [
+                'Con proveedor',
+                'Puerto origen',
+                'En tránsito marítimo',
+                'Puerto destino',
+                'Entregado'
+            ],
             statuses: {
                 'Con proveedor': markRaw(ArchiveBoxIcon),
                 'Puerto origen': markRaw(AnclaIcon),
@@ -458,6 +496,20 @@ export default {
         }
     },
     methods: {
+        updateStatus(newStatus) {
+            router.patch(route('imports.status.update', this.importData.id), {
+                status: newStatus
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$notify({ title: 'Éxito', message: 'Estado actualizado correctamente', type: 'success' });
+                    this.$emit('reload'); // Tell the parent to refetch data
+                },
+                onError: () => {
+                    this.$notify({ title: 'Error', message: 'No se pudo actualizar el estado. Revisa tus permisos.', type: 'error' });
+                }
+            });
+        },
         getActivityIcon(activity) {
             const icons = {
                 created: { icon: PlusIcon, bgColor: 'bg-blue-500' },

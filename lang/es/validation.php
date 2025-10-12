@@ -189,5 +189,10 @@ return [
         'concept' => 'concepto',
         'amount' => 'monto',
         'import_cost_id' => 'costo relacionado',
+        'client' => 'cliente',
+        'arrival_port' => 'puerto de llegada',
+        'warehouse' => 'almacén',
+        'supplier_id' => 'proveedor',
+        'customs_agent_id' => 'agente aduanal',
     ],
 ];

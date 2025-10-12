@@ -143,7 +143,7 @@
                     </div>
                     <div style="width: 150px;">
                         <InputLabel value="Costo unitario *" />
-                        <el-input v-model="product.unit_cost" placeholder="Ej. 500.00">
+                        <el-input v-model="product.unit_cost" placeholder="Ej. 500.00" required>
                             <template #prepend>$</template>
                         </el-input>
                     </div>
