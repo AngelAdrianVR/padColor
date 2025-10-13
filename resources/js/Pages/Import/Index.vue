@@ -45,10 +45,10 @@
                     <div class="grid grid-cols-5 gap-2">
                         <!-- Iteramos sobre las columnas definidas en 'data' -->
                         <div v-for="column in columns" :key="column.title"
-                            class="rounded-[10px] p-2 transition-colors duration-300 border"
+                            class="rounded-[10px] p-2 transition-colors duration-300 border flex flex-col"
                             :style="{ backgroundColor: isDragging ? '#dbeafe' : column.bgColor, borderColor: isDragging ? '#dbeafe' : null, }">
                             <!-- Encabezado de la columna -->
-                            <div class="flex items-center justify-between text-sm mb-2 pb-1 border-b border-grayD9"
+                            <div class="flex items-center justify-between text-sm mb-2 pb-1 border-b border-grayD9 flex-shrink-0"
                                 :class="column.iconColor">
                                 <div class="flex items-center space-x-2">
                                     <component :is="column.icon" class="size-4" />
@@ -62,7 +62,7 @@
                             <!-- Zona de Arrastre (Draggable) -->
                             <draggable :disabled="!canDragCards" :list="localImports[column.title] || []"
                                 group="imports" @add="handleDrop" @start="isDragging = true" @end="isDragging = false"
-                                :animation="300" :id="column.title" item-key="id" class="space-y-2 min-h-[60vh]">
+                                :animation="300" :id="column.title" item-key="id" class="space-y-2 flex-grow">
                                 <template #item="{ element }">
                                     <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">

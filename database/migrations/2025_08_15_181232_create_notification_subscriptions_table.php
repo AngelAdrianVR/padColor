@@ -27,7 +27,10 @@ return new class extends Migration
             $table->index(['notifiable_id', 'notifiable_type']);
 
             // Clave única para evitar suscripciones duplicadas
-            $table->unique(['notification_event_id', 'notifiable_id', 'notifiable_type']);
+           $table->unique(
+                ['notification_event_id', 'notifiable_id', 'notifiable_type'],
+                'notification_subscriptions_unique' // Nombre corto y descriptivo para el índice
+            );
         });
     }
 
