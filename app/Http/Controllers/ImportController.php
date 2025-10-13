@@ -50,6 +50,10 @@ class ImportController extends Controller
             $endDate = $request->dates[1] . ' 23:59:59';
             $query->whereBetween('created_at', [$startDate, $endDate]);
         });
+        
+        // --- MODIFICACIÓN AQUÍ ---
+        // Ordenamos las importaciones por fecha de creación para mostrar las más recientes primero.
+        $importsQuery->latest();
 
         // 4. Ejecutamos la consulta
         $importsCollection = $importsQuery->get();
@@ -132,10 +136,10 @@ class ImportController extends Controller
     {
         // 1. Validación de los datos del formulario
         $validatedData = $request->validate([
-            'client' => 'nullable|string|max:255',
-            'cedis' => 'nullable|string|max:255',
-            'arrival_port' => 'nullable|string|max:255',
-            'warehouse' => 'nullable|string|max:255',
+            'client' => 'required|string|max:255',
+            'cedis' => 'required|string|max:255',
+            'arrival_port' => 'required|string|max:255',
+            'warehouse' => 'required|string|max:255',
             'supplier_id' => 'required',
             'customs_agent_id' => 'required',
             'incoterm' => 'required|string|max:255',
@@ -234,10 +238,10 @@ class ImportController extends Controller
     {
         // 1. Validación (similar a store, pero permite campos opcionales para no forzar re-subir archivos)
         $validatedData = $request->validate([
-            'client' => 'nullable|string|max:255',
-            'cedis' => 'nullable|string|max:255',
-            'arrival_port' => 'nullable|string|max:255',
-            'warehouse' => 'nullable|string|max:255',
+            'client' => 'required|string|max:255',
+            'cedis' => 'required|string|max:255',
+            'arrival_port' => 'required|string|max:255',
+            'warehouse' => 'required|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
             'customs_agent_id' => 'nullable|exists:customs_agents,id',
             'incoterm' => 'required|string|max:255',
