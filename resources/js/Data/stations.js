@@ -3,6 +3,7 @@ import {
     ArrowDownOnSquareIcon,
     HandRaisedIcon,
     InboxIcon,
+    InboxArrowDownIcon,
     PauseCircleIcon,
     ArchiveBoxXMarkIcon,
     PrinterIcon,
@@ -21,7 +22,8 @@ import {
     CheckIcon,
     ShieldCheckIcon,
     XMarkIcon,
-    SwatchIcon, // Ícono para Serigrafía
+    SwatchIcon,
+    ShoppingBagIcon,
 } from '@heroicons/vue/24/outline';
 import { markRaw } from 'vue';
 
@@ -34,11 +36,18 @@ export const stations = [
         permission: 'Ver en estacion Material pendiente',
     },
     {
-        name: 'Solicitado',
+        name: 'X Compra',
+        dark: '#73237F',
+        light: '#DD85FF',
+        icon: markRaw(ShoppingBagIcon),
+        permission: 'Ver en estacion X Compra',
+    },
+    {
+        name: 'Surtido',
         dark: '#00A9B5',
         light: '#bef4f8',
         icon: markRaw(ArrowDownOnSquareIcon),
-        permission: 'Ver en estacion Solicitado',
+        permission: 'Ver en estacion Surtido',
     },
     {
         name: 'Maquila',
@@ -51,8 +60,15 @@ export const stations = [
         name: 'Empaques',
         dark: '#98350F',
         light: '#F9E0D2',
-        icon: markRaw(InboxIcon),
+        icon: markRaw(InboxArrowDownIcon),
         permission: 'Ver en estacion Empaques',
+    },
+    {
+        name: 'Empaques terminado',
+        dark: '#344604',
+        light: '#E7FFA7',
+        icon: markRaw(InboxIcon),
+        permission: 'Ver en estacion Empaques terminado',
     },
     {
         name: 'En pausa',

@@ -28,12 +28,20 @@ class ProductionForwardedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject("Avance de Producción: Folio {$this->production->folio}")
-            ->greeting("¡Hola!")
-            ->line("La producción con folio **{$this->production->folio}** ha sido liberada a la estación **{$this->nextStation}**.")
-            ->line("Se han transferido **" . number_format($this->unitsPassed, 1) . "** unidades.")
-            ->action('Ver Producción', url('/productions/'));
+        if ($this->nextStation == 'Material pendiente') {
+            return (new MailMessage)
+                ->subject("Avance de Producción: Folio {$this->production->folio}")
+                ->greeting("¡Hola!")
+                ->line("Tienes una nueva orden pendiente con folio **{$this->production->folio}**. Revisar lo antes posible.")
+                ->action('Ver Producción', url('/productions/'));
+        } else {
+            return (new MailMessage)
+                ->subject("Avance de Producción: Folio {$this->production->folio}")
+                ->greeting("¡Hola!")
+                ->line("La producción con folio **{$this->production->folio}** ha sido liberada a la estación **{$this->nextStation}**.")
+                ->line("Se han transferido **" . number_format($this->unitsPassed, 1) . "** unidades.")
+                ->action('Ver Producción', url('/productions/'));
+        }
     }
 
     public function toArray(object $notifiable): array

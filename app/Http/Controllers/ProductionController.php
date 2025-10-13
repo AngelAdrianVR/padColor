@@ -73,6 +73,16 @@ class ProductionController extends Controller
         $validated['materials'] = [$validated['materials']];
 
         $production = Production::create($validated + ['modified_user_id' => auth()->id()]);
+
+        // notificar si pasa a Empaques
+        if ($validated['station'] == 'Material pendiente') {
+            $notificationInstance = new ProductionForwardedNotification(
+                $production,
+                'Material pendiente',
+                $production->current_quantity
+            );
+            $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
+        }
     }
 
     public function show(Production $production)
@@ -133,6 +143,16 @@ class ProductionController extends Controller
         $production->station = $request->station;
         $production->modified_user_id = auth()->id();
         $production->save();
+
+        // notificar si pasa a Empaques
+        if ($request->station == 'Empaques') {
+            $notificationInstance = new ProductionForwardedNotification(
+                $production,
+                'Empaques',
+                $production->current_quantity
+            );
+            $this->sendNotification('production.forwarded.packing', $notificationInstance);
+        }
     }
 
     public function updateMachine(Request $request, Production $production)
@@ -380,7 +400,6 @@ class ProductionController extends Controller
         if ($isFinished) {
             $this->finishProduction($request, $production);
         }
-
     }
 
     public function finishProduction(Request $request, Production $production)
