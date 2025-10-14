@@ -143,16 +143,6 @@ class ProductionController extends Controller
         $production->station = $request->station;
         $production->modified_user_id = auth()->id();
         $production->save();
-
-        // notificar si pasa a Empaques
-        if ($request->station == 'Empaques') {
-            $notificationInstance = new ProductionForwardedNotification(
-                $production,
-                'Empaques',
-                $production->current_quantity
-            );
-            $this->sendNotification('production.forwarded.packing', $notificationInstance);
-        }
     }
 
     public function updateMachine(Request $request, Production $production)
@@ -401,6 +391,96 @@ class ProductionController extends Controller
             $this->finishProduction($request, $production);
         }
     }
+
+    // --- NUEVO MÉTODO ---
+    // Registra la cantidad inicial que se mueve a la estación de empaques
+    public function moveToPacking(Request $request, Production $production)
+    {
+        $validatedData = $request->validate([
+            'packing_received_quantity' => 'required|numeric|min:0',
+            'packing_received_date' => 'required|date',
+        ]);
+
+        $production->update([
+            'station' => 'Empaques',
+            'packing_received_quantity' => $validatedData['packing_received_quantity'],
+            'packing_received_date' => $validatedData['packing_received_date'],
+            'current_quantity' => 0, // Reiniciar la cantidad actual para el proceso de empaque
+            'modified_user_id' => auth()->id(),
+        ]);
+        
+        // notificar si pasa a Empaques
+        $notificationInstance = new ProductionForwardedNotification(
+            $production,
+            'Empaques',
+            $validatedData['packing_received_quantity']
+        );
+        $this->sendNotification('production.forwarded.packing', $notificationInstance);
+    }
+
+    // --- NUEVO MÉTODO ---
+    // Procesa las entregas (únicas o parciales) desde la estación de empaques
+    public function packingRelease(Request $request, Production $production)
+    {
+        $validatedData = $request->validate([
+            'packing_close_type' => 'required|string|in:Única,Parcialidades',
+            'quantity' => 'required|numeric|min:0',
+            'date' => 'required|date',
+            'scrap_quantity' => 'required_if:packing_close_type,Única|numeric|min:0',
+            'shortage_quantity' => 'required_if:packing_close_type,Única|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $production->packing_close_type = $validatedData['packing_close_type'];
+        $production->packing_notes = $validatedData['notes'];
+        $production->packing_scrap = $validatedData['scrap_quantity'] ?? 0;
+        $production->packing_shortage = $validatedData['shortage_quantity'] ?? 0;
+        $production->modified_user_id = auth()->id();
+
+        if ($validatedData['packing_close_type'] === 'Parcialidades') {
+            $partials = $production->packing_partials ?? [];
+            $partials[] = ['quantity' => $validatedData['quantity'], 'date' => $validatedData['date'], 'notes' => $validatedData['notes']];
+            $production->packing_partials = $partials;
+            $production->current_quantity += $validatedData['quantity'];
+        } else { // 'Única'
+            $production->current_quantity = $validatedData['quantity'];
+        }
+
+        $isFinished = ($production->current_quantity >= $production->packing_received_quantity);
+        if ($isFinished) {
+            $production->station = 'Empaques terminado';
+            $production->packing_finished_date = now();
+        }
+        
+        $production->save();
+    }
+    
+    // --- NUEVO MÉTODO ---
+    // Agrega una nueva entrega parcial a empaques
+    public function addPackingPartial(Request $request, Production $production)
+    {
+        $validatedData = $request->validate([
+            'quantity' => 'required|numeric|min:0',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
+            'is_last_delivery' => 'boolean',
+        ]);
+
+        $partials = $production->packing_partials ?? [];
+        $partials[] = ['quantity' => $validatedData['quantity'], 'date' => $validatedData['date'], 'notes' => $validatedData['notes'], 'is_last_delivery' => $validatedData['is_last_delivery']];
+        
+        $production->packing_partials = $partials;
+        $production->modified_user_id = auth()->id();
+        $production->current_quantity += $validatedData['quantity'];
+
+        if ($validatedData['is_last_delivery'] || $production->current_quantity >= $production->packing_received_quantity) {
+            $production->station = 'Empaques terminado';
+            $production->packing_finished_date = $validatedData['date'];
+        }
+
+        $production->save();
+    }
+
 
     public function finishProduction(Request $request, Production $production)
     {

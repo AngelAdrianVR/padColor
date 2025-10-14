@@ -23,12 +23,12 @@ return new class extends Migration
             $table->unsignedFloat('current_quantity', 11, 2)->default(0);
             $table->unsignedFloat('scrap_quantity', 11, 2)->default(0);
             $table->unsignedFloat('shortage_quantity', 11, 2)->default(0);
-            $table->unsignedFloat('production_scrap', 11,2)->default(0);
-            $table->unsignedFloat('production_shortage', 11,2)->default(0);
-            $table->unsignedFloat('quality_scrap', 11,2)->default(0);
-            $table->unsignedFloat('quality_shortage', 11,2)->default(0);
-            $table->unsignedFloat('inspection_scrap', 11,2)->default(0);
-            $table->unsignedFloat('inspection_shortage', 11,2)->default(0);
+            $table->unsignedFloat('production_scrap', 11, 2)->default(0);
+            $table->unsignedFloat('production_shortage', 11, 2)->default(0);
+            $table->unsignedFloat('quality_scrap', 11, 2)->default(0);
+            $table->unsignedFloat('quality_shortage', 11, 2)->default(0);
+            $table->unsignedFloat('inspection_scrap', 11, 2)->default(0);
+            $table->unsignedFloat('inspection_shortage', 11, 2)->default(0);
             $table->unsignedFloat('close_quantity', 11, 2)->default(0);
             $table->unsignedFloat('quality_quantity', 11, 2)->default(0);
             $table->text('close_production_notes')->nullable();
@@ -60,6 +60,16 @@ return new class extends Migration
             $table->timestamp('quality_released_date')->nullable();
             $table->date('start_date')->nullable();
             $table->timestamp('finish_date')->nullable();
+
+            $table->decimal('packing_received_quantity', 11, 2)->nullable();
+            $table->dateTime('packing_received_date')->nullable();
+            $table->string('packing_close_type')->nullable();
+            $table->text('packing_notes')->nullable();
+            $table->decimal('packing_scrap', 11, 2)->default(0);
+            $table->decimal('packing_shortage', 11, 2)->default(0);
+            $table->json('packing_partials')->nullable();
+            $table->dateTime('packing_finished_date')->nullable();
+
             $table->timestamps();
         });
     }

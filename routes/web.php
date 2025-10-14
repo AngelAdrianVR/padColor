@@ -136,7 +136,10 @@ Route::post('productions-finish-production/{production}', [ProductionController:
 Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
 
-
+// --- NUEVAS RUTAS PARA EMPAQUES ---
+Route::post('productions-move-to-packing/{production}', [ProductionController::class, 'moveToPacking'])->name('productions.move-to-packing')->middleware('auth');
+Route::post('productions-packing-release/{production}', [ProductionController::class, 'packingRelease'])->name('productions.packing-release')->middleware('auth');
+Route::post('productions-add-packing-partial/{production}', [ProductionController::class, 'addPackingPartial'])->name('productions.add-packing-partial')->middleware('auth');
 
 //products routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
