@@ -330,7 +330,7 @@
                     <p class="text-[#464646]">Progreso:</p>
                     <div class="col-span-2 flex items-center">
                         <el-select @change="updateStation" v-model="tempStation" class="!w-2/3"
-                            :disabled="tempStation === 'Terminadas'">
+                            :disabled="tempStation === 'Terminadas' || tempStation === 'Empaques terminado'">
                             <el-option v-for="station in filteredStations" :key="station.name" :label="station.name"
                                 :value="station.name" />
                         </el-select>
@@ -517,6 +517,58 @@
                     </div>
                 </div>
 
+                <!-- --- NUEVA SECCIÓN: EMPAQUES --- -->
+                <div v-if="selectedProduction.station == 'Empaques' || selectedProduction.packing_close_type"
+                    class="bg-[#F3F4F6] py-3 px-4 rounded-lg mt-5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-gray-700">Empaques</h2>
+                        <PrimaryButton v-if="!selectedProduction.packing_close_type"
+                            @click="showPackingReleaseModal = true">
+                            Registrar entrega
+                        </PrimaryButton>
+                        <PrimaryButton
+                            v-else-if="selectedProduction.packing_close_type == 'Parcialidades' && selectedProduction.station != 'Empaques terminado' && selectedProduction.station != 'Terminadas'"
+                            @click="showAddPackingPartialModal = true">
+                            Registrar parcialidad
+                        </PrimaryButton>
+                    </div>
+
+                    <div v-if="selectedProduction.packing_close_type" class="grid grid-cols-3 gap-x-2 gap-y-1 mt-3">
+                        <p class="text-[#464646]">Tipo de entrega:</p>
+                        <p class="col-span-2">{{ selectedProduction.packing_close_type }}</p>
+
+                        <div v-if="selectedProduction.packing_close_type != 'Parcialidades'"
+                            class="grid grid-cols-3 gap-x-2 gap-y-1 col-span-full">
+                            <div class="col-span-full contents">
+                                <p class="text-[#464646]">Fecha de entrega:</p>
+                                <p class="col-span-2">{{ formatDateTime(selectedProduction.packing_finished_date) }}</p>
+                            </div>
+                            <p class="text-[#464646]">Cantidad entregada:</p>
+                            <p class="col-span-2">{{
+                                selectedProduction.current_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                            </p>
+                            <p class="text-[#464646]">Notas:</p>
+                            <p class="col-span-2" style="white-space: pre-line;">{{ selectedProduction.packing_notes ?? '-' }}</p>
+                        </div>
+                    </div>
+                    <section v-for="(partial, index) in selectedProduction.packing_partials" :key="index" class="mt-3">
+                        <div class="bg-white py-1 px-3 rounded-full flex justify-between items-center">
+                            <span>Parcialidad de empaque {{ index + 1 }}</span>
+                            <span v-if="partial.is_last_delivery" class="text-xs text-gray-500">(Última entrega)</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
+                            <p class="text-[#464646]">Fecha de entrega:</p>
+                            <p class="col-span-2">{{ formatDateTime(partial.date) }}</p>
+
+                            <p class="text-[#464646]">Cantidad entregada:</p>
+                            <p class="col-span-2">{{ partial.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</p>
+
+                            <p class="text-[#464646]">Notas:</p>
+                            <p class="col-span-2">{{ partial.notes ?? '-' }}</p>
+                        </div>
+                    </section>
+                </div>
+
                 <!-- ------------ Materiales y medidas ------------ -->
                 <h2 class="text-[#666666] font-bold mt-5">Materiales y medidas</h2>
                 <div class="border rounded-lg p-4 mt-2">
@@ -644,6 +696,155 @@
             </div>
         </template>
     </DialogModal>
+
+    <!-- --- NUEVO MODAL: Mover a Empaques --- -->
+    <DialogModal :show="showMoveToPackingModal" @close="showMoveToPackingModal = false">
+        <template #title>
+            <h1 class="font-semibold">Mover a Empaques</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+                <div>
+                    <InputLabel value="Cantidad a mover a empaques*" />
+                    <el-input-number v-model="form.packing_received_quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
+                    <InputError :message="form.errors.packing_received_quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de movimiento*" />
+                    <el-date-picker class="!w-full" v-model="form.packing_received_date" type="datetime"
+                        placeholder="dd/mm/aa hh:mm" value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
+                    <InputError :message="form.errors.packing_received_date" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showMoveToPackingModal = false; tempStation = currentStation" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="moveToPacking" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Mover a Empaques
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
+
+    <!-- --- NUEVO MODAL: Registrar Entrega Empaques --- -->
+    <DialogModal :show="showPackingReleaseModal" @close="showPackingReleaseModal = false">
+        <template #title>
+            <h1 class="font-semibold">Registrar Entrega de Empaques</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+                <div class="col-span-full">
+                    <InputLabel value="Tipo de entrega" />
+                    <el-select v-model="form.packing_close_type" @change="handlePackingReleaseTypeChange"
+                        placeholder="Seleccione">
+                        <el-option v-for="item in ['Única', 'Parcialidades']" :key="item" :label="item" :value="item" />
+                    </el-select>
+                    <InputError :message="form.errors.packing_close_type" />
+                </div>
+
+                <template v-if="form.packing_close_type === 'Única'">
+                    <div>
+                        <InputLabel value="Cantidad a entregar" />
+                        <el-input-number v-model="form.quantity" :min="0" class="!w-full" />
+                        <InputError :message="form.errors.quantity" />
+                    </div>
+                    <div>
+                        <InputLabel value="Fecha de entrega" />
+                        <el-date-picker class="!w-full" v-model="form.date" type="datetime" placeholder="dd/mm/aa hh:mm"
+                            value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
+                        <InputError :message="form.errors.date" />
+                    </div>
+                </template>
+                <template v-else-if="form.packing_close_type === 'Parcialidades'">
+                    <div class="col-span-full bg-[#E9E9E9] py-2 px-4 rounded-full">
+                        Parcialidad 1
+                    </div>
+                    <div>
+                        <InputLabel value="Cantidad entregada" />
+                        <el-input-number v-model="form.quantity" :min="0" class="!w-full" />
+                        <InputError :message="form.errors.quantity" />
+                    </div>
+                    <div>
+                        <InputLabel value="Fecha de entrega" />
+                        <el-date-picker class="!w-full" v-model="form.date" type="datetime" placeholder="dd/mm/aa"
+                            value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
+                        <InputError :message="form.errors.date" />
+                    </div>
+                </template>
+
+                <div class="col-span-full">
+                    <InputLabel value="Notas" />
+                    <el-input v-model="form.notes" :rows="2" type="textarea"
+                        placeholder="Notas relacionadas con la entrega a empaques." />
+                    <InputError :message="form.errors.notes" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showPackingReleaseModal = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="packingRelease" :disabled="form.processing || !form.packing_close_type">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    <span v-if="form.packing_close_type === 'Única'">Finalizar Empaque</span>
+                    <span v-else>Registrar Parcialidad</span>
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
+
+    <!-- --- NUEVO MODAL: Agregar Parcial de Empaque --- -->
+    <DialogModal :show="showAddPackingPartialModal" @close="showAddPackingPartialModal = false">
+        <template #title>
+            <h1 class="font-semibold">Registrar Parcialidad de Empaque</h1>
+        </template>
+        <template #content>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+                <div class="col-span-full bg-[#E9E9E9] py-2 px-4 rounded-full">
+                    Parcialidad {{ (selectedProduction.packing_partials?.length ?? 0) + 1 }}
+                </div>
+                <div>
+                    <InputLabel value="Cantidad entregada" />
+                    <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="0"
+                        class="!w-full" />
+                    <InputError :message="form.errors.quantity" />
+                </div>
+                <div>
+                    <InputLabel value="Fecha de entrega" />
+                    <el-date-picker class="!w-full" v-model="form.date" type="datetime" placeholder="dd/mm/aa"
+                        value-format="YYYY-MM-DD HH:mm:ss" format="DD/MM/YYYY hh:mm A" />
+                    <InputError :message="form.errors.date" />
+                </div>
+                <div class="col-span-full">
+                    <el-checkbox v-model="form.is_last_delivery" label="Última entrega" size="large" />
+                </div>
+                <div class="col-span-full">
+                    <InputLabel value="Notas" />
+                    <el-input v-model="form.notes" :rows="2" type="textarea"
+                        placeholder="Notas de la parcialidad." />
+                    <InputError :message="form.errors.notes" />
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <CancelButton @click="showAddPackingPartialModal = false" :disabled="form.processing">
+                    Cancelar
+                </CancelButton>
+                <PrimaryButton @click="addPackingPartial" :disabled="form.processing">
+                    <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                    Registrar Parcialidad
+                </PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
+
     <DialogModal :show="showInspectionRelease" @close="showInspectionRelease = false">
         <template #title>
             <h1 class="font-semibold">Inspección</h1>
@@ -868,18 +1069,26 @@ export default {
     name: 'ProductionList',
     data() {
         const form = useForm({
-            production_close_type: null,
-            close_production_date: null,
-            close_quantity: 0,
-            quality_released_date: null,
-            quality_quantity: 0,
-            excel: [],
-            quantity: 0, // para parcialidades
+            // campos generales
+            quantity: 0,
             shortage_quantity: 0,
             scrap_quantity: 0,
             notes: '',
-            date: null, // para parcialidades
-            is_last_delivery: false, // para parcialidades
+            date: null,
+            is_last_delivery: false,
+            // campos para produccion -> calidad
+            production_close_type: null,
+            close_production_date: null,
+            close_quantity: 0,
+            // campos para calidad -> inspeccion
+            quality_released_date: null,
+            quality_quantity: 0,
+            // --- CAMPOS NUEVOS PARA EMPAQUES ---
+            packing_received_quantity: 0,
+            packing_received_date: null,
+            packing_close_type: null,
+            // campo para excel
+            excel: [],
         });
 
         const returnForm = useForm({
@@ -898,6 +1107,9 @@ export default {
             showProductionRelease: false,
             showInspectionRelease: false,
             showQualityRelease: false,
+            showMoveToPackingModal: false,
+            showPackingReleaseModal: false,
+            showAddPackingPartialModal: false,
             showExportFilters: false,
             showImportModal: false,
             showAddPartial: false,
@@ -908,11 +1120,9 @@ export default {
             searchTemp: null,
             search: null,
             updatingDetails: false,
-            //exportación
             dateRange: null,
             season: 'Todas',
             station: 'Todos',
-            // paginación
             currentPage: 1,
             prevTotal: 0,
             total: 0,
@@ -920,16 +1130,8 @@ export default {
             stations: stations,
             machines: [],
             seasons: [
-                'Todas',
-                'Amistad',
-                'Escolar',
-                'Fiestas patrias',
-                'Monarca',
-                'Muestos',
-                'Navidad',
-                'Servicios',
-                'Toda ocasión',
-                'UUPZ',
+                'Todas', 'Amistad', 'Escolar', 'Fiestas patrias', 'Monarca',
+                'Muestos', 'Navidad', 'Servicios', 'Toda ocasión', 'UUPZ',
             ]
         }
     },
@@ -960,7 +1162,7 @@ export default {
         },
         filteredStations() {
             if (this.currentStation === 'Terminadas' || this.currentStation === 'Empaques terminado') {
-                return [];
+                return this.stations.filter(station => station.name === 'Terminadas');
             }
 
             if (this.currentStation === 'Inspección') {
@@ -981,7 +1183,7 @@ export default {
                 );
             }
 
-            return this.stations.filter(station => station.name !== 'Inspección' && station.name !== 'X Reproceso');
+            return this.stations.filter(station => station.name !== 'Inspección' && station.name !== 'X Reproceso' && station.name !== 'Empaques terminado');
         }
     },
     methods: {
@@ -1139,46 +1341,47 @@ export default {
             this.form.post(route('productions.add-partial', this.selectedProduction.id), {
                 onSuccess: () => {
                     this.showAddPartial = false;
-                    this.$notify({
-                        title: "Parcialidad registrada",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Parcialidad registrada", type: "success" });
                     this.updateDetails();
                 },
-                onError: () => {
-                    this.$notify({
-                        title: "Error al registrar parcialidad",
-                        type: "error",
-                    });
+                onError: () => this.$notify({ title: "Error al registrar parcialidad", type: "error" }),
+            });
+        },
+        addPackingPartial() {
+            this.form.post(route('productions.add-packing-partial', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showAddPackingPartialModal = false;
+                    this.$notify({ title: "Parcialidad de empaque registrada", type: "success" });
+                    this.updateDetails();
                 },
+                onError: () => this.$notify({ title: "Error al registrar parcialidad de empaque", type: "error" }),
             });
         },
         handleInspectionReleaseTypeChange(newVal) {
             if (newVal == 'Parcialidades') {
                 this.form.quantity = 0;
-                this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
             } else {
                 this.form.quantity = this.selectedProduction.quality_quantity;
-                this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
             }
+            this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+        },
+        handlePackingReleaseTypeChange(newVal) {
+            if (newVal == 'Parcialidades') {
+                this.form.quantity = 0;
+            } else {
+                this.form.quantity = this.selectedProduction.packing_received_quantity;
+            }
+            this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
         },
         returnStation() {
             this.returnForm.post(route('productions.return-station', this.selectedProduction.id), {
                 onSuccess: async () => {
                     this.showReturnModal = false;
-                    this.$notify({
-                        title: "Regreso a estación anterior",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Regreso a estación anterior", type: "success" });
                     this.updateDetails();
                     this.returnForm.reset();
                 },
-                onError: () => {
-                    this.$notify({
-                        title: "Error al regresar a estación anterior",
-                        type: "error",
-                    });
-                },
+                onError: () => this.$notify({ title: "Error al regresar a estación anterior", type: "error" }),
             });
         },
         productionRelease() {
@@ -1188,45 +1391,49 @@ export default {
                     this.$notify({ title: "Éxito", message: "Entrega de producción registrada", type: "success" });
                     this.updateDetails();
                 },
-                onError: () => {
-                    this.$notify({ title: "Error", message: "No se pudo registrar la entrega", type: "error" });
-                },
+                onError: () => this.$notify({ title: "Error", message: "No se pudo registrar la entrega", type: "error" }),
             });
         },
         qualityReleased() {
             this.form.post(route('productions.quality-release', this.selectedProduction.id), {
                 onSuccess: () => {
                     this.showQualityRelease = false;
-                    this.$notify({
-                        title: "Entrega de calidad a inspeccíón",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Entrega de calidad a inspeccíón", type: "success" });
                     this.updateDetails();
                 },
-                onError: () => {
-                    this.$notify({
-                        title: "Error al registrar entrega de calidad a inspeccíón",
-                        type: "error",
-                    });
+                onError: () => this.$notify({ title: "Error al registrar entrega de calidad a inspeccíón", type: "error" }),
+            });
+        },
+        moveToPacking() {
+            this.form.post(route('productions.move-to-packing', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showMoveToPackingModal = false;
+                    this.$notify({ title: "Movimiento a Empaques registrado", type: "success" });
+                    this.updateDetails();
                 },
+                onError: () => this.$notify({ title: "Error al mover a Empaques", type: "error" }),
+            });
+        },
+        packingRelease() {
+            this.form.post(route('productions.packing-release', this.selectedProduction.id), {
+                onSuccess: () => {
+                    this.showPackingReleaseModal = false;
+                    this.$notify({ title: "Entrega de empaques registrada", type: "success" });
+                    this.updateDetails();
+                },
+                onError: () => this.$notify({ title: "Error al registrar entrega de empaques", type: "error" }),
             });
         },
         inspectionRelease() {
             this.form.post(route('productions.inspection-release', this.selectedProduction.id), {
                 onSuccess: async () => {
                     this.showInspectionRelease = false;
-                    this.$notify({
-                        title: "Entrega registrada",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Entrega registrada", type: "success" });
                     this.updateDetails();
                 },
                 onError: (err) => {
-                    console.log(err)
-                    this.$notify({
-                        title: "Error al registrar entrega",
-                        type: "error",
-                    });
+                    console.log(err);
+                    this.$notify({ title: "Error al registrar entrega", type: "error" });
                 },
             });
         },
@@ -1234,75 +1441,81 @@ export default {
             this.form.post(route('productions.finish-production', this.selectedProduction.id), {
                 onSuccess: () => {
                     this.showQualityRelease = false;
-                    this.$notify({
-                        title: "Orden de producción Terminada",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Orden de producción Terminada", type: "success" });
                     this.updateDetails();
                     this.showFinishedConfirmation = false
                     this.showDetails = false;
                 },
-                onError: () => {
-                    this.$notify({
-                        title: "Error al liberar la orden de producción",
-                        type: "error",
-                    });
-                },
+                onError: () => this.$notify({ title: "Error al liberar la orden de producción", type: "error" }),
             });
         },
         async updateDetails() {
             this.updatingDetails = true;
             await this.fetchProductions();
-            this.selectedProduction = this.productions.find(p => p.id == this.selectedProduction.id);
-            this.tempStation = this.selectedProduction.station;
-            this.currentStation = this.selectedProduction.station;
+            const updatedProduction = this.productions.find(p => p.id == this.selectedProduction.id);
+            if (updatedProduction) {
+                this.selectedProduction = updatedProduction;
+                this.tempStation = this.selectedProduction.station;
+                this.currentStation = this.selectedProduction.station;
+            } else {
+                this.showDetails = false; // Cierra el modal si la produccion ya no se encuentra
+            }
             this.updatingDetails = false;
             this.form.reset();
         },
         async updateStation() {
-            if (this.currentStation === 'Calidad') {
-                if (this.tempStation === 'X Reproceso') {
-                    // Regresar
-                    this.returnForm.quantity = this.selectedProduction.close_quantity;
-                    this.showReturnModal = true;
-                } else {
-                    this.form.reset();
-                    this.form.quality_quantity = this.selectedProduction.close_quantity;
-                    this.form.quality_released_date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
-                    this.showQualityRelease = true;
-                }
+            // 1. Si el destino es "Empaques", mostrar modal de movimiento inicial.
+            if (this.tempStation === 'Empaques') {
+                this.form.reset();
+                this.form.packing_received_quantity = this.selectedProduction.quality_quantity ?? this.selectedProduction.close_quantity ?? this.selectedProduction.quantity;
+                this.form.packing_received_date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+                this.showMoveToPackingModal = true;
                 this.showDetails = false;
-            } else if (this.currentStation === 'Inspección') {
-                if (this.tempStation === 'Calidad') {
-                    // Regresar
-                    this.returnForm.quantity = this.selectedProduction.quality_quantity;
-                    this.showReturnModal = true;
-                } else {
-                    this.showFinishedConfirmation = true;
-                }
+                return;
+            }
+            // 2. Si el destino es "Calidad" (y no viene de Inspección), mostrar modal de cierre de producción.
+            if (this.tempStation === 'Calidad' && this.currentStation !== 'Inspección') {
+                this.form.reset();
+                this.form.close_quantity = this.selectedProduction.quantity;
+                this.form.close_production_date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+                this.showProductionRelease = true;
                 this.showDetails = false;
-            } else {
-                // Para todas las demás estaciones
-                if (this.tempStation === 'Calidad') {
-                    this.showProductionRelease = true;
-                    this.form.close_quantity = this.selectedProduction.quantity;
-                    this.form.close_production_date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
-                } else {
-                    try {
-                        const response = await axios.put(route('productions.update-station', this.selectedProduction.id),
-                            { station: this.tempStation });
-                        if (response.status === 200) {
-                            this.$notify({
-                                title: "Progreso actualizado",
-                                type: "success",
-                            });
-                            this.selectedProduction.station = this.tempStation;
-                        }
-                    } catch (error) {
-                        console.error('Error updating station:', error);
-                    }
-                }
+                return;
+            }
+            // 3. Si el destino es "Inspección", mostrar modal de liberación de calidad.
+            if (this.tempStation === 'Inspección') {
+                this.form.reset();
+                this.form.quality_quantity = this.selectedProduction.close_quantity;
+                this.form.quality_released_date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+                this.showQualityRelease = true;
                 this.showDetails = false;
+                return;
+            }
+            // 4. Si es un regreso a estación anterior.
+            if ((this.tempStation === 'X Reproceso' && this.currentStation === 'Calidad') || (this.tempStation === 'Calidad' && this.currentStation === 'Inspección')) {
+                this.returnForm.quantity = this.currentStation === 'Calidad' ? this.selectedProduction.close_quantity : this.selectedProduction.quality_quantity;
+                this.showReturnModal = true;
+                this.showDetails = false;
+                return;
+            }
+            // 5. Si es para finalizar la producción.
+            if (this.tempStation === 'Terminadas' && ['Inspección', 'Empaques', 'Empaques terminado'].includes(this.currentStation)) {
+                this.showFinishedConfirmation = true;
+                // no cerramos el modal de detalles para que el usuario pueda cancelar
+                return;
+            }
+            // 6. Si es un cambio simple de estación.
+            try {
+                const response = await axios.put(route('productions.update-station', this.selectedProduction.id), { station: this.tempStation });
+                if (response.status === 200) {
+                    this.$notify({ title: "Progreso actualizado", type: "success" });
+                    this.updateDetails();
+                    this.showDetails = false;
+                }
+            } catch (error) {
+                this.$notify({ title: 'Error', message: 'No se pudo actualizar el progreso', type: 'error' });
+                console.error('Error updating station:', error);
+                this.tempStation = this.currentStation; // Revertir cambio en dropdown
             }
         },
         async updateMachine() {
@@ -1313,10 +1526,7 @@ export default {
                 if (response.status === 200) {
                     const machineName = this.machines.find(m => m.id == this.selectedProduction.machine.id)?.name;
                     this.selectedProduction.machine.name = machineName;
-                    this.$notify({
-                        title: "Máquina cambiada",
-                        type: "success",
-                    });
+                    this.$notify({ title: "Máquina cambiada", type: "success" });
                 }
             } catch (error) {
                 console.error('Error updating machine:', error);
