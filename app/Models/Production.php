@@ -59,6 +59,15 @@ class Production extends Model
         'quality_notes',
         'inspection_notes',
         
+        'packing_close_type',
+        'packing_notes',
+        'packing_scrap',
+        'packing_shortage',
+        'packing_partials',
+        'packing_received_quantity',
+        'packing_received_date',
+        'packing_finished_date',
+        
         'ha',
         'pf',
         'ts',
@@ -74,12 +83,15 @@ class Production extends Model
         'materials' => 'array',
         'partials' => 'array',
         'returns' => 'array',
+        'packing_partials' => 'array',
         'estimated_date' => 'date',
         'estimated_package_date' => 'date',
         'start_date' => 'date',
         'finish_date' => 'datetime',
         'close_production_date' => 'datetime',
         'quality_released_date' => 'datetime',
+        'packing_received_date' => 'datetime',
+        'packing_finished_date' => 'datetime',
     ];
 
     //realciones
