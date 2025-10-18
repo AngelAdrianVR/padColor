@@ -121,6 +121,8 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //production routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
+Route::get('productions-dashboard', [ProductionController::class, 'dashboard'])->name('productions.dashboard')->middleware('auth');
+Route::get('productions-report', [ProductionController::class, 'report'])->name('productions.report')->middleware('auth');
 Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
 Route::get('productions-export-report-excel', [ProductionController::class, 'exportExcelReport'])->name('productions.export-report-excel')->middleware('auth');
 Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');

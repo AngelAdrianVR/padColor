@@ -20,18 +20,29 @@ class ProductionController extends Controller
 {
     use NotifiesViaEvents;
 
-    public function index()
+    public function dashboard()
     {
         $productions = Production::latest('folio')->get(['folio', 'station']);
-        $next_production = Production::latest('folio')->first();
-        $next_production = $next_production ? $next_production->folio + 1 : 1;
 
-        return inertia('Production/Index', compact('productions', 'next_production'));
+        return inertia('Production/Dashboard', compact('productions'));
+    }
+    
+    public function index()
+    {
+        return inertia('Production/Index');
+    }
+    
+    public function report()
+    {
+        return inertia('Production/Report');
     }
 
     public function create()
     {
-        //
+        $next_production = Production::latest('folio')->first();
+        $next_production = $next_production ? $next_production->folio + 1 : 1;
+
+        return inertia('Production/Create', compact('next_production'));
     }
 
     public function store(Request $request)
@@ -135,7 +146,7 @@ class ProductionController extends Controller
 
         $production->update($validated + ['modified_user_id' => auth()->id()]);
 
-        return to_route('productions.index', ["currentTab" => 2]);
+        return to_route('productions.index');
     }
 
     public function updateStation(Request $request, Production $production)

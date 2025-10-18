@@ -1,10 +1,10 @@
 <template>
-    <AppLayout title="Editar producción">
+    <AppLayout title="Crear nueva producción">
         <div class="mb-4">
             <Back class="mt-5 mx-2 lg:mx-20" />
-            <form @submit.prevent="update" ref="formContainer"
+            <form @submit.prevent="store" ref="formContainer"
                 class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 md:grid grid-cols-2 gap-x-3 gap-y-2">
-                <h1 class="font-semibold ml-2 col-span-full">Editar orden de producción</h1>
+                <h1 class="font-semibold ml-2 col-span-full">Crear orden de producción</h1>
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
                 <div>
                     <InputLabel value="N° de orden*" />
@@ -50,9 +50,9 @@
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
                 <div>
                     <InputLabel value="Producto*" />
-                    <el-select v-model="form.product_id" filterable placeholder="Selecciona el producto" remote
-                        reserve-keyword :remote-method="fetchProductsMatch" :loading="fetchingProducts" class="!w-full"
-                        no-match-text="No hay productos coincidentes">
+                    <el-select v-model="form.product_id" @change="handleChangeProduct" filterable
+                        placeholder="Selecciona el producto" remote reserve-keyword :remote-method="fetchProductsMatch"
+                        :loading="fetchingProducts" class="!w-full" no-match-text="No hay productos coincidentes">
                         <el-option v-for="product in products" :key="product.id" :label="product.name"
                             :value="product.id" />
                     </el-select>
@@ -61,7 +61,7 @@
                 <div>
                     <InputLabel value="Cantidad solicitada*" />
                     <el-input-number v-model="form.quantity" @change="handleSheet" placeholder="Ingresa la cantidad"
-                        :step="0.01" :min="0.01" class="!w-full" />
+                        :min="0.01" :step="0.01" class="!w-full" />
                     <InputError :message="form.errors.quantity" />
                 </div>
                 <div>
@@ -150,7 +150,18 @@
                     <InputError :message="form.errors.look" />
                 </div>
                 <div>
-                    <InputLabel value="Dim. F/H" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Dim. F/H</span>
+                            <el-tooltip content="Ancho x Largo" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="dfh" placeholder="Dimensión del formato de hoja" disabled />
                 </div>
                 <div>
@@ -214,25 +225,58 @@
                     <InputError :message="form.errors.pf" />
                 </div>
                 <div>
-                    <InputLabel value="Total de hojas" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Total de hojas</span>
+                            <el-tooltip content="Hojas + Ajuste" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="form.ts" placeholder="Hojas" disabled />
                 </div>
                 <div>
-                    <InputLabel value="Ta/Im" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Ta/Im</span>
+                            <el-tooltip content="Hojas / Piezas por hoja" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="form.ps" placeholder="Tamaño de impresión" disabled />
                 </div>
                 <div>
-                    <InputLabel value="Total Ta/Im" />
+                    <InputLabel>
+                        <div class="flex items-center space-x-3">
+                            <span>Total Ta/Im</span>
+                            <el-tooltip content="Total de Hojas / Piezas por hoja" placement="top">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                            </el-tooltip>
+                        </div>
+                    </InputLabel>
                     <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
                 </div>
                 <div class="col-span-2 text-right mt-4 space-x-2">
-                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index'))"
-                        :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
-                        Cancelar
+                    <PrimaryButton type="button" @click="cleanForm" :disabled="form.processing"
+                        class="!bg-[#CFCFCF] !text-[#6E6E6E]">
+                        Limpiar formulario
                     </PrimaryButton>
                     <PrimaryButton :disabled="form.processing">
                         <i v-if="form.processing" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span>Guardar cambios</span>
+                        <span>Crear</span>
                     </PrimaryButton>
                 </div>
             </form>
@@ -248,47 +292,48 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
 import { stations } from '@/Data/stations';
 import axios from 'axios';
+import { format } from "date-fns";
 import Back from '@/Components/MyComponents/Back.vue';
 
 export default {
-    name: 'EditeProduction',
+    name: 'CreateProduction',
     data() {
         const form = useForm({
-            folio: this.production.folio,
-            type: this.production.type,
-            client: this.production.client,
-            changes: this.production.changes,
-            season: this.production.season,
-            station: this.production.station,
-            quantity: this.production.quantity,
-            materials: this.production.materials?.length ? this.production.materials[0] : null,
-            notes: this.production.notes,
-            product_id: this.production.product_id,
-            machine_id: this.production.machine_id,
-            material: this.production.material,
-            width: this.production.width,
-            gauge: this.production.gauge,
-            large: this.production.large,
-            pps: this.production.pps,
-            adjust: this.production.adjust,
-            look: this.production.look,
-            faces: this.production.faces,
-            dfi: this.production.dfi,
-            sheets: this.production.sheets,
-            ha: this.production.ha,
-            pf: this.production.pf,
-            ts: this.production.ts,
-            ps: this.production.ps,
-            tps: this.production.tps,
-            has_varnish: !!this.production.varnish_type,
-            varnish_type: this.production.varnish_type,
-            start_date: this.production.start_date,
-            estimated_date: this.production.estimated_date,
+            folio: this.nextProduction,
+            type: 'Nuevo',
+            client: 'PadColor',
+            changes: null,
+            season: null,
+            station: 'Material pendiente',
+            quantity: null,
+            materials: null,
+            notes: null,
+            product_id: null,
+            machine_id: null,
+            material: null,
+            width: null,
+            gauge: null,
+            large: null,
+            pps: null,
+            adjust: 0,
+            look: null,
+            faces: null,
+            dfi: null,
+            sheets: null,
+            ha: null,
+            pf: null,
+            ts: null,
+            ps: null,
+            tps: null,
+            has_varnish: false,
+            varnish_type: null,
+            start_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
+            estimated_date: null,
         });
 
         return {
             form,
-            products: [this.product],
+            products: [],
             machines: [],
             clients: [],
             fetchingProducts: false,
@@ -321,28 +366,40 @@ export default {
     },
     components: {
         AppLayout,
+        Back,
         InputLabel,
         InputError,
         PrimaryButton,
-        Back,
     },
     props: {
-        production: Object,
-        product: Object,
+        nextProduction: {
+            type: Number,
+            required: true,
+        },
     },
+    emits: ['created'],
     methods: {
-        update() {
-            this.form.put(route('productions.update', this.production.id), {
+        handleVarnish() {
+            if (!this.form.has_varnish) {
+                this.form.varnish_type = null;
+            }
+        },
+        store() {
+            this.form.post(route('productions.store'), {
                 onSuccess: () => {
+                    this.cleanForm();
+                    // sumar unidad a folio para poder crear otra producción
+                    this.form.folio++;
+
                     this.$notify({
-                        title: 'Orden de producción actualizada',
+                        title: 'Orden de producción creada',
                         message: '',
                         type: 'success',
                     });
+                    this.$emit('created');
                 },
                 onError: () => {
                     console.log(this.form.errors);
-
                     this.$refs.formContainer.scrollIntoView({
                         behavior: 'smooth',
                     });
@@ -354,14 +411,13 @@ export default {
                 },
             });
         },
+        handleChangeProduct() {
+            const productSelected = this.products.find(product => product.id === this.form.product_id);
+            this.form.material = productSelected.material;
+        },
         cleanForm() {
             this.form.reset();
             this.dfh = null;
-        },
-        handleVarnish() {
-            if (!this.form.has_varnish) {
-                this.form.varnish_type = null;
-            }
         },
         handleDfh() {
             if (this.form.width && this.form.large) {
@@ -418,10 +474,6 @@ export default {
             } else {
                 this.form.tps = null;
             }
-        },
-        handleChangeProduct() {
-            const productSelected = this.products.find(product => product.id === this.form.product_id);
-            this.form.material = productSelected.material;
         },
         async fetchProductsMatch(query) {
             if (!query) {
