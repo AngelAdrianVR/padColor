@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\ProductionForwardedNotification;
 use App\Notifications\ProductionReturnedNotification;
 use App\Traits\NotifiesViaEvents;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Facades\Excel;
@@ -26,12 +27,12 @@ class ProductionController extends Controller
 
         return inertia('Production/Dashboard', compact('productions'));
     }
-    
+
     public function index()
     {
         return inertia('Production/Index');
     }
-    
+
     public function report()
     {
         return inertia('Production/Report');
@@ -151,8 +152,43 @@ class ProductionController extends Controller
 
     public function updateStation(Request $request, Production $production)
     {
-        $production->station = $request->station;
-        $production->modified_user_id = auth()->id();
+        $old_station = $production->station;
+        $new_station = $request->station;
+        $user_id = auth()->id();
+        $now = now();
+
+        $station_times = $production->station_times ?? [];
+        $last_station_key = count($station_times) - 1;
+
+        if ($last_station_key >= 0) {
+            $station_times[$last_station_key]['status'] = 'Finalizada';
+            $station_times[$last_station_key]['finished_at'] = $now;
+            // Add history event for finishing the old station
+            $station_times[$last_station_key]['history'][] = [
+                'event' => 'Finalizada (movimiento manual)',
+                'timestamp' => $now->toDateTimeString(),
+                'user_id' => $user_id,
+                'details' => "Movido de {$old_station} a {$new_station}"
+            ];
+        }
+
+        // Add new station record
+        $station_times[] = [
+            'station_name' => $new_station,
+            'status' => 'En espera',
+            'entered_at' => $now->toDateTimeString(),
+            'started_at' => null,
+            'finished_at' => null,
+            'pauses' => [],
+            'history' => [
+                ['event' => 'En espera', 'timestamp' => $now->toDateTimeString(), 'user_id' => $user_id, 'details' => null]
+            ],
+            'times' => ['waiting_seconds' => 0, 'paused_seconds' => 0, 'effective_seconds' => 0]
+        ];
+
+        $production->station = $new_station;
+        $production->station_times = $station_times;
+        $production->modified_user_id = $user_id;
         $production->save();
     }
 
@@ -241,6 +277,14 @@ class ProductionController extends Controller
             'quality_notes',
             'partials',
             'start_date',
+            'packing_close_type',
+            'packing_notes',
+            'packing_scrap',
+            'packing_shortage',
+            'packing_partials',
+            'packing_received_quantity',
+            'packing_received_date',
+            'packing_finished_date',
         ]);
         $newProduction->folio = $lastProductionFolio + 1;
         $newProduction->type = 'Repetido';
@@ -419,7 +463,7 @@ class ProductionController extends Controller
             'current_quantity' => 0, // Reiniciar la cantidad actual para el proceso de empaque
             'modified_user_id' => auth()->id(),
         ]);
-        
+
         // notificar si pasa a Empaques
         $notificationInstance = new ProductionForwardedNotification(
             $production,
@@ -462,10 +506,10 @@ class ProductionController extends Controller
             $production->station = 'Empaques terminado';
             $production->packing_finished_date = now();
         }
-        
+
         $production->save();
     }
-    
+
     // --- NUEVO MÉTODO ---
     // Agrega una nueva entrega parcial a empaques
     public function addPackingPartial(Request $request, Production $production)
@@ -479,7 +523,7 @@ class ProductionController extends Controller
 
         $partials = $production->packing_partials ?? [];
         $partials[] = ['quantity' => $validatedData['quantity'], 'date' => $validatedData['date'], 'notes' => $validatedData['notes'], 'is_last_delivery' => $validatedData['is_last_delivery']];
-        
+
         $production->packing_partials = $partials;
         $production->modified_user_id = auth()->id();
         $production->current_quantity += $validatedData['quantity'];
@@ -600,5 +644,168 @@ class ProductionController extends Controller
         $production->load(['product', 'machine', 'modifiedUser']);
 
         return inertia('Production/HojaViajera', compact('production'));
+    }
+
+    // ===================================================================
+    // NUEVOS MÉTODOS PARA EL CONTROL DE TIEMPOS
+    // ===================================================================
+
+    private function getCurrentStationRecord(Production &$production)
+    {
+        $station_times = $production->station_times ?? [];
+        if (empty($station_times)) return null;
+        return $station_times[count($station_times) - 1];
+    }
+
+    private function updateCurrentStationRecord(Production &$production, $updated_record)
+    {
+        $station_times = $production->station_times ?? [];
+        if (empty($station_times)) return;
+        $station_times[count($station_times) - 1] = $updated_record;
+        $production->station_times = $station_times;
+    }
+
+    public function startStationProcess(Production $production)
+    {
+        $current_record = $this->getCurrentStationRecord($production);
+        if (!$current_record || $current_record['status'] !== 'En espera') {
+            return back()->with('error', 'La estación no está en espera.');
+        }
+
+        $now = now();
+        $current_record['status'] = 'En proceso';
+        $current_record['started_at'] = $now->toDateTimeString();
+        $current_record['history'][] = [
+            'event' => 'Iniciada',
+            'timestamp' => $now->toDateTimeString(),
+            'user_id' => auth()->id(),
+            'details' => null,
+        ];
+
+        $this->updateCurrentStationRecord($production, $current_record);
+        $production->save();
+        return back();
+    }
+
+    public function pauseStationProcess(Request $request, Production $production)
+    {
+        $request->validate(['reason' => 'required|string|max:255']);
+
+        $current_record = $this->getCurrentStationRecord($production);
+        if (!$current_record || $current_record['status'] !== 'En proceso') {
+            return back()->with('error', 'La estación no está en proceso.');
+        }
+
+        $now = now();
+        $current_record['status'] = 'En pausa';
+        $current_record['pauses'][] = [
+            'paused_at' => $now->toDateTimeString(),
+            'resumed_at' => null,
+            'reason' => $request->reason,
+            'user_id' => auth()->id(),
+        ];
+        $current_record['history'][] = [
+            'event' => 'Pausada',
+            'timestamp' => $now->toDateTimeString(),
+            'user_id' => auth()->id(),
+            'details' => $request->reason,
+        ];
+
+        $this->updateCurrentStationRecord($production, $current_record);
+        $production->save();
+        return back();
+    }
+
+    public function resumeStationProcess(Production $production)
+    {
+        $current_record = $this->getCurrentStationRecord($production);
+        if (!$current_record || $current_record['status'] !== 'En pausa') {
+            return back()->with('error', 'La estación no está en pausa.');
+        }
+
+        $now = now();
+        $current_record['status'] = 'En proceso';
+
+        // Find the last pause and set its resumed_at
+        $last_pause_key = count($current_record['pauses']) - 1;
+        if (isset($current_record['pauses'][$last_pause_key])) {
+            $current_record['pauses'][$last_pause_key]['resumed_at'] = $now->toDateTimeString();
+        }
+
+        $current_record['history'][] = [
+            'event' => 'Reanudada',
+            'timestamp' => $now->toDateTimeString(),
+            'user_id' => auth()->id(),
+            'details' => null,
+        ];
+
+        $this->updateCurrentStationRecord($production, $current_record);
+        $production->save();
+        return back();
+    }
+
+    public function finishAndMoveStation(Request $request, Production $production)
+    {
+        $request->validate(['next_station' => 'required|string|max:255']);
+
+        $current_record = $this->getCurrentStationRecord($production);
+        if (!$current_record || !in_array($current_record['status'], ['En proceso', 'En pausa'])) {
+            return back()->with('error', 'La estación no puede ser finalizada desde su estado actual.');
+        }
+
+        $now = now();
+        // If it was paused, resume it first to calculate time correctly
+        if ($current_record['status'] === 'En pausa') {
+            $last_pause_key = count($current_record['pauses']) - 1;
+            $current_record['pauses'][$last_pause_key]['resumed_at'] = $now->toDateTimeString();
+        }
+
+        $current_record['status'] = 'Finalizada';
+        $current_record['finished_at'] = $now->toDateTimeString();
+        $current_record['history'][] = [
+            'event' => 'Finalizada',
+            'timestamp' => $now->toDateTimeString(),
+            'user_id' => auth()->id(),
+            'details' => "Movido a {$request->next_station}",
+        ];
+
+        // Calculate times
+        $entered_at = Carbon::parse($current_record['entered_at']);
+        $started_at = Carbon::parse($current_record['started_at']);
+        $finished_at = Carbon::parse($current_record['finished_at']);
+
+        $total_paused_seconds = 0;
+        foreach ($current_record['pauses'] as $pause) {
+            $paused_at = Carbon::parse($pause['paused_at']);
+            $resumed_at = Carbon::parse($pause['resumed_at']);
+            $total_paused_seconds += $resumed_at->diffInSeconds($paused_at);
+        }
+
+        $current_record['times']['waiting_seconds'] = $started_at->diffInSeconds($entered_at);
+        $current_record['times']['paused_seconds'] = $total_paused_seconds;
+        $current_record['times']['effective_seconds'] = $finished_at->diffInSeconds($started_at) - $total_paused_seconds;
+
+        $this->updateCurrentStationRecord($production, $current_record);
+
+        // Create new station record
+        $station_times = $production->station_times;
+        $station_times[] = [
+            'station_name' => $request->next_station,
+            'status' => 'En espera',
+            'entered_at' => $now->toDateTimeString(),
+            'started_at' => null,
+            'finished_at' => null,
+            'pauses' => [],
+            'history' => [
+                ['event' => 'En espera', 'timestamp' => $now->toDateTimeString(), 'user_id' => auth()->id(), 'details' => null]
+            ],
+            'times' => ['waiting_seconds' => 0, 'paused_seconds' => 0, 'effective_seconds' => 0]
+        ];
+
+        $production->station_times = $station_times;
+        $production->station = $request->next_station;
+        $production->save();
+
+        return back();
     }
 }

@@ -137,7 +137,14 @@ Route::post('productions-inspection-release/{production}', [ProductionController
 Route::post('productions-finish-production/{production}', [ProductionController::class, 'finishProduction'])->name('productions.finish-production')->middleware('auth');
 Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
-
+// --- NUEVAS RUTAS PARA TIME TRACKING ---
+Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
+    Route::post('/start', [ProductionController::class, 'startStationProcess'])->name('start');
+    Route::post('/pause', [ProductionController::class, 'pauseStationProcess'])->name('pause');
+    Route::post('/resume', [ProductionController::class, 'resumeStationProcess'])->name('resume');
+    Route::post('/finish-and-move', [ProductionController::class, 'finishAndMoveStation'])->name('finishAndMove');
+    Route::post('/skip-and-move', [ProductionController::class, 'skipAndMoveStation'])->name('skipAndMove');
+});
 // --- NUEVAS RUTAS PARA EMPAQUES ---
 Route::post('productions-move-to-packing/{production}', [ProductionController::class, 'moveToPacking'])->name('productions.move-to-packing')->middleware('auth');
 Route::post('productions-packing-release/{production}', [ProductionController::class, 'packingRelease'])->name('productions.packing-release')->middleware('auth');
