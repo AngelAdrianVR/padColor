@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, watch, ref } from 'vue';
 
 const props = defineProps({
     show: {
@@ -21,6 +21,7 @@ const emit = defineEmits(['close']);
 watch(() => props.show, () => {
     if (props.show) {
         document.body.style.overflow = 'hidden';
+        resetPosition();
     } else {
         document.body.style.overflow = null;
     }
@@ -55,6 +56,50 @@ const maxWidthClass = computed(() => {
         '3xl': 'sm:max-w-3xl',
     }[props.maxWidth];
 });
+
+// --- Draggable Modal Logic ---
+const modalContent = ref(null);
+const dragging = ref(false);
+const position = ref({ x: 0, y: 0 });
+const startPosition = ref({ x: 0, y: 0 });
+
+const startDrag = (event) => {
+    // Evitar que el arrastre inicie si se hace clic en inputs, botones, etc.
+    if (event.target.closest('button, input, select, textarea, a')) {
+        return;
+    }
+    event.preventDefault(); // Evita la selección de texto mientras se arrastra
+    dragging.value = true;
+    startPosition.value.x = event.clientX - position.value.x;
+    startPosition.value.y = event.clientY - position.value.y;
+    window.addEventListener('mousemove', onDrag);
+    window.addEventListener('mouseup', stopDrag);
+};
+
+const onDrag = (event) => {
+    if (dragging.value) {
+        // Usar requestAnimationFrame para un rendimiento más suave
+        requestAnimationFrame(() => {
+            position.value.x = event.clientX - startPosition.value.x;
+            position.value.y = event.clientY - startPosition.value.y;
+        });
+    }
+};
+
+const stopDrag = () => {
+    dragging.value = false;
+    window.removeEventListener('mousemove', onDrag);
+    window.removeEventListener('mouseup', stopDrag);
+};
+
+const resetPosition = () => {
+    position.value = { x: 0, y: 0 };
+};
+
+const modalStyle = computed(() => ({
+    transform: `translate(${position.value.x}px, ${position.value.y}px)`,
+}));
+
 </script>
 
 <template>
@@ -82,8 +127,13 @@ const maxWidthClass = computed(() => {
                     leave-from-class="opacity-100 translate-y-0 sm:scale-100"
                     leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                    <div v-show="show" class="mb-6 bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto" :class="maxWidthClass">
-                        <slot v-if="show" />
+                    <!-- Eliminamos 'transition-all' para que no interfiera con el drag -->
+                    <div v-show="show" ref="modalContent" :style="modalStyle" class="relative mb-6 bg-white rounded-2xl overflow-hidden shadow-xl transform sm:w-full sm:mx-auto" :class="maxWidthClass">
+                        <!-- Draggable Handle -->
+                        <div @mousedown="startDrag" class="absolute top-0 left-0 w-full h-5 cursor-move z-10"></div>
+                        <div class="relative z-0">
+                           <slot v-if="show" />
+                        </div>
                     </div>
                 </transition>
             </div>

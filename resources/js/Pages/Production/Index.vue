@@ -18,15 +18,14 @@
                     @command="handleCommand" />
             </div>
         </div>
-
         <!-- Modals -->
         <ProductionDetailsModal 
             :show="showDetails" 
             :selectedProduction="selectedProduction"
             :updatingDetails="updatingDetails" 
-            :machines="machines" 
             :stations="stations" 
-            :users="users"
+            :users="users" 
+            :machines="machines"
             @close="showDetails = false" 
             @start-process="startProcess"
             @pause-process="pauseProcess" 
@@ -34,7 +33,7 @@
             @finish-move-process="finishAndMoveProcess"
             @skip-move-process="skipAndMoveProcess" 
             @register-delivery="handleRegisterDelivery"
-        />
+         />
 
         <DialogModal :show="showExportFilters" @close="showExportFilters = false">
             <template #title>
@@ -376,7 +375,7 @@ export default {
             });
         },
         pauseProcess(payload) {
-            this.$inertia.post(route('productions.station-process.pause', this.selectedProduction.id), { reason: payload }, {
+            this.$inertia.post(route('productions.station-process.pause', this.selectedProduction.id), { reason: payload.reason, notes: payload.notes }, {
                 onSuccess: () => this.updateDetails(),
                 onError: (errors) => this.$notify({ title: "Error", message: errors.reason || "No se pudo pausar el proceso", type: "error" }),
                 preserveScroll: true,

@@ -24,10 +24,10 @@
                             selectedProduction.quantity?.toLocaleString('es-MX') }}</span></p>
                     </div>
                     <div class="flex items-center space-x-2 flex-shrink-0">
-                        <button @click="$inertia.visit(route('productions.hoja-viajera', selectedProduction.id))"
+                        <a :href="route('productions.hoja-viajera', selectedProduction.id)" target="_blank"
                             class="text-sm text-[#EC4899] border border-[#EC4899] rounded-md px-3 py-1.5 hover:bg-[#FCE7F3] transition-all">
                             Hoja viajera
-                        </button>
+                        </a>
                         <button v-if="$page.props.auth.user.permissions.includes('Editar producciones')"
                             @click="$inertia.visit(route('productions.edit', selectedProduction.id))"
                             class="text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-200 transition-all">
@@ -164,35 +164,12 @@
 
                                 <!-- Station Control -->
                                 <section>
-                                    <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Control de
-                                        estación</h2>
+                                    <h2 class="font-bold px-3 pb-1">Control de estación</h2>
                                     <div v-if="currentStationRecord && currentStationRecord.status !== 'Finalizada'"
-                                        class="p-4 border rounded-b-md">
+                                        class="p-4 border rounded-lg bg-[#F2F2F2]">
                                         <!-- Waiting State -->
                                         <div v-if="currentStationStatus === 'En espera'">
-                                            <div class="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
-                                                <p class="text-sm">Tiempo en esta estación</p>
-                                                <p class="font-bold text-lg">{{ formatDuration(liveWaitingTime) }}</p>
-                                            </div>
-                                            <p class="text-center text-sm text-gray-600 my-4">Puedes iniciar la tarea en
-                                                esta estación o mover la orden a la siguiente estación sin iniciarla.
-                                            </p>
-                                            <div class="flex justify-center items-center space-x-3">
-                                                <PrimaryButton @click="$emit('start-process')"
-                                                    customClasses="bg-green-500 hover:bg-green-600">
-                                                    <PlayIcon class="size-5 mr-2" />
-                                                    Iniciar
-                                                </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip')">
-                                                    <ArrowRightIcon class="size-5 mr-2" />
-                                                    Mover a siguiente
-                                                </PrimaryButton>
-                                            </div>
-                                        </div>
-
-                                        <!-- In Process State -->
-                                        <div v-else-if="currentStationStatus === 'En proceso'">
-                                            <div class="flex justify-between items-center">
+                                            <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: stations.find(s => s.name === currentStationRecord.station_name)?.light, color: stations.find(s => s.name === currentStationRecord.station_name)?.dark }">
@@ -202,7 +179,38 @@
                                                     </div>
                                                     <p class="font-bold">{{ currentStationRecord.station_name }}</p>
                                                 </div>
-                                                <div>
+                                                <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
+                                                    <p class="text-xs text-right">Tiempo en espera</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(liveWaitingTime) }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-center items-center space-x-3 mt-3">
+                                                <PrimaryButton @click="$emit('start-process')"
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                    <PlayIcon class="size-5 mr-2" />
+                                                    Iniciar
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openMoveModal('skip')" class="!bg-[#D9D9D9] text-[#373737] flex items-center !rounded-lg">
+                                                    Mover a siguiente
+                                                    <ArrowRightIcon class="size-5 ml-2" />
+                                                </PrimaryButton>
+                                            </div>
+                                        </div>
+
+                                        <!-- In Process State -->
+                                        <div v-else-if="currentStationStatus === 'En proceso'">
+                                            <div class="flex justify-between items-center bg-white px-3 rounded-lg">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="rounded-full size-6 flex items-center justify-center"
+                                                        :style="{ backgroundColor: stations.find(s => s.name === currentStationRecord.station_name)?.light, color: stations.find(s => s.name === currentStationRecord.station_name)?.dark }">
+                                                        <component
+                                                            :is="stations.find(s => s.name === currentStationRecord.station_name)?.icon"
+                                                            class="size-4" />
+                                                    </div>
+                                                    <p class="font-bold">{{ currentStationRecord.station_name }}</p>
+                                                </div>
+                                                <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
                                                     <p class="text-xs text-right">Tiempo efectivo</p>
                                                     <p class="font-bold text-lg text-right">{{
                                                         formatDuration(liveEffectiveTime) }}</p>
@@ -210,11 +218,11 @@
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
                                                 <PrimaryButton @click="showPauseModal = true"
-                                                    customClasses="bg-orange-500 hover:bg-orange-600">
+                                                    class="!bg-[#FDA10F] flex items-center !rounded-lg">
                                                     <PauseIcon class="size-5 mr-2" />
                                                     Pausar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish')">
+                                                <PrimaryButton @click="openMoveModal('finish')" class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" />
                                                     Finalizar y mover
                                                 </PrimaryButton>
@@ -223,7 +231,7 @@
 
                                         <!-- Paused State -->
                                         <div v-else-if="currentStationStatus === 'En pausa'">
-                                            <div class="flex justify-between items-center">
+                                            <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: stations.find(s => s.name === currentStationRecord.station_name)?.light, color: stations.find(s => s.name === currentStationRecord.station_name)?.dark }">
@@ -233,21 +241,21 @@
                                                     </div>
                                                     <p class="font-bold">{{ currentStationRecord.station_name }}</p>
                                                 </div>
-                                                <div>
+                                                <div class="flex justify-between items-center p-3 space-x-2 rounded-lg">
                                                     <p class="text-xs text-right">Tiempo en pausa</p>
                                                     <p class="font-bold text-lg text-right">{{
                                                         formatDuration(livePausedTime) }}</p>
                                                 </div>
                                             </div>
-                                            <p class="text-sm text-gray-700 mt-2">Motivo: <span
+                                            <p class="text-sm text-gray-700 text-center mt-2">Motivo: <span
                                                     class="font-semibold italic">"{{ lastPauseReason }}"</span></p>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
                                                 <PrimaryButton @click="$emit('resume-process')"
-                                                    customClasses="bg-green-500 hover:bg-green-600">
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Reanudar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish')">
+                                                <PrimaryButton @click="openMoveModal('finish')" class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" />
                                                     Finalizar y mover
                                                 </PrimaryButton>
@@ -440,11 +448,11 @@
 
     <!-- Other Modals -->
     <PauseStationModal :show="showPauseModal" @close="showPauseModal = false" @submit="handlePauseSubmit" />
-    <MoveStationModal :show="showMoveModal" :mode="moveModalMode" :stations="stations" :machines="machines"
-        :current-station="selectedProduction?.station" :production="selectedProduction" @close="showMoveModal = false"
+    <MoveStationModal :show="showMoveModal" :processType="moveModalMode" :available-stations="availableNextStations" :machines="machines"
+        :production="selectedProduction" :default-quantity="moveDefaultQty" @close="showMoveModal = false"
         @submit="handleMoveSubmit" />
     <RegisterDeliveryModal :show="showDeliveryModal" :production="selectedProduction" :context="deliveryContext"
-        :is-partial="isDeliveryPartial" @close="showDeliveryModal = false"
+        :is-partial="isDeliveryPartial" :default-quantity="deliveryDefaultQty" @close="showDeliveryModal = false"
         @submit="handleDeliverySubmit" />
 
 </template>
@@ -488,6 +496,8 @@ export default {
             moveModalMode: 'skip',
             deliveryContext: null,
             isDeliveryPartial: false,
+            deliveryDefaultQty: 0,
+            moveDefaultQty: 0,
         };
     },
     watch: {
@@ -512,8 +522,8 @@ export default {
             if (!status) return { text: this.selectedProduction.station, icon: QuestionMarkCircleIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-600' };
             switch (status) {
                 case 'En proceso': return { text: 'En proceso', icon: PlayIcon, bgColor: 'bg-green-100', textColor: 'text-green-700' };
-                case 'En pausa': return { text: 'En pausa', icon: PauseIcon, bgColor: 'bg-orange-100', textColor: 'text-orange-700' };
-                case 'En espera': return { text: 'En espera', icon: ClockIcon, bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' };
+                case 'En pausa': return { text: 'En pausa', icon: PauseIcon, bgColor: 'bg-[#FFEEDF]', textColor: 'text-[#F09400]' };
+                case 'En espera': return { text: 'En espera', icon: ClockIcon, bgColor: 'bg-[#f2f2f2]', textColor: 'text-[#373737]' };
                 case 'Finalizada': return { text: 'Finalizada', icon: CheckCircleIcon, bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
                 default: return { text: status, icon: QuestionMarkCircleIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-600' };
             }
@@ -527,11 +537,28 @@ export default {
         },
         shouldShowInspectionSection() {
             const relevantStations = ['Inspección', 'Empaques', 'Empaques terminado', 'Terminadas'];
-            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.production_close_type;
+            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.partials?.length > 0;
         },
         shouldShowPackingSection() {
             const relevantStations = ['Empaques', 'Empaques terminado', 'Terminadas'];
-            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.packing_received_date;
+            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.packing_partials?.length > 0;
+        },
+        availableNextStations() {
+            if (!this.selectedProduction) return [];
+            const current = this.selectedProduction.station;
+            const allStations = this.stations;
+
+            if (current === 'Calidad') {
+                return allStations.filter(s => ['X Reproceso', 'Inspección', 'Empaques'].includes(s.name));
+            }
+            if (current === 'Empaques') {
+                return allStations.filter(s => ['Empaques terminado'].includes(s.name));
+            }
+            if (current === 'Inspección') {
+                return allStations.filter(s => ['Calidad', 'Terminadas'].includes(s.name));
+            }
+            const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado'];
+            return allStations.filter(s => !restricted.includes(s.name) && s.name !== current);
         },
         totalEffectiveTime() {
             if (!this.selectedProduction?.station_times) return 0;
@@ -593,6 +620,20 @@ export default {
         openDeliveryModal(context, isPartial) {
             this.deliveryContext = context;
             this.isDeliveryPartial = isPartial;
+            
+            // --- NEW: Calculate remaining quantity ---
+            const production = this.selectedProduction;
+            let remainingQty = 0;
+            if (context === 'inspection') {
+                const delivered = production.partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
+                remainingQty = (production.quality_quantity ?? production.close_quantity ?? 0) - delivered;
+            } else if (context === 'packing') {
+                const delivered = production.packing_partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
+                remainingQty = (production.packing_received_quantity ?? 0) - delivered;
+            }
+            this.deliveryDefaultQty = remainingQty > 0 ? remainingQty : 0;
+            // --- END NEW ---
+
             this.showDeliveryModal = true;
         },
         handlePauseSubmit(reason) {

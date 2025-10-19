@@ -13,7 +13,7 @@
                     <InputLabel value="Siguiente estación*" />
                     <el-select v-model="form.next_station" class="w-full" placeholder="Selecciona la siguiente estación"
                         @change="handleStationChange">
-                        <el-option v-for="station in filteredStations" :key="station.name" :label="station.name"
+                        <el-option v-for="station in availableStations" :key="station.name" :label="station.name"
                             :value="station.name" />
                     </el-select>
                     <InputError :message="form.errors.next_station" />
@@ -118,14 +118,11 @@ export default {
     },
     props: {
         show: Boolean,
-        mode: {
-            type: String, // 'skip' or 'finish'
-            required: true,
-        },
-        stations: Array,
+        processType: String,
+        availableStations: Array,
         machines: Array,
-        currentStation: String,
-        production: Object, // Pass the whole production object
+        production: Object,
+        defaultQuantity: Number,
     },
     emits: ['close', 'submit'],
     data() {
@@ -134,32 +131,32 @@ export default {
                 next_station: null,
                 machine_id: null,
                 notes: '',
-                // Additional fields for special cases
                 quantity: 0,
                 date: null,
                 scrap_quantity: 0,
                 shortage_quantity: 0,
                 reason: '',
+                processType: this.processType,
             }),
         };
     },
     computed: {
         title() {
             if (this.showReturnFields) return 'Regresar de estación';
-            return this.mode === 'skip' ? 'Mover a la siguiente estación' : 'Finalizar y mover de estación';
+            return this.processType === 'skip' ? 'Mover a la siguiente estación' : 'Finalizar y mover de estación';
         },
         infoText() {
             if (this.showReturnFields) return 'La orden regresará a una estación anterior para su revisión o reproceso.';
-            return this.mode === 'skip'
+            return this.processType === 'skip'
                 ? 'La orden avanzará a la siguiente estación. El tiempo transcurrido en la estación actual se registrará como "Tiempo en espera".'
                 : 'La estación actual se marcará como finalizada y la orden avanzará a la siguiente etapa del proceso.';
         },
         submitButtonText() {
             if (this.showReturnFields) return 'Regresar orden';
-            return this.mode === 'skip' ? 'Mover orden' : 'Finalizar orden';
+            return this.processType === 'skip' ? 'Mover orden' : 'Finalizar y mover';
         },
-        filteredStations() {
-            return this.stations.filter(station => station.name !== this.currentStation);
+        currentStation() {
+            return this.production?.station;
         },
         // --- Computed properties to show/hide conditional fields ---
         isMoveToQuality() {
@@ -188,11 +185,11 @@ export default {
             if (!this.form.next_station) return false;
 
             if (this.showDeliveryFields) {
-                if (!this.form.quantity || !this.form.date) return false;
+                if (this.form.quantity === null || this.form.date === null) return false;
             }
 
             if (this.showReturnFields) {
-                if (!this.form.quantity || !this.form.reason) return false;
+                 if (this.form.quantity === null || !this.form.reason) return false;
             }
 
             return true;
@@ -206,16 +203,14 @@ export default {
             this.form.reset(
                 'quantity', 'date', 'scrap_quantity', 'shortage_quantity', 'reason'
             );
-            // Pre-fill data based on the selected station
+            this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+
             if (this.isMoveToQuality) {
                 this.form.quantity = this.production?.quantity ?? 0;
-                this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
             } else if (this.isMoveToInspection) {
                 this.form.quantity = this.production?.close_quantity ?? 0;
-                 this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
             } else if (this.isMoveToPacking) {
                  this.form.quantity = this.production?.quality_quantity ?? this.production?.close_quantity ?? this.production?.quantity;
-                 this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
             } else if (this.isReturnToReprocess || this.isReturnToQuality) {
                 this.form.quantity = this.isReturnToReprocess 
                     ? this.production?.close_quantity 
@@ -226,7 +221,9 @@ export default {
     watch: {
         show(newVal) {
             if (newVal) {
+                this.form.processType = this.processType;
                 this.form.machine_id = this.production?.machine_id;
+                this.form.quantity = this.defaultQuantity;
             } else {
                 this.form.reset();
                 this.form.clearErrors();
@@ -235,3 +232,4 @@ export default {
     }
 };
 </script>
+
