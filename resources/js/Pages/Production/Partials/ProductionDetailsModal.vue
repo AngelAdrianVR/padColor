@@ -12,11 +12,11 @@
                         <div class="flex items-center space-x-3">
                             <h1 class="font-bold text-lg text-gray-800">Orden de producción Nº. {{
                                 selectedProduction.folio }}</h1>
-                            <!-- Status Chip (Hardcoded as "Finalizado" as requested) -->
-                            <span
-                                class="flex items-center bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                <CheckCircleIcon class="size-4 mr-1" />
-                                Finalizado
+                            <!-- Status Chip -->
+                            <span class="flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
+                                :class="[statusInfo.bgColor, statusInfo.textColor]">
+                                <component :is="statusInfo.icon" class="size-4 mr-1.5" />
+                                {{ statusInfo.text }}
                             </span>
                         </div>
                         <p class="text-sm text-gray-600 mt-1">Producto: {{ selectedProduction.product.name }}</p>
@@ -41,7 +41,7 @@
                     <el-tabs v-model="activeTab">
                         <el-tab-pane label="Detalles de la orden" name="details">
                             <div class="p-1 mt-2 space-y-6">
-                                <!-- Información de la orden -->
+                                <!-- Order Information -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Información de
                                         la orden</h2>
@@ -57,7 +57,7 @@
                                     </div>
                                 </section>
 
-                                <!-- Información del producto -->
+                                <!-- Product Information -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Información del
                                         producto</h2>
@@ -87,12 +87,12 @@
                                     </div>
                                 </section>
 
-                                <!-- Materiales y medidas -->
+                                <!-- Materials and Measures -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Materiales y
                                         medidas</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mt-3 px-2">
-                                        <!-- Columna Izquierda -->
+                                        <!-- Left Column -->
                                         <div class="grid grid-cols-2 *:border-b *:py-2">
                                             <p class="text-gray-500">Material:</p>
                                             <p>{{ selectedProduction.material ?? '-' }}</p>
@@ -116,7 +116,7 @@
                                             <p class="text-gray-500">Calibre:</p>
                                             <p>{{ selectedProduction.gauge ?? '-' }}</p>
                                         </div>
-                                        <!-- Columna Derecha -->
+                                        <!-- Right Column -->
                                         <div class="grid grid-cols-2 self-start *:border-b *:py-2">
                                             <p class="text-gray-500">Hojas:</p>
                                             <p>{{ selectedProduction.sheets }}</p>
@@ -139,7 +139,7 @@
                         </el-tab-pane>
                         <el-tab-pane label="Producción" name="production">
                             <div class="p-1 mt-2 space-y-6">
-                                <!-- Resumen general de tiempos -->
+                                <!-- General Time Summary -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Resumen general
                                         de la orden</h2>
@@ -162,37 +162,35 @@
                                     </div>
                                 </section>
 
-                                <!-- Control de estación -->
+                                <!-- Station Control -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Control de
                                         estación</h2>
-                                    <div v-if="currentStationRecord" class="p-4 border rounded-b-md">
-                                        <!-- Estado: En espera -->
+                                    <div v-if="currentStationRecord && currentStationRecord.status !== 'Finalizada'"
+                                        class="p-4 border rounded-b-md">
+                                        <!-- Waiting State -->
                                         <div v-if="currentStationStatus === 'En espera'">
                                             <div class="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
                                                 <p class="text-sm">Tiempo en esta estación</p>
                                                 <p class="font-bold text-lg">{{ formatDuration(liveWaitingTime) }}</p>
                                             </div>
                                             <p class="text-center text-sm text-gray-600 my-4">Puedes iniciar la tarea en
-                                                esta estación o mover la orden a la siguiente estación.</p>
+                                                esta estación o mover la orden a la siguiente estación sin iniciarla.
+                                            </p>
                                             <div class="flex justify-center items-center space-x-3">
-                                                <button @click="$emit('start-process')"
-                                                    class="bg-green-500 text-white font-bold py-2 px-6 rounded-md hover:bg-green-600 transition-all flex items-center">
+                                                <PrimaryButton @click="$emit('start-process')"
+                                                    customClasses="bg-green-500 hover:bg-green-600">
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Iniciar
-                                                </button>
-                                                <el-select @change="val => $emit('skip-move-process', val)"
-                                                    placeholder="Mover a la siguiente estación" class="!w-64">
-                                                    <template #prefix>
-                                                        <ArrowRightIcon class="size-4" />
-                                                    </template>
-                                                    <el-option v-for="station in filteredStations" :key="station.name"
-                                                        :label="station.name" :value="station.name" />
-                                                </el-select>
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openMoveModal('skip')">
+                                                    <ArrowRightIcon class="size-5 mr-2" />
+                                                    Mover a siguiente
+                                                </PrimaryButton>
                                             </div>
                                         </div>
 
-                                        <!-- Estado: En proceso -->
+                                        <!-- In Process State -->
                                         <div v-else-if="currentStationStatus === 'En proceso'">
                                             <div class="flex justify-between items-center">
                                                 <div class="flex items-center space-x-2">
@@ -211,23 +209,19 @@
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <button @click="showPauseModal = true"
-                                                    class="bg-orange-500 text-white font-bold py-2 px-6 rounded-md hover:bg-orange-600 transition-all flex items-center">
+                                                <PrimaryButton @click="showPauseModal = true"
+                                                    customClasses="bg-orange-500 hover:bg-orange-600">
                                                     <PauseIcon class="size-5 mr-2" />
                                                     Pausar
-                                                </button>
-                                                <el-select @change="val => $emit('finish-move-process', val)"
-                                                    placeholder="Finalizar y mover" class="!w-64">
-                                                    <template #prefix>
-                                                        <CheckCircleIcon class="size-4" />
-                                                    </template>
-                                                    <el-option v-for="station in filteredStations" :key="station.name"
-                                                        :label="station.name" :value="station.name" />
-                                                </el-select>
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openMoveModal('finish')">
+                                                    <CheckCircleIcon class="size-5 mr-2" />
+                                                    Finalizar y mover
+                                                </PrimaryButton>
                                             </div>
                                         </div>
 
-                                        <!-- Estado: En pausa -->
+                                        <!-- Paused State -->
                                         <div v-else-if="currentStationStatus === 'En pausa'">
                                             <div class="flex justify-between items-center">
                                                 <div class="flex items-center space-x-2">
@@ -248,25 +242,26 @@
                                             <p class="text-sm text-gray-700 mt-2">Motivo: <span
                                                     class="font-semibold italic">"{{ lastPauseReason }}"</span></p>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <button @click="$emit('resume-process')"
-                                                    class="bg-green-500 text-white font-bold py-2 px-6 rounded-md hover:bg-green-600 transition-all flex items-center">
+                                                <PrimaryButton @click="$emit('resume-process')"
+                                                    customClasses="bg-green-500 hover:bg-green-600">
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Reanudar
-                                                </button>
-                                                <el-select @change="val => $emit('finish-move-process', val)"
-                                                    placeholder="Finalizar y mover" class="!w-64">
-                                                    <template #prefix>
-                                                        <CheckCircleIcon class="size-4" />
-                                                    </template>
-                                                    <el-option v-for="station in filteredStations" :key="station.name"
-                                                        :label="station.name" :value="station.name" />
-                                                </el-select>
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openMoveModal('finish')">
+                                                    <CheckCircleIcon class="size-5 mr-2" />
+                                                    Finalizar y mover
+                                                </PrimaryButton>
                                             </div>
                                         </div>
                                     </div>
+                                    <div v-else class="text-center text-gray-500 py-8 border rounded-b-md">
+                                        <p v-if="currentStationRecord?.status === 'Finalizada'">La estación actual ya ha
+                                            sido finalizada.</p>
+                                        <p v-else>No hay un registro de tiempo para la estación actual.</p>
+                                    </div>
                                 </section>
 
-                                <!-- Resumen de tiempos por estación -->
+                                <!-- Station Time Summary -->
                                 <section>
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Resumen de
                                         tiempos por estación</h2>
@@ -276,101 +271,165 @@
                             </div>
                         </el-tab-pane>
                         <el-tab-pane label="Entregas" name="deliveries">
-                            <div class="p-1 mt-2 space-y-6">
-                                <!-- Inspección -->
-                                <section
-                                    v-if="selectedProduction.station == 'Inspección' || selectedProduction.production_close_type">
-                                    <div class="flex items-center justify-between bg-gray-100 py-2 px-3 rounded-md">
-                                        <h2 class="font-bold text-gray-700">Entregas de Inspección</h2>
-                                        <PrimaryButton v-if="!selectedProduction.production_close_type"
-                                            @click="$emit('open-inspection-release')">
-                                            Registrar entrega
-                                        </PrimaryButton>
-                                        <PrimaryButton
-                                            v-else-if="selectedProduction.production_close_type == 'Parcialidades' && selectedProduction.station != 'Terminadas'"
-                                            @click="$emit('open-add-partial')">
-                                            Registrar parcialidad
-                                        </PrimaryButton>
+                            <div class="p-1 mt-2 space-y-4">
+                                <h2 class="font-bold text-gray-800">Registro de entregas</h2>
+
+                                <!-- Empty State -->
+                                <div v-if="!hasAnyDeliveryInfo"
+                                    class="text-center text-gray-500 py-12 bg-gray-50 rounded-lg">
+                                    <div class="flex justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="size-12 text-gray-300">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                        </svg>
                                     </div>
-                                    <div v-if="!selectedProduction.partials?.length && !selectedProduction.production_close_type"
-                                        class="text-center text-gray-500 py-8">
-                                        <p>No hay entregas registradas desde inspección.</p>
-                                    </div>
-                                    <!-- Entregas parciales -->
-                                    <div v-if="selectedProduction.partials?.length">
-                                        <section v-for="(partial, index) in selectedProduction.partials" :key="index"
-                                            class="mt-3 px-2 pb-2"
-                                            :class="{ 'border-b': index < selectedProduction.partials.length - 1 }">
-                                            <div class="font-semibold text-gray-600 flex justify-between items-center">
-                                                <span>Parcialidad {{ index + 1 }}</span>
-                                                <span v-if="partial.is_last_delivery"
-                                                    class="text-xs font-normal text-gray-500">(Última
-                                                    entrega)</span>
-                                            </div>
-                                            <div class="grid grid-cols-3 gap-x-4 gap-y-2 mt-2">
-                                                <p class="text-gray-500">Fecha:</p>
-                                                <p class="col-span-2">{{ formatDateTime(partial.date) }}</p>
-                                                <p class="text-gray-500">Cantidad:</p>
-                                                <p class="col-span-2">{{ partial.quantity?.toLocaleString('es-MX') }}
-                                                </p>
-                                                <p class="text-gray-500">Notas:</p>
-                                                <p class="col-span-2">{{ partial.notes ?? '-' }}</p>
-                                            </div>
-                                        </section>
-                                        <div
-                                            class="grid grid-cols-3 gap-x-4 gap-y-2 pt-2 mt-2 px-2 border-t font-semibold">
-                                            <p class="text-gray-500">Total entregado:</p>
-                                            <p class="col-span-2">{{
-                                                selectedProduction.current_quantity?.toLocaleString('es-MX') }}</p>
-                                            <p class="text-gray-500">Restante:</p>
-                                            <p class="col-span-2">{{ (selectedProduction.quantity -
-                                                selectedProduction.current_quantity)?.toLocaleString('es-MX') }}</p>
+                                    <p class="font-semibold mt-3">Aún no hay entregas registradas</p>
+                                    <p class="text-xs mt-1">Aquí aparecerá la lista de entregas de producción, calidad,
+                                        inspección y empaques.</p>
+                                </div>
+
+                                <!-- Content -->
+                                <div v-else class="space-y-4">
+                                    <!-- Production Release -->
+                                    <section v-if="selectedProduction.close_production_date"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                        <h3 class="font-semibold text-gray-700">Liberado por producción</h3>
+                                        <div class="grid grid-cols-2 gap-x-4 text-xs">
+                                            <span>Fecha de liberación:</span> <span class="font-medium">{{
+                                                formatDateTime(selectedProduction.close_production_date) }}</span>
+                                            <span>Cantidad entregada:</span> <span class="font-medium">{{
+                                                selectedProduction.close_quantity?.toLocaleString('es-MX') }}</span>
+                                            <span>Notas:</span> <span class="font-medium">{{
+                                                selectedProduction.close_production_notes ?? '-' }}</span>
                                         </div>
-                                    </div>
-                                </section>
+                                    </section>
 
-                                <!-- Empaques -->
-                                <section
-                                    v-if="selectedProduction.station == 'Empaques' || selectedProduction.packing_close_type">
-                                    <div class="flex items-center justify-between bg-gray-100 py-2 px-3 rounded-md">
-                                        <h2 class="font-bold text-gray-700">Entregas de Empaques</h2>
-                                        <PrimaryButton v-if="!selectedProduction.packing_close_type"
-                                            @click="$emit('open-packing-release')">
-                                            Registrar entrega
-                                        </PrimaryButton>
-                                        <PrimaryButton
-                                            v-else-if="selectedProduction.packing_close_type == 'Parcialidades' && selectedProduction.station != 'Empaques terminado' && selectedProduction.station != 'Terminadas'"
-                                            @click="$emit('open-add-packing-partial')">
-                                            Registrar parcialidad
-                                        </PrimaryButton>
-                                    </div>
-                                    <div v-if="!selectedProduction.packing_partials?.length && !selectedProduction.packing_close_type"
-                                        class="text-center text-gray-500 py-8">
-                                        <p>No hay entregas registradas desde empaques.</p>
-                                    </div>
-                                    <div v-if="selectedProduction.packing_partials?.length">
-                                        <section v-for="(partial, index) in selectedProduction.packing_partials"
-                                            :key="index" class="mt-3 px-2 pb-2"
-                                            :class="{ 'border-b': index < selectedProduction.packing_partials.length - 1 }">
-                                            <div class="font-semibold text-gray-600 flex justify-between items-center">
-                                                <span>Parcialidad de empaque {{ index + 1 }}</span>
-                                                <span v-if="partial.is_last_delivery"
-                                                    class="text-xs text-gray-500">(Última entrega)</span>
+                                    <!-- Quality Release -->
+                                    <section v-if="selectedProduction.quality_released_date"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                        <h3 class="font-semibold text-gray-700">Liberado por calidad</h3>
+                                        <div class="grid grid-cols-2 gap-x-4 text-xs">
+                                            <span>Fecha de liberación:</span> <span class="font-medium">{{
+                                                formatDateTime(selectedProduction.quality_released_date) }}</span>
+                                            <span>Cantidad entregada:</span> <span class="font-medium">{{
+                                                selectedProduction.quality_quantity?.toLocaleString('es-MX') }}</span>
+                                            <span>Merma:</span> <span class="font-medium">{{
+                                                selectedProduction.quality_scrap?.toLocaleString('es-MX') }} ({{
+                                                    calculatePercentage(selectedProduction.quality_scrap,
+                                                selectedProduction.close_quantity) }}%)</span>
+                                            <span>Diferencia:</span> <span class="font-medium">{{
+                                                selectedProduction.quality_shortage?.toLocaleString('es-MX') }}</span>
+                                            <span>Notas:</span> <span class="font-medium">{{
+                                                selectedProduction.quality_notes ?? '-' }}</span>
+                                        </div>
+                                    </section>
+
+                                    <!-- Inspection -->
+                                    <section v-if="shouldShowInspectionSection"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <h3 class="font-semibold text-gray-700">Inspección</h3>
+                                            <PrimaryButton @click="openDeliveryModal('inspection', false)"
+                                                v-if="selectedProduction.station === 'Inspección' && !selectedProduction.production_close_type">
+                                                Registrar entrega
+                                            </PrimaryButton>
+                                            <PrimaryButton @click="openDeliveryModal('inspection', true)"
+                                                v-if="selectedProduction.station === 'Inspección' && selectedProduction.production_close_type === 'Parcialidades'">
+                                                Registrar parcialidad
+                                            </PrimaryButton>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-x-4 text-xs">
+                                            <span>Tipo de entrega:</span> <span class="font-medium">{{
+                                                selectedProduction.production_close_type ?? 'Pendiente' }}</span>
+                                        </div>
+                                        <div v-if="selectedProduction.production_close_type === 'Única'"
+                                            class="grid grid-cols-2 gap-x-4 text-xs border-t pt-2 mt-2">
+                                            <span>Cantidad entregada:</span> <span class="font-medium">{{
+                                                selectedProduction.current_quantity?.toLocaleString('es-MX') }}</span>
+                                            <span>Merma:</span> <span class="font-medium">{{
+                                                selectedProduction.inspection_scrap?.toLocaleString('es-MX') }} ({{
+                                                    calculatePercentage(selectedProduction.inspection_scrap,
+                                                selectedProduction.quality_quantity) }}%)</span>
+                                            <span>Diferencia:</span> <span class="font-medium">{{
+                                                selectedProduction.inspection_shortage?.toLocaleString('es-MX')
+                                                }}</span>
+                                            <span>Notas:</span> <span class="font-medium">{{
+                                                selectedProduction.inspection_notes ?? '-' }}</span>
+                                        </div>
+                                        <div v-if="selectedProduction.production_close_type === 'Parcialidades'"
+                                            class="text-xs border-t pt-2 mt-2 space-y-3">
+                                            <div v-for="(partial, index) in selectedProduction.partials" :key="index"
+                                                class="pb-2"
+                                                :class="{ 'border-b': index !== selectedProduction.partials.length - 1 }">
+                                                <p class="font-semibold mb-1">Parcialidad {{ index + 1 }} <span
+                                                        v-if="partial.is_last_delivery"
+                                                        class="font-normal text-gray-500">(Última entrega)</span></p>
+                                                <div class="grid grid-cols-2 gap-x-4">
+                                                    <span>Fecha:</span> <span class="font-medium">{{
+                                                        formatDateTime(partial.date) }}</span>
+                                                    <span>Cantidad:</span> <span class="font-medium">{{
+                                                        partial.quantity?.toLocaleString('es-MX') }}</span>
+                                                    <span>Notas:</span> <span class="font-medium">{{ partial.notes ??
+                                                        '-' }}</span>
+                                                </div>
                                             </div>
-                                            <div class="grid grid-cols-3 gap-x-4 gap-y-2 mt-2">
-                                                <p class="text-gray-500">Fecha:</p>
-                                                <p class="col-span-2">{{ formatDateTime(partial.date) }}</p>
+                                        </div>
+                                    </section>
 
-                                                <p class="text-gray-500">Cantidad:</p>
-                                                <p class="col-span-2">{{ partial.quantity?.toLocaleString('es-MX') }}
-                                                </p>
-
-                                                <p class="text-gray-500">Notas:</p>
-                                                <p class="col-span-2">{{ partial.notes ?? '-' }}</p>
+                                    <!-- Packing -->
+                                    <section v-if="shouldShowPackingSection"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <h3 class="font-semibold text-gray-700">Empaques</h3>
+                                            <PrimaryButton @click="openDeliveryModal('packing', false)"
+                                                v-if="selectedProduction.station === 'Empaques' && !selectedProduction.packing_close_type">
+                                                Registrar entrega
+                                            </PrimaryButton>
+                                            <PrimaryButton @click="openDeliveryModal('packing', true)"
+                                                v-if="selectedProduction.station === 'Empaques' && selectedProduction.packing_close_type === 'Parcialidades'">
+                                                Registrar parcialidad
+                                            </PrimaryButton>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-x-4 text-xs">
+                                            <span>Cantidad recibida:</span> <span class="font-medium">{{
+                                                selectedProduction.packing_received_quantity?.toLocaleString('es-MX')
+                                                }}</span>
+                                            <span>Fecha de recibido:</span> <span class="font-medium">{{
+                                                formatDateTime(selectedProduction.packing_received_date) }}</span>
+                                            <span>Tipo de entrega:</span> <span class="font-medium">{{
+                                                selectedProduction.packing_close_type ?? 'Pendiente' }}</span>
+                                        </div>
+                                        <div v-if="selectedProduction.packing_close_type === 'Única'"
+                                            class="grid grid-cols-2 gap-x-4 text-xs border-t pt-2 mt-2">
+                                            <span>Cantidad entregada:</span> <span class="font-medium">{{
+                                                selectedProduction.current_quantity?.toLocaleString('es-MX') }}</span>
+                                            <span>Fecha de entrega:</span> <span class="font-medium">{{
+                                                formatDateTime(selectedProduction.packing_finished_date) }}</span>
+                                            <span>Notas:</span> <span class="font-medium">{{
+                                                selectedProduction.packing_notes ?? '-' }}</span>
+                                        </div>
+                                        <div v-if="selectedProduction.packing_close_type === 'Parcialidades'"
+                                            class="text-xs border-t pt-2 mt-2 space-y-3">
+                                            <div v-for="(partial, index) in selectedProduction.packing_partials"
+                                                :key="index" class="pb-2"
+                                                :class="{ 'border-b': index !== selectedProduction.packing_partials.length - 1 }">
+                                                <p class="font-semibold mb-1">Parcialidad {{ index + 1 }} <span
+                                                        v-if="partial.is_last_delivery"
+                                                        class="font-normal text-gray-500">(Última entrega)</span></p>
+                                                <div class="grid grid-cols-2 gap-x-4">
+                                                    <span>Fecha:</span> <span class="font-medium">{{
+                                                        formatDateTime(partial.date) }}</span>
+                                                    <span>Cantidad:</span> <span class="font-medium">{{
+                                                        partial.quantity?.toLocaleString('es-MX') }}</span>
+                                                    <span>Notas:</span> <span class="font-medium">{{ partial.notes ??
+                                                        '-' }}</span>
+                                                </div>
                                             </div>
-                                        </section>
-                                    </div>
-                                </section>
+                                        </div>
+                                    </section>
+
+                                </div>
                             </div>
                         </el-tab-pane>
                     </el-tabs>
@@ -378,78 +437,66 @@
             </div>
         </template>
     </DialogModal>
+
+    <!-- Other Modals -->
+    <PauseStationModal :show="showPauseModal" @close="showPauseModal = false" @submit="handlePauseSubmit" />
+    <MoveStationModal :show="showMoveModal" :mode="moveModalMode" :stations="stations" :machines="machines"
+        :current-station="selectedProduction?.station" :production="selectedProduction" @close="showMoveModal = false"
+        @submit="handleMoveSubmit" />
+    <RegisterDeliveryModal :show="showDeliveryModal" :production="selectedProduction" :context="deliveryContext"
+        :is-partial="isDeliveryPartial" @close="showDeliveryModal = false"
+        @submit="handleDeliverySubmit" />
+
 </template>
 
 <script>
 import DialogModal from '@/Components/DialogModal.vue';
 import Loading from '@/Components/MyComponents/Loading.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import CancelButton from '@/Components/MyComponents/CancelButton.vue';
 import StationTimeHistory from './StationTimeHistory.vue';
+import PauseStationModal from './PauseStationModal.vue';
+import MoveStationModal from './MoveStationModal.vue';
+import RegisterDeliveryModal from './RegisterDeliveryModal.vue';
 import { format, parseISO, differenceInSeconds } from 'date-fns';
 import es from 'date-fns/locale/es';
-import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon } from '@heroicons/vue/24/solid';
+import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/solid';
 
 export default {
     name: 'ProductionDetailsModal',
     components: {
-       DialogModal,
-        Loading,
-        PrimaryButton,
-        CancelButton,
-        CheckCircleIcon,
-        PlayIcon,
-        PauseIcon,
-        ArrowRightIcon,
-        StationTimeHistory,
+        DialogModal, Loading, PrimaryButton, StationTimeHistory,
+        PauseStationModal, MoveStationModal, RegisterDeliveryModal,
+        CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon,
+        QuestionMarkCircleIcon
     },
     props: {
-        show: Boolean,
-        selectedProduction: Object,
-        updatingDetails: Boolean,
-        machines: Array,
-        stations: Array,
-        users: Object,
+        show: Boolean, selectedProduction: Object, updatingDetails: Boolean,
+        machines: Array, stations: Array, users: Object,
     },
     emits: [
-        'close',
-        'update-machine',
-        'station-change-intent',
-        'open-inspection-release',
-        'open-add-partial',
-        'open-packing-release',
-        'open-add-packing-partial',
-        'start-process',
-        'pause-process',
-        'resume-process',
-        'finish-move-process',
-        'skip-move-process',
+        'close', 'start-process', 'pause-process', 'resume-process',
+        'finish-move-process', 'skip-move-process', 'register-delivery',
     ],
     data() {
         return {
-            tempStation: null,
             activeTab: 'details',
             liveTimeTrigger: null,
             now: new Date(),
             showPauseModal: false,
-            pauseReason: '',
+            showMoveModal: false,
+            showDeliveryModal: false,
+            moveModalMode: 'skip',
+            deliveryContext: null,
+            isDeliveryPartial: false,
         };
     },
     watch: {
         selectedProduction(newVal) {
-            if (newVal) {
-                this.tempStation = newVal.station;
-                this.activeTab = 'details';
-            }
+            if (newVal) this.activeTab = 'details';
         },
         show(newVal) {
-            if (newVal) {
-                this.liveTimeTrigger = setInterval(() => {
-                    this.now = new Date();
-                }, 1000);
-            } else {
-                clearInterval(this.liveTimeTrigger);
-            }
+            if (newVal) this.liveTimeTrigger = setInterval(() => { this.now = new Date(); }, 1000);
+            else clearInterval(this.liveTimeTrigger);
         }
     },
     computed: {
@@ -460,27 +507,56 @@ export default {
         currentStationStatus() {
             return this.currentStationRecord?.status;
         },
+        statusInfo() {
+            const status = this.currentStationStatus;
+            if (!status) return { text: this.selectedProduction.station, icon: QuestionMarkCircleIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-600' };
+            switch (status) {
+                case 'En proceso': return { text: 'En proceso', icon: PlayIcon, bgColor: 'bg-green-100', textColor: 'text-green-700' };
+                case 'En pausa': return { text: 'En pausa', icon: PauseIcon, bgColor: 'bg-orange-100', textColor: 'text-orange-700' };
+                case 'En espera': return { text: 'En espera', icon: ClockIcon, bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' };
+                case 'Finalizada': return { text: 'Finalizada', icon: CheckCircleIcon, bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
+                default: return { text: status, icon: QuestionMarkCircleIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-600' };
+            }
+        },
         lastPauseReason() {
             if (this.currentStationStatus !== 'En pausa' || !this.currentStationRecord.pauses.length) return '';
             return this.currentStationRecord.pauses[this.currentStationRecord.pauses.length - 1].reason;
         },
-        // --- Total time calculations ---
+        hasAnyDeliveryInfo() {
+            return this.selectedProduction.close_production_date || this.selectedProduction.quality_released_date || this.selectedProduction.production_close_type || this.selectedProduction.packing_received_date;
+        },
+        shouldShowInspectionSection() {
+            const relevantStations = ['Inspección', 'Empaques', 'Empaques terminado', 'Terminadas'];
+            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.production_close_type;
+        },
+        shouldShowPackingSection() {
+            const relevantStations = ['Empaques', 'Empaques terminado', 'Terminadas'];
+            return relevantStations.includes(this.selectedProduction.station) || this.selectedProduction.packing_received_date;
+        },
         totalEffectiveTime() {
             if (!this.selectedProduction?.station_times) return 0;
-            const pastTime = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.effective_seconds ?? 0), 0);
-            return pastTime + (this.currentStationStatus === 'En proceso' ? this.liveEffectiveTime : 0);
+            let total = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.effective_seconds ?? 0), 0);
+            if (this.currentStationStatus === 'En proceso') {
+                total += this.liveEffectiveTime;
+            }
+            return total;
         },
         totalPausedTime() {
-             if (!this.selectedProduction?.station_times) return 0;
-            const pastTime = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.paused_seconds ?? 0), 0);
-            return pastTime + (this.currentStationStatus === 'En pausa' ? this.livePausedTime : this.accumulatedPausedTimeInCurrentStation);
+            if (!this.selectedProduction?.station_times) return 0;
+            let total = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.paused_seconds ?? 0), 0);
+            if (this.currentStationStatus === 'En pausa') {
+                total += this.livePausedTime;
+            }
+            return total;
         },
         totalWaitingTime() {
             if (!this.selectedProduction?.station_times) return 0;
-            const pastTime = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.waiting_seconds ?? 0), 0);
-            return pastTime + (this.currentStationStatus === 'En espera' ? this.liveWaitingTime : 0);
+            let total = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.waiting_seconds ?? 0), 0);
+            if (this.currentStationStatus === 'En espera') {
+                total += this.liveWaitingTime;
+            }
+            return total;
         },
-        // --- Live time calculations for current station ---
         liveWaitingTime() {
             if (this.currentStationStatus !== 'En espera' || !this.currentStationRecord.entered_at) return 0;
             return differenceInSeconds(this.now, parseISO(this.currentStationRecord.entered_at));
@@ -491,8 +567,8 @@ export default {
             return differenceInSeconds(this.now, startedAt) - this.accumulatedPausedTimeInCurrentStation;
         },
         accumulatedPausedTimeInCurrentStation() {
-             if (!this.currentStationRecord?.pauses?.length) return 0;
-             return this.currentStationRecord.pauses.reduce((acc, pause) => {
+            if (!this.currentStationRecord?.pauses?.length) return 0;
+            return this.currentStationRecord.pauses.reduce((acc, pause) => {
                 if (pause.resumed_at) {
                     return acc + differenceInSeconds(parseISO(pause.resumed_at), parseISO(pause.paused_at));
                 }
@@ -502,23 +578,49 @@ export default {
         livePausedTime() {
             if (this.currentStationStatus !== 'En pausa' || !this.currentStationRecord.pauses.length) return 0;
             const lastPause = this.currentStationRecord.pauses[this.currentStationRecord.pauses.length - 1];
-            const currentPauseDuration = differenceInSeconds(this.now, parseISO(lastPause.paused_at));
-            return this.accumulatedPausedTimeInCurrentStation + currentPauseDuration;
+            if (!lastPause.resumed_at) {
+                const currentPauseDuration = differenceInSeconds(this.now, parseISO(lastPause.paused_at));
+                return currentPauseDuration;
+            }
+            return 0;
         }
     },
     methods: {
-         submitPause() {
-            this.$emit('pause-process', this.pauseReason);
+        openMoveModal(mode) {
+            this.moveModalMode = mode;
+            this.showMoveModal = true;
+        },
+        openDeliveryModal(context, isPartial) {
+            this.deliveryContext = context;
+            this.isDeliveryPartial = isPartial;
+            this.showDeliveryModal = true;
+        },
+        handlePauseSubmit(reason) {
+            this.$emit('pause-process', reason);
             this.showPauseModal = false;
-            this.pauseReason = '';
+        },
+        handleMoveSubmit(payload) {
+            if (this.moveModalMode === 'skip') this.$emit('skip-move-process', payload);
+            else this.$emit('finish-move-process', payload);
+            this.showMoveModal = false;
+        },
+        handleDeliverySubmit(form) {
+            this.$emit('register-delivery', {
+                form: form,
+                context: this.deliveryContext,
+                isPartial: this.isDeliveryPartial,
+            });
+            this.showDeliveryModal = false;
+        },
+        calculatePercentage(value, total) {
+            if (!total || !value) return '0.0';
+            return ((value / total) * 100).toFixed(1);
         },
         formatDuration(totalSeconds) {
-             if (totalSeconds === null || isNaN(totalSeconds) || totalSeconds < 0) return '0d 00:00:00';
-            
-            const days = Math.floor(totalSeconds / 86400);
-            totalSeconds %= 86400;
-            const hours = Math.floor(totalSeconds / 3600);
-            totalSeconds %= 3600;
+            if (totalSeconds === null || isNaN(totalSeconds) || totalSeconds < 0) return '0d 00:00:00';
+
+            const days = Math.floor(totalSeconds / 86400); totalSeconds %= 86400;
+            const hours = Math.floor(totalSeconds / 3600); totalSeconds %= 3600;
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = Math.floor(totalSeconds % 60);
 
@@ -526,9 +628,6 @@ export default {
             if (days > 0) result += `${days}d `;
             result += `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             return result;
-        },
-        onStationChange() {
-            this.$emit('station-change-intent', { newStation: this.tempStation, oldStation: this.selectedProduction.station });
         },
         formatDate(dateString) {
             if (!dateString) return '-';
@@ -538,11 +637,6 @@ export default {
             if (!dateString) return '-';
             return format(parseISO(dateString), 'dd MMMM yyyy, hh:mm a', { locale: es });
         },
-        revertStation() {
-            if (this.selectedProduction) {
-                this.tempStation = this.selectedProduction.station;
-            }
-        }
     },
     beforeUnmount() {
         clearInterval(this.liveTimeTrigger);

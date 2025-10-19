@@ -128,27 +128,20 @@ Route::get('productions-export-report-excel', [ProductionController::class, 'exp
 Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');
 Route::post('productions-import-excel', [ProductionController::class, 'importExcel'])->name('productions.import-excel')->middleware('auth');
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
-Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
 Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
-Route::post('productions-production-release/{production}', [ProductionController::class, 'productionRelease'])->name('productions.production-release')->middleware('auth');
-Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
-Route::post('productions-inspection-release/{production}', [ProductionController::class, 'inspectionRelease'])->name('productions.inspection-release')->middleware('auth');
-Route::post('productions-finish-production/{production}', [ProductionController::class, 'finishProduction'])->name('productions.finish-production')->middleware('auth');
-Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
-// --- NUEVAS RUTAS PARA TIME TRACKING ---
+Route::get('productions-backfill-station-times', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill-station-times')->middleware('auth');
+// --- STATION TIME TRACKING ---
 Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
     Route::post('/start', [ProductionController::class, 'startStationProcess'])->name('start');
     Route::post('/pause', [ProductionController::class, 'pauseStationProcess'])->name('pause');
     Route::post('/resume', [ProductionController::class, 'resumeStationProcess'])->name('resume');
     Route::post('/finish-and-move', [ProductionController::class, 'finishAndMoveStation'])->name('finishAndMove');
     Route::post('/skip-and-move', [ProductionController::class, 'skipAndMoveStation'])->name('skipAndMove');
+    Route::post('/register-delivery', [ProductionController::class, 'registerDelivery'])->name('register-delivery');
 });
-// --- NUEVAS RUTAS PARA EMPAQUES ---
-Route::post('productions-move-to-packing/{production}', [ProductionController::class, 'moveToPacking'])->name('productions.move-to-packing')->middleware('auth');
-Route::post('productions-packing-release/{production}', [ProductionController::class, 'packingRelease'])->name('productions.packing-release')->middleware('auth');
-Route::post('productions-add-packing-partial/{production}', [ProductionController::class, 'addPackingPartial'])->name('productions.add-packing-partial')->middleware('auth');
+
 
 //products routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
