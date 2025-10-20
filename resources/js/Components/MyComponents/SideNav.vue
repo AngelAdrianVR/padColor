@@ -204,8 +204,33 @@ export default {
                     label: 'SwAssistant',
                     icon: '<svg width="20" height="18" class="inline" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.154379 14.9829L14.2487 15C14.3858 15 14.3858 14.9829 14.3858 14.6754C14.3858 14.5007 14.3246 14.1993 14.2509 13.8367L14.2509 13.8366L14.2509 13.8366L14.2509 13.8366L14.2509 13.8366C14.1396 13.2889 14 12.6016 14 12V10.5V8.5C14 7.28943 14.0618 6.89676 14.3858 5.3475C14.4208 5.18027 14.3858 5.03103 14.1637 5.17665L9.4996 8.23481C9.36292 8.32443 9.36292 8.26898 9.36292 8.1323V5.3475C9.36292 5.08147 9.29458 5.02941 9.07248 5.17665L4.45963 8.23481C4.35654 8.30315 4.27169 8.30315 4.27169 8.1323L4 6.5V4L4.24064 2.46974H0.044804L0.5 4.5V6.5V9V12L0.000527196 14.4533L0.000244263 14.544C-0.00114732 14.8409 -0.00181277 14.9829 0.154379 14.9829ZM0.0514674 2.06974H4.22845L4 1C4 0.5 4 0 3.5 0H1C0.342221 0 0.342221 0.375586 0.342221 0.913825L0.0514674 2.06974ZM4.27127 2.2703V2.27493L4.27169 2.27226L4.27127 2.2703ZM4.56205 10.6584C4.35704 10.6584 4.33995 10.7609 4.33995 10.8634V11.7347C4.33995 11.8885 4.3912 11.991 4.56205 11.991H6.86848C7.03933 11.991 7.07077 11.8891 7.0735 11.7347V10.8634C7.0735 10.7268 7.03933 10.6584 6.86848 10.6584H4.56205ZM9.36353 10.8636C9.36353 10.7611 9.38062 10.6585 9.58563 10.6585H11.8921C12.0629 10.6585 12.0971 10.7269 12.0971 10.8636V11.7349C12.0943 11.8892 12.0629 11.9911 11.8921 11.9911H9.58563C9.41479 11.9911 9.36353 11.8886 9.36353 11.7349V10.8636Z" fill="currentColor"/></svg>',
                     route: route('productions.index'),
-                    active: route().current('productions.*'),
-                    options: [],
+                    active:route().current('productions.*') || route().current('machines.*'),
+                    options: [
+                        {
+                            label: 'Reportes',
+                            route: route('productions.report'),
+                            show: true,
+                            active: route().current('productions.report'),
+                        },
+                        {
+                            label: 'Inicio',
+                            route: route('productions.dashboard'),
+                            show: true,
+                            active: route().current('productions.dashboard'),
+                        },
+                        {
+                            label: 'Gestión de producción',
+                            route: route('productions.index'),
+                            show: true,
+                            active: route().current('productions.index'),
+                        },
+                        {
+                            label: 'Máquinas',
+                            route: route('machines.index'),
+                            show: true,
+                            active: route().current('machines.*'),
+                        },
+                    ],
                     show: this.$page.props.auth.user.permissions.includes('Ver producciones'),
                 },
                 {
