@@ -191,7 +191,7 @@
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Iniciar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip')" class="!bg-[#D9D9D9] text-[#373737] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('skip')" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
                                                     Mover a siguiente
                                                     <ArrowRightIcon class="size-5 ml-2" />
                                                 </PrimaryButton>

@@ -91,11 +91,53 @@
                 </div>
             </div>
 
-            <!-- New Station Performance Chart -->
+            <!-- Station Performance Chart -->
             <div class="bg-white p-5 rounded-xl border border-grayD9 mt-8">
                 <h3 class="font-semibold text-gray-800 mb-4">Rendimiento promedio por estación</h3>
                 <div class="relative h-96">
                     <canvas ref="stationsChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- NEW: Productions Detail Table -->
+            <div class="bg-white p-5 rounded-xl border border-grayD9 mt-8">
+                <h3 class="font-semibold text-gray-800 mb-4">Detalle de órdenes de producción</h3>
+                <div v-if="loading">Cargando...</div>
+                <div v-else-if="reportData?.current_period?.productions_list">
+                    <el-table :data="reportData.current_period.productions_list" stripe max-height="400" style="width: 100%">
+                        <el-table-column prop="folio" label="Folio" width="100" />
+                        <el-table-column prop="product_name" label="Producto" />
+                        <el-table-column prop="quantity" label="Cant. Solicitada" width="150">
+                            <template #default="scope">
+                                {{ scope.row.quantity.toLocaleString('es-MX') }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="T. Efectivo" width="140">
+                            <template #default="scope">
+                                {{ formatDuration(scope.row.total_effective_time) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="T. Pausa" width="140">
+                            <template #default="scope">
+                                {{ formatDuration(scope.row.total_paused_time) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="T. Espera" width="140">
+                            <template #default="scope">
+                                {{ formatDuration(scope.row.total_waiting_time) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Fecha Creación" width="180">
+                            <template #default="scope">
+                                {{ formatSimpleDateTime(scope.row.created_at) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Fecha Término" width="180">
+                            <template #default="scope">
+                                {{ scope.row.finish_date ? formatSimpleDateTime(scope.row.finish_date) : '-' }}
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </div>
             </div>
 
@@ -109,7 +151,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import StatCard from './Partials/StatCard.vue';
 import { stations } from '@/Data/stations.js';
 import { ref, onMounted, watch } from 'vue';
-import { subDays, format as formatDate } from 'date-fns';
+import { subDays, format as formatDate, parseISO } from 'date-fns';
 import {
   Chart,
   BarController,
@@ -311,6 +353,11 @@ const formatDuration = (totalSeconds) => {
     if (days > 0) result += `${days}d `;
     result += `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     return result;
+};
+
+const formatSimpleDateTime = (dateString) => {
+    if (!dateString) return '-';
+    return formatDate(parseISO(dateString), 'dd/MM/yyyy hh:mm a');
 };
 
 const generatePrintableView = () => {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Production;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
 class ProductionReportController extends Controller
@@ -16,11 +15,13 @@ class ProductionReportController extends Controller
             'endDate' => 'required|date',
         ]);
 
-        $currentPeriodStart = Carbon::parse($request->startDate);
+        // Ensure the date range covers the entire day(s) selected.
+        $currentPeriodStart = Carbon::parse($request->startDate)->startOfDay();
         $currentPeriodEnd = Carbon::parse($request->endDate)->endOfDay();
+
         $durationInDays = $currentPeriodStart->diffInDays($currentPeriodEnd);
         $previousPeriodStart = $currentPeriodStart->copy()->subDays($durationInDays + 1);
-        $previousPeriodEnd = $currentPeriodEnd->copy()->subDays($durationInDays + 1)->endOfDay();
+        $previousPeriodEnd = $currentPeriodEnd->copy()->subDays($durationInDays + 1);
 
         $currentData = $this->calculateMetricsForPeriod($currentPeriodStart, $currentPeriodEnd);
         $previousData = $this->calculateMetricsForPeriod($previousPeriodStart, $previousPeriodEnd);
@@ -42,26 +43,39 @@ class ProductionReportController extends Controller
 
     private function calculateMetricsForPeriod(Carbon $start, Carbon $end)
     {
-        $productions = Production::whereBetween('created_at', [$start, $end])->get();
+        // Eager load the product relationship
+        $productions = Production::with('product')->whereBetween('created_at', [$start, $end])->get();
         $totalProductions = $productions->count();
-        if ($totalProductions === 0) {
-            return $this->getEmptyMetrics();
-        }
 
         $totalEffectiveTime = 0;
         $totalPausedTime = 0;
         $totalWaitingTime = 0;
         $pauseReasons = [];
         $performanceByStation = [];
+        
+        // NEW: Process productions for the detailed list
+        $productionsList = $productions->map(function ($production) use (&$totalEffectiveTime, &$totalPausedTime, &$totalWaitingTime, &$pauseReasons, &$performanceByStation) {
+            $prodTotalEffective = 0;
+            $prodTotalPaused = 0;
+            $prodTotalWaiting = 0;
 
-        foreach ($productions as $production) {
             if (is_array($production->station_times)) {
                 foreach ($production->station_times as $record) {
-                    $totalEffectiveTime += $record['times']['effective_seconds'] ?? 0;
-                    $totalPausedTime += $record['times']['paused_seconds'] ?? 0;
-                    $totalWaitingTime += $record['times']['waiting_seconds'] ?? 0;
+                    $effective = $record['times']['effective_seconds'] ?? 0;
+                    $paused = $record['times']['paused_seconds'] ?? 0;
+                    $waiting = $record['times']['waiting_seconds'] ?? 0;
 
-                    // Pause Reasons
+                    // Sum for individual production
+                    $prodTotalEffective += $effective;
+                    $prodTotalPaused += $paused;
+                    $prodTotalWaiting += $waiting;
+                    
+                    // Sum for overall report metrics
+                    $totalEffectiveTime += $effective;
+                    $totalPausedTime += $paused;
+                    $totalWaitingTime += $waiting;
+
+                    // Aggregate Pause Reasons for the entire report
                     if (is_array($record['pauses'])) {
                         foreach ($record['pauses'] as $pause) {
                             $reason = $pause['reason'] ?? 'Otro';
@@ -69,18 +83,33 @@ class ProductionReportController extends Controller
                         }
                     }
 
-                     // Performance by Station
+                    // Aggregate Performance by Station for the entire report
                     $stationName = $record['station_name'];
                     if (!isset($performanceByStation[$stationName])) {
                         $performanceByStation[$stationName] = ['effective' => 0, 'paused' => 0, 'waiting' => 0];
                     }
-                    $performanceByStation[$stationName]['effective'] += $record['times']['effective_seconds'] ?? 0;
-                    $performanceByStation[$stationName]['paused'] += $record['times']['paused_seconds'] ?? 0;
-                    $performanceByStation[$stationName]['waiting'] += $record['times']['waiting_seconds'] ?? 0;
+                    $performanceByStation[$stationName]['effective'] += $effective;
+                    $performanceByStation[$stationName]['paused'] += $paused;
+                    $performanceByStation[$stationName]['waiting'] += $waiting;
                 }
             }
-        }
+
+            return [
+                'folio' => $production->folio,
+                'product_name' => $production->product?->name ?? 'N/A',
+                'quantity' => $production->quantity,
+                'total_effective_time' => $prodTotalEffective,
+                'total_paused_time' => $prodTotalPaused,
+                'total_waiting_time' => $prodTotalWaiting,
+                'created_at' => $production->created_at->toDateTimeString(),
+                'finish_date' => $production->finish_date?->toDateTimeString(),
+            ];
+        });
         
+        if ($totalProductions === 0) {
+            return $this->getEmptyMetrics();
+        }
+
         $totalTime = $totalEffectiveTime + $totalPausedTime + $totalWaitingTime;
 
         return [
@@ -96,6 +125,7 @@ class ProductionReportController extends Controller
                 'waiting' => $totalWaitingTime,
             ],
             'performance_by_station' => $performanceByStation,
+            'productions_list' => $productionsList, // Add the list to the response
         ];
     }
     
@@ -106,21 +136,19 @@ class ProductionReportController extends Controller
             'endDate' => 'required|date',
         ]);
 
-        $start = Carbon::parse($request->startDate);
-        $end = Carbon::parse($request->endDate);
+        $start = Carbon::parse($request->startDate)->startOfDay();
+        $end = Carbon::parse($request->endDate)->endOfDay();
 
         $reportData = $this->calculateMetricsForPeriod($start, $end);
 
-        // --- Analysis Text Calculation ---
         $analysis = [
             'station_highlight' => null,
             'pause_highlight' => null,
         ];
 
-        // Station with the most total time
-        $maxTime = 0;
-        $worstStation = null;
         if (!empty($reportData['performance_by_station'])) {
+            $maxTime = 0;
+            $worstStation = null;
             foreach ($reportData['performance_by_station'] as $station => $times) {
                 $totalTime = ($times['effective'] ?? 0) + ($times['paused'] ?? 0) + ($times['waiting'] ?? 0);
                 if ($totalTime > $maxTime) {
@@ -133,13 +161,11 @@ class ProductionReportController extends Controller
             }
         }
         
-
-        // Top pause reason analysis
         if (!empty($reportData['pause_reasons'])) {
             $topReason = array_keys($reportData['pause_reasons'], max($reportData['pause_reasons']))[0];
             $totalPauses = array_sum($reportData['pause_reasons']);
-            $topReasonPercentage = ($reportData['pause_reasons'][$topReason] / $totalPauses) * 100;
-            $analysis['pause_highlight'] = "**{$topReason}** representó el **" . round($topReasonPercentage) . "%** del tiempo en pausa, siendo el área de mayor oportunidad.";
+            $topReasonPercentage = $totalPauses > 0 ? ($reportData['pause_reasons'][$topReason] / $totalPauses) * 100 : 0;
+            $analysis['pause_highlight'] = "La **{$topReason}** representó el **" . round($topReasonPercentage) . "%** del tiempo en pausa, siendo el área de mayor oportunidad.";
         }
 
         return inertia('Production/PrintableReport', [
@@ -149,7 +175,6 @@ class ProductionReportController extends Controller
             'endDate' => $end->isoFormat('D [de] MMMM [de] YYYY'),
         ]);
     }
-
 
     private function getEmptyMetrics()
     {
@@ -162,6 +187,7 @@ class ProductionReportController extends Controller
             'pause_reasons' => [],
             'time_breakdown' => ['effective' => 0, 'paused' => 0, 'waiting' => 0],
             'performance_by_station' => [],
+            'productions_list' => [], // Ensure empty list is returned
         ];
     }
 
