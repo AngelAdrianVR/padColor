@@ -524,7 +524,7 @@ export default {
                 case 'En proceso': return { text: 'En proceso', icon: PlayIcon, bgColor: 'bg-green-100', textColor: 'text-green-700' };
                 case 'En pausa': return { text: 'En pausa', icon: PauseIcon, bgColor: 'bg-[#FFEEDF]', textColor: 'text-[#F09400]' };
                 case 'En espera': return { text: 'En espera', icon: ClockIcon, bgColor: 'bg-[#f2f2f2]', textColor: 'text-[#373737]' };
-                case 'Finalizada': return { text: 'Finalizada', icon: CheckCircleIcon, bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
+                case 'Finalizada': return { text: 'Finalizada', icon: CheckCircleIcon, bgColor: 'bg-[#DDF2FF]', textColor: 'text-[#008CF0]' };
                 default: return { text: status, icon: QuestionMarkCircleIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-600' };
             }
         },
