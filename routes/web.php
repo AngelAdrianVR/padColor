@@ -123,17 +123,22 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
 Route::get('productions-dashboard', [ProductionController::class, 'dashboard'])->name('productions.dashboard')->middleware('auth');
-Route::get('productions-report', [ProductionController::class, 'report'])->name('productions.report')->middleware('auth');
-Route::get('productions-get-report-data', ProductionReportController::class)->name('productions.get-report-data')->middleware('auth');
+
+Route::prefix('productions-report')->name('productions.')->middleware('auth')->group(function () {
+    Route::get('/', [ProductionController::class, 'report'])->name('report');
+    Route::get('/get-data', [ProductionReportController::class, 'getReportData'])->name('get-report-data');
+    Route::get('/printable', [ProductionReportController::class, 'printableReport'])->name('report.printable');
+});
+
 Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
 Route::get('productions-export-report-excel', [ProductionController::class, 'exportExcelReport'])->name('productions.export-report-excel')->middleware('auth');
 Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');
 Route::post('productions-import-excel', [ProductionController::class, 'importExcel'])->name('productions.import-excel')->middleware('auth');
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
-Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
-Route::get('productions-backfill-station-times', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill-station-times')->middleware('auth');
+Route::post('productions-backfill', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill');
+
 // --- STATION TIME TRACKING ---
 Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
     Route::post('/start', [ProductionController::class, 'startStationProcess'])->name('start');
@@ -143,6 +148,8 @@ Route::prefix('productions/{production}/station-process')->name('productions.sta
     Route::post('/skip-and-move', [ProductionController::class, 'skipAndMoveStation'])->name('skipAndMove');
     Route::post('/register-delivery', [ProductionController::class, 'registerDelivery'])->name('register-delivery');
 });
+Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
+
 
 
 //products routes---------------------------------------------------------------------------

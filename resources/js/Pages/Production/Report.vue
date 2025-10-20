@@ -4,7 +4,7 @@
             <!-- Header -->
             <header class="flex justify-between items-start mb-8">
                 <div>
-                    <h1 class="text-2xl lg:text-3xl font-bold text-gray-800">Reportes</h1>
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Reportes</h1>
                     <p class="mt-1 text-sm text-gray-500">Análisis de rendimiento y eficiencia en tiempo real.</p>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -27,7 +27,7 @@
 
             <!-- Stat Panels -->
             <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-                 <div v-for="i in 5" :key="i" class="bg-white p-5 rounded-xl shadow animate-pulse">
+                 <div v-for="i in 5" :key="i" class="bg-white p-5 rounded-xl border border-grayD9 animate-pulse">
                     <div class="h-8 w-8 bg-gray-200 rounded-full mb-4"></div>
                     <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                     <div class="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
@@ -36,28 +36,69 @@
             </div>
             <div v-else-if="reportData" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
                 <!-- Stat Cards -->
-                <StatCard icon-path="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" title="Promedio de tiempo efectivo" :current-value="formatDuration(reportData.current_period.avg_effective_time)" :prev-value="formatDuration(reportData.previous_period.avg_effective_time)" :percentage="reportData.comparison.effective_time" :invert-colors="true" />
-                <StatCard icon-path="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" title="Promedio de tiempo en pausa" :current-value="formatDuration(reportData.current_period.avg_paused_time)" :prev-value="formatDuration(reportData.previous_period.avg_paused_time)" :percentage="reportData.comparison.paused_time" />
-                <StatCard icon-path="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" title="Promedio de tiempo en espera" :current-value="formatDuration(reportData.current_period.avg_waiting_time)" :prev-value="formatDuration(reportData.previous_period.avg_waiting_time)" :percentage="reportData.comparison.waiting_time" />
-                <StatCard icon-path="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" title="Órdenes terminadas" :current-value="reportData.current_period.finished_orders" :prev-value="reportData.previous_period.finished_orders" :percentage="reportData.comparison.finished_orders" :invert-colors="true" />
-                <StatCard icon-path="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 1.5m1-1.5l1 1.5m0 0l.5 1.5m-2-3l2 3m4.5-3l2 3m-2-3l.5 1.5m-5-3l.5 1.5" title="Eficiencia general" :current-value="`${reportData.current_period.general_efficiency.toFixed(1)}%`" :prev-value="`${reportData.previous_period.general_efficiency.toFixed(1)}%`" :percentage="reportData.comparison.general_efficiency" :invert-colors="true" />
+                <StatCard 
+                    :icon="PlayCircleIcon" 
+                    title="Promedio de tiempo efectivo" 
+                    :current-value="formatDuration(reportData.current_period.avg_effective_time)" 
+                    :prev-value="formatDuration(reportData.previous_period.avg_effective_time)" 
+                    :percentage="reportData.comparison.effective_time" 
+                />
+                <StatCard 
+                    :icon="PauseCircleIcon" 
+                    title="Promedio de tiempo en pausa" 
+                    :current-value="formatDuration(reportData.current_period.avg_paused_time)" 
+                    :prev-value="formatDuration(reportData.previous_period.avg_paused_time)" 
+                    :percentage="reportData.comparison.paused_time" 
+                    invert-colors 
+                />
+                <StatCard 
+                    :icon="ClockIcon" 
+                    title="Promedio de tiempo en espera" 
+                    :current-value="formatDuration(reportData.current_period.avg_waiting_time)" 
+                    :prev-value="formatDuration(reportData.previous_period.avg_waiting_time)" 
+                    :percentage="reportData.comparison.waiting_time" 
+                    invert-colors 
+                />
+                <StatCard 
+                    :icon="CheckBadgeIcon" 
+                    title="Órdenes terminadas" 
+                    :current-value="reportData.current_period.finished_orders" 
+                    :prev-value="reportData.previous_period.finished_orders" 
+                    :percentage="reportData.comparison.finished_orders" 
+                />
+                <StatCard 
+                    :icon="ChartBarIcon" 
+                    title="Eficiencia general" 
+                    :current-value="`${reportData.current_period.general_efficiency.toFixed(1)}%`" 
+                    :prev-value="`${reportData.previous_period.general_efficiency.toFixed(1)}%`" 
+                    :percentage="reportData.comparison.general_efficiency" 
+                />
             </div>
 
             <!-- Charts -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-8">
-                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow">
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-grayD9">
                     <h3 class="font-semibold text-gray-800 mb-4">Principales motivos de pausa</h3>
                     <div class="relative h-80">
                         <canvas ref="barChartCanvas"></canvas>
                     </div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow">
+                <div class="bg-white p-5 rounded-xl border border-grayD9">
                      <h3 class="font-semibold text-gray-800 mb-4">Desglose de tiempo de producción</h3>
                     <div class="relative h-80">
                         <canvas ref="doughnutChartCanvas"></canvas>
                     </div>
                 </div>
             </div>
+
+            <!-- New Station Performance Chart -->
+            <div class="bg-white p-5 rounded-xl border border-grayD9 mt-8">
+                <h3 class="font-semibold text-gray-800 mb-4">Rendimiento promedio por estación</h3>
+                <div class="relative h-96">
+                    <canvas ref="stationsChartCanvas"></canvas>
+                </div>
+            </div>
+
         </div>
     </AppLayout>
 </template>
@@ -66,6 +107,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import StatCard from './Partials/StatCard.vue';
+import { stations } from '@/Data/stations.js';
 import { ref, onMounted, watch } from 'vue';
 import { subDays, format as formatDate } from 'date-fns';
 import {
@@ -79,6 +121,14 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { 
+    PlayCircleIcon, 
+    PauseCircleIcon, 
+    ClockIcon, 
+    CheckBadgeIcon, 
+    ChartBarIcon 
+} from '@heroicons/vue/24/outline';
+
 
 // Register Chart.js components
 Chart.register(
@@ -101,8 +151,10 @@ const reportData = ref(null);
 const loading = ref(true);
 const barChartCanvas = ref(null);
 const doughnutChartCanvas = ref(null);
+const stationsChartCanvas = ref(null);
 let barChart = null;
 let doughnutChart = null;
+let stationsChart = null;
 
 // --- API & DATA ---
 const fetchReportData = async () => {
@@ -123,6 +175,7 @@ const fetchReportData = async () => {
 
 // --- CHARTS ---
 const initCharts = () => {
+    // Pause Reasons Bar Chart
     if (barChartCanvas.value) {
         const barCtx = barChartCanvas.value.getContext('2d');
         barChart = new Chart(barCtx, {
@@ -138,6 +191,7 @@ const initCharts = () => {
         });
     }
 
+    // Time Breakdown Doughnut Chart
     if (doughnutChartCanvas.value) {
         const doughnutCtx = doughnutChartCanvas.value.getContext('2d');
         doughnutChart = new Chart(doughnutCtx, {
@@ -155,6 +209,35 @@ const initCharts = () => {
             }
         });
     }
+
+    // New Station Performance Chart
+    if (stationsChartCanvas.value) {
+        const stationsCtx = stationsChartCanvas.value.getContext('2d');
+        stationsChart = new Chart(stationsCtx, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: { stacked: true },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Minutos'
+                        }
+                     }
+                }
+            }
+        });
+    }
 };
 
 const updateCharts = () => {
@@ -168,7 +251,7 @@ const updateCharts = () => {
         barChart.data.datasets = [{
             label: 'Número de Pausas',
             data: sortedReasons.map(item => item[1]),
-            backgroundColor: '#FDBA74',
+            backgroundColor: '#FBBF24',
             borderColor: '#FB923C',
             borderWidth: 1
         }];
@@ -181,9 +264,39 @@ const updateCharts = () => {
         doughnutChart.data.labels = ['Tiempo efectivo', 'Tiempo en pausa', 'Tiempo en espera'];
         doughnutChart.data.datasets = [{
             data: [times.effective, times.paused, times.waiting],
-            backgroundColor: ['#22C55E', '#F97316', '#A1A1AA'],
+            backgroundColor: ['#1FAE07', '#FBBF24', '#B3B3B3'],
         }];
         doughnutChart.update();
+    }
+
+    // Update Station Performance Chart
+    if (stationsChart) {
+        const stationData = reportData.value.current_period.performance_by_station;
+        const excludedStations = ["Terminadas", "Empaques terminado", "Canceladas"];
+        
+        const filteredStationLabels = stations
+            .map(s => s.name)
+            .filter(name => !excludedStations.includes(name));
+
+        stationsChart.data.labels = filteredStationLabels;
+        stationsChart.data.datasets = [
+            {
+                label: 'Tiempo efectivo promedio (min)',
+                data: filteredStationLabels.map(name => (stationData[name]?.effective ?? 0) / 60),
+                backgroundColor: '#1FAE07',
+            },
+            {
+                label: 'Tiempo en pausa promedio (min)',
+                data: filteredStationLabels.map(name => (stationData[name]?.paused ?? 0) / 60),
+                backgroundColor: '#FBBF24',
+            },
+            {
+                label: 'Tiempo en espera promedio (min)',
+                data: filteredStationLabels.map(name => (stationData[name]?.waiting ?? 0) / 60),
+                backgroundColor: '#B3B3B3',
+            }
+        ];
+        stationsChart.update();
     }
 };
 
@@ -201,8 +314,13 @@ const formatDuration = (totalSeconds) => {
 };
 
 const generatePrintableView = () => {
-    // Logic to open a new window/tab for printing will be added later
-    alert("La funcionalidad para generar el reporte impreso se implementará en el siguiente paso.");
+    if (!dateRange.value) return;
+    
+    const url = route('productions.report.printable', { 
+        startDate: dateRange.value[0], 
+        endDate: dateRange.value[1] 
+    });
+    window.open(url, '_blank');
 };
 
 // --- LIFECYCLE ---
