@@ -137,7 +137,7 @@ Route::post('productions-import-excel', [ProductionController::class, 'importExc
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
-Route::post('productions-backfill', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill');
+Route::get('productions-backfill', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill');
 
 // --- STATION TIME TRACKING ---
 Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
