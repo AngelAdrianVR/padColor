@@ -450,10 +450,19 @@ export default {
                 console.error('Error fetching users:', error);
             }
         },
+        getFilterFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filter = urlParams.get('filter');
+            if (filter) {
+                this.search = filter;
+                this.searchTemp = filter;
+            }
+        }
     },
     mounted() {
         this.fetchMachines();
         this.fetchUsers();
+        this.getFilterFromUrl();
         this.fetchProductions();
     }
 }
