@@ -1,6 +1,16 @@
 <template>
     <el-table :data="productions" @row-click="handleRowClick" max-height="670" style="width: 100%" class="mt-1"
         :row-class-name="tableRowClassName">
+        
+        <!-- New Status Icon Column -->
+        <el-table-column width="40">
+            <template #default="scope">
+                <el-tooltip :content="getStatus(scope.row).text" placement="top">
+                    <component :is="getStatus(scope.row).icon" class="size-5" :class="getStatus(scope.row).color" />
+                </el-tooltip>
+            </template>
+        </el-table-column>
+
         <el-table-column prop="folio" label="N° Orden">
             <template #default="scope">
                 <div v-if="!scope.row.quantity" class="flex items-center space-x-2"
@@ -21,7 +31,7 @@
         <el-table-column prop="product.season" label="Temporada" />
         <el-table-column prop="quantity" label="Cantidad solicitada">
             <template #default="scope">
-                {{ scope.row.quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
+                {{ scope.row.quantity?.toLocaleString('es-MX') }} pzs
             </template>
         </el-table-column>
         <el-table-column prop="client" label="Cliente" />
@@ -38,7 +48,7 @@
         </el-table-column>
         <el-table-column prop="current_quantity" label="Cantidad actual">
             <template #default="scope">
-                {{ scope.row.current_quantity?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }} pzs
+                {{ scope.row.current_quantity?.toLocaleString('es-MX') }} pzs
             </template>
         </el-table-column>
         <el-table-column prop="notes" label="Notas" width="160">
@@ -100,14 +110,39 @@
 </template>
 
 <script>
+import { CheckCircleIcon, PlayCircleIcon, PauseCircleIcon, ClockIcon } from '@heroicons/vue/24/solid';
+
 export default {
     name: 'ProductionTable',
+    components: {
+        CheckCircleIcon,
+        PlayCircleIcon,
+        PauseCircleIcon,
+        ClockIcon
+    },
     props: {
         productions: Array,
         stations: Array,
     },
     emits: ['row-click', 'command'],
     methods: {
+        getStatus(production) {
+            const lastTimeRecord = production.station_times?.[production.station_times.length - 1];
+            const status = lastTimeRecord?.status;
+
+            switch (status) {
+                case 'En proceso':
+                    return { icon: PlayCircleIcon, color: 'text-[#1fae07]', text: 'En proceso' };
+                case 'En pausa':
+                    return { icon: PauseCircleIcon, color: 'text-[#fbbf24]', text: 'En pausa' };
+                case 'En espera':
+                    return { icon: ClockIcon, color: 'text-[#b3b3b3]', text: 'En espera' };
+                case 'Finalizada':
+                    return { icon: CheckCircleIcon, color: 'text-[#008cf0]', text: 'Finalizada' };
+                default:
+                    return { icon: null, color: '', text: 'Sin estado' };
+            }
+        },
         handleRowClick(row) {
             this.$emit('row-click', row);
         },
