@@ -51,7 +51,7 @@ class ProductionController extends Controller
     {
         $validated = $request->validate([
             'folio' => 'required|numeric|unique:productions',
-            'type' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
@@ -119,7 +119,7 @@ class ProductionController extends Controller
     {
         $validated = $request->validate([
             'folio' => 'required|numeric|unique:productions,folio,' . $production->id,
-            'type' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
