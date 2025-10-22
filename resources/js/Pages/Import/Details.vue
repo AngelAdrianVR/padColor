@@ -8,7 +8,7 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm font-bold text-gray-700">Nº {{ importData.id }}</span>
                     
-                    <!-- Dropdown para cambiar estatus (NUEVO) -->
+                    <!-- Dropdown para cambiar estatus -->
                     <el-dropdown
                         v-if="$page.props.auth.user.permissions.includes('Cambiar status de importaciones mediante kanban')"
                         trigger="click"
@@ -36,7 +36,7 @@
                         </template>
                     </el-dropdown>
 
-                    <!-- Muestra estatus estático si no hay permisos (Anterior) -->
+                    <!-- Muestra estatus estático si no hay permisos -->
                     <p v-else class="px-2 py-1 text-xs flex space-x-1 items-center font-semibold rounded-full"
                         :style="statusClass(importData.status)">
                         <component :is="statuses[importData.status]" class="size-4" />
@@ -45,12 +45,20 @@
                         </span>
                     </p>
                 </div>
-                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar importaciones')"
-                    @click="editImport"
-                    class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
-                    <PencilIcon class="size-4 inline mr-1" />
-                    Editar
-                </PrimaryButton>
+                <div class="flex items-center space-x-2">
+                    <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Editar importaciones')"
+                        @click="editImport"
+                        class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm !py-1">
+                        <PencilIcon class="size-4 inline mr-1" />
+                        Editar
+                    </PrimaryButton>
+                    <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Eliminar importaciones')"
+                        @click="showDeleteConfirmation = true"
+                        class="!text-red-600 !bg-white border !border-gray-300 !rounded-md text-sm !py-1 hover:!bg-red-50">
+                        <TrashIcon class="size-4 inline mr-1" />
+                        Eliminar
+                    </PrimaryButton>
+                </div>
             </div>
             <el-tabs v-model="activeTab" class="mt-4">
                 <el-tab-pane label="Información general" name="general">
@@ -386,11 +394,28 @@
             </PrimaryButton>
         </template>
     </DialogModal>
+
+     <!-- Confirmation Modal for Deletion -->
+    <ConfirmationModal :show="showDeleteConfirmation" @close="showDeleteConfirmation = false">
+        <template #title>
+            Eliminar Importación
+        </template>
+        <template #content>
+            ¿Estás seguro de que deseas eliminar la importación con folio <strong>Nº {{ importData.id }}</strong>? Esta acción no se puede deshacer y eliminará todos los costos, pagos y documentos asociados.
+        </template>
+        <template #footer>
+            <CancelButton @click="showDeleteConfirmation = false">Cancelar</CancelButton>
+            <PrimaryButton @click="confirmDelete" class="ml-2 !bg-red-600 hover:!bg-red-700">
+                Sí, eliminar
+            </PrimaryButton>
+        </template>
+    </ConfirmationModal>
 </template>
 
 <script>
 import { useForm } from '@inertiajs/vue3';
 import CancelButton from '@/Components/MyComponents/CancelButton.vue';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import { markRaw } from 'vue';
 import DialogModal from '@/Components/DialogModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -429,8 +454,9 @@ export default {
         InputLabel,
         InputError,
         ChevronDownIcon,
+        ConfirmationModal,
     },
-    emits: ['reload', 'close'],
+    emits: ['reload', 'close', 'delete-import'],
     props: {
         show: {
             type: Boolean,
@@ -463,6 +489,7 @@ export default {
             activeTab: 'general',
             showCostModal: false,
             showPaymentModal: false,
+            showDeleteConfirmation: false,
             allStatuses: [
                 'Con proveedor',
                 'Puerto origen',
@@ -496,6 +523,10 @@ export default {
         }
     },
     methods: {
+        confirmDelete() {
+            this.$emit('delete-import', this.importData.id);
+            this.showDeleteConfirmation = false;
+        },
         updateStatus(newStatus) {
             router.patch(route('imports.status.update', this.importData.id), {
                 status: newStatus

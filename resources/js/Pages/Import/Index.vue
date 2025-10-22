@@ -122,7 +122,7 @@
         </AppLayout>
         <!-- Integración del Modal de Detalles -->
         <ImportDetails v-if="selectedImport" :show="showDetailsModal" :import-data="selectedImport"
-            @close="showDetailsModal = false" @reload="reloadData" />
+            @close="showDetailsModal = false" @reload="reloadData" @delete-import="handleDeleteImport" />
     </div>
 </template>
 
@@ -191,6 +191,20 @@ export default {
         };
     },
     methods: {
+        handleDeleteImport(importId) {
+            router.delete(route('imports.destroy', importId), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$notify({ title: 'Éxito', message: 'Importación eliminada correctamente', type: 'success' });
+                    this.showDetailsModal = false;
+                    // Forzamos la recarga de los datos para actualizar el kanban.
+                    router.get(route('imports.index'), this.localFilters, { preserveState: true, replace: true });
+                },
+                onError: () => {
+                    this.$notify({ title: 'Error', message: 'No se pudo eliminar la importación.', type: 'error' });
+                }
+            });
+        },
         handleCommand(command) {
             if (command === 'export') {
                 this.export();
