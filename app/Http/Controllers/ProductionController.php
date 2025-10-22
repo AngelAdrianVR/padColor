@@ -227,6 +227,18 @@ class ProductionController extends Controller
         $newProduction->type = 'Repetido';
         $newProduction->station = 'Material pendiente';
         $newProduction->start_date = now();
+
+        // Initialize the station_times record for the cloned production
+        $now = now();
+        $newProduction->station_times = [
+            $this->createNewStationTimeRecord(
+                'Material pendiente',
+                $now,
+                auth()->id(),
+                'Registro inicial de orden clonada.'
+            )
+        ];
+
         $newProduction->save();
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
@@ -420,7 +432,6 @@ class ProductionController extends Controller
     {
         $updatedCount = 0;
         $adminUserId = auth()->id(); 
-
         Production::where(fn ($q) => $q->whereNull('station_times')->orWhere('station_times', '=', '[]'))
             ->chunk(200, function ($productions) use (&$updatedCount, $adminUserId) {
             foreach ($productions as $production) {
@@ -439,7 +450,7 @@ class ProductionController extends Controller
             }
         });
 
-        return to_route('productions.index')->with('success', "Script ejecutado: Se procesaron y actualizaron {$updatedCount} producciones.");
+        return "Script ejecutado: Se procesaron y actualizaron {$updatedCount} producciones.";
     }
 
     // ===================================================================
@@ -561,6 +572,22 @@ class ProductionController extends Controller
         } elseif ($validated['next_station'] === 'Empaques') {
              $production->packing_received_quantity = $validated['quantity']; $production->packing_received_date = $validated['date'];
         }
+
+        // --- NEW NOTIFICATION LOGIC ---
+        if (in_array($validated['next_station'], ['X Compra', 'Surtido'])) {
+            $notificationInstance = new ProductionForwardedNotification(
+                $production,
+                $validated['next_station'],
+                $validated['quantity'] ?? $production->quantity // Use passed quantity or fallback to total
+            );
+
+            if ($validated['next_station'] === 'X Compra') {
+                $this->sendNotification('production.forwarded.purchase', $notificationInstance);
+            } elseif ($validated['next_station'] === 'Surtido') {
+                $this->sendNotification('production.forwarded.assortment', $notificationInstance);
+            }
+        }
+        // --- END NOTIFICATION LOGIC ---
 
         $production->save();
     }

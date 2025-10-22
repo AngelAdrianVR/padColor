@@ -323,7 +323,33 @@ class ImportController extends Controller
 
     public function destroy(Import $import)
     {
-        //
+        // Asegurarse de que el usuario tiene permisos
+        // $this->authorize('delete', $import);
+
+        DB::transaction(function () use ($import) {
+            // 1. Desvincular materias primas
+            $import->rawMaterials()->detach();
+    
+            // 2. Eliminar costos y pagos asociados
+            foreach ($import->costs as $cost) {
+                foreach ($cost->payments as $payment) {
+                    // Limpiar media de pagos
+                    $payment->clearMediaCollection('payment_vouchers');
+                }
+                // Eliminar pagos del costo
+                $cost->payments()->delete();
+            }
+            // Eliminar costos de la importación
+            $import->costs()->delete();
+    
+            // 3. Limpiar media de la importación
+            $import->clearMediaCollection();
+    
+            // 4. Finalmente, eliminar la importación
+            $import->delete();
+        });
+    
+        return redirect()->route('imports.index')->with('success', 'Importación eliminada correctamente.');
     }
 
     public function updateStatus(Request $request, Import $import)
