@@ -19,7 +19,7 @@ class ProductionForwardedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        if (app()->environment() == 'local') {
+        if (app()->environment() == 'production') {
             return ['mail'];
         } else {
             return [];
