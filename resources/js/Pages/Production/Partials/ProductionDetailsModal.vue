@@ -191,7 +191,8 @@
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Iniciar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip')" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('skip')"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
                                                     Mover a siguiente
                                                     <ArrowRightIcon class="size-5 ml-2" />
                                                 </PrimaryButton>
@@ -222,7 +223,8 @@
                                                     <PauseIcon class="size-5 mr-2" />
                                                     Pausar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish')" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish')"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" />
                                                     Finalizar y mover
                                                 </PrimaryButton>
@@ -255,7 +257,8 @@
                                                     <PlayIcon class="size-5 mr-2" />
                                                     Reanudar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish')" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish')"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" />
                                                     Finalizar y mover
                                                 </PrimaryButton>
@@ -325,7 +328,7 @@
                                             <span>Merma:</span> <span class="font-medium">{{
                                                 selectedProduction.quality_scrap?.toLocaleString('es-MX') }} ({{
                                                     calculatePercentage(selectedProduction.quality_scrap,
-                                                selectedProduction.close_quantity) }}%)</span>
+                                                        selectedProduction.close_quantity) }}%)</span>
                                             <span>Diferencia:</span> <span class="font-medium">{{
                                                 selectedProduction.quality_shortage?.toLocaleString('es-MX') }}</span>
                                             <span>Notas:</span> <span class="font-medium">{{
@@ -358,10 +361,10 @@
                                             <span>Merma:</span> <span class="font-medium">{{
                                                 selectedProduction.inspection_scrap?.toLocaleString('es-MX') }} ({{
                                                     calculatePercentage(selectedProduction.inspection_scrap,
-                                                selectedProduction.quality_quantity) }}%)</span>
+                                                        selectedProduction.quality_quantity) }}%)</span>
                                             <span>Diferencia:</span> <span class="font-medium">{{
                                                 selectedProduction.inspection_shortage?.toLocaleString('es-MX')
-                                                }}</span>
+                                            }}</span>
                                             <span>Notas:</span> <span class="font-medium">{{
                                                 selectedProduction.inspection_notes ?? '-' }}</span>
                                         </div>
@@ -402,7 +405,7 @@
                                         <div class="grid grid-cols-2 gap-x-4 text-xs">
                                             <span>Cantidad recibida:</span> <span class="font-medium">{{
                                                 selectedProduction.packing_received_quantity?.toLocaleString('es-MX')
-                                                }}</span>
+                                            }}</span>
                                             <span>Fecha de recibido:</span> <span class="font-medium">{{
                                                 formatDateTime(selectedProduction.packing_received_date) }}</span>
                                             <span>Tipo de entrega:</span> <span class="font-medium">{{
@@ -448,9 +451,9 @@
 
     <!-- Other Modals -->
     <PauseStationModal :show="showPauseModal" @close="showPauseModal = false" @submit="handlePauseSubmit" />
-    <MoveStationModal :show="showMoveModal" :processType="moveModalMode" :available-stations="availableNextStations" :machines="machines"
-        :production="selectedProduction" :default-quantity="moveDefaultQty" @close="showMoveModal = false"
-        @submit="handleMoveSubmit" />
+    <MoveStationModal :show="showMoveModal" :processType="moveModalMode" :available-stations="availableNextStations"
+        :machines="machines" :production="selectedProduction" :default-quantity="moveDefaultQty"
+        @close="showMoveModal = false" @submit="handleMoveSubmit" />
     <RegisterDeliveryModal :show="showDeliveryModal" :production="selectedProduction" :context="deliveryContext"
         :is-partial="isDeliveryPartial" :default-quantity="deliveryDefaultQty" @close="showDeliveryModal = false"
         @submit="handleDeliverySubmit" />
@@ -548,6 +551,12 @@ export default {
             const current = this.selectedProduction.station;
             const allStations = this.stations;
 
+            if (current === 'Material pendiente') {
+                return allStations.filter(s => ['X Compra', 'Surtido'].includes(s.name));
+            }
+            if (current === 'X Compra') {
+                return allStations.filter(s => ['Surtido'].includes(s.name));
+            }
             if (current === 'Calidad') {
                 return allStations.filter(s => ['X Reproceso', 'Inspección', 'Empaques'].includes(s.name));
             }
@@ -557,7 +566,7 @@ export default {
             if (current === 'Inspección') {
                 return allStations.filter(s => ['Calidad', 'Terminadas'].includes(s.name));
             }
-            const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado'];
+            const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado', 'X Compra', 'Surtido', 'Material pendiente'];
             return allStations.filter(s => !restricted.includes(s.name) && s.name !== current);
         },
         totalEffectiveTime() {
@@ -620,7 +629,7 @@ export default {
         openDeliveryModal(context, isPartial) {
             this.deliveryContext = context;
             this.isDeliveryPartial = isPartial;
-            
+
             // --- NEW: Calculate remaining quantity ---
             const production = this.selectedProduction;
             let remainingQty = 0;
