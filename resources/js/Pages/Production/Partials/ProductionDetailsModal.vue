@@ -566,7 +566,7 @@ export default {
             if (current === 'Inspección') {
                 return allStations.filter(s => ['Calidad', 'Terminadas'].includes(s.name));
             }
-            const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado', 'X Compra', 'Surtido', 'Material pendiente'];
+            const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado'];
             return allStations.filter(s => !restricted.includes(s.name) && s.name !== current);
         },
         totalEffectiveTime() {
