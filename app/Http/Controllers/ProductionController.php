@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Auth; // Import añadido
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
@@ -64,9 +65,9 @@ class ProductionController extends Controller
             'notes' => 'nullable|string|max:300',
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
-            'width' => 'nullable|string|max:255',
+            'width' => 'nullable|string|max:255', // Tu validación original (string)
             'gauge' => 'nullable|string|max:255',
-            'large' => 'nullable|string|max:255',
+            'large' => 'nullable|string|max:255', // Tu validación original (string)
             'look' => 'nullable|string|max:255',
             'faces' => 'nullable|numeric|min:0',
             'pps' => 'nullable|numeric|min:0',
@@ -84,6 +85,11 @@ class ProductionController extends Controller
 
         $validated['user_id'] = auth()->id();
         $validated['materials'] = [$validated['materials']];
+
+        // --- LÓGICA DE COMPONENTES AÑADIDA ---
+        // Inicializa la cantidad no asignada
+        $validated['unassigned_quantity'] = $validated['quantity'];
+        // --- FIN LÓGICA DE COMPONENTES ---
 
         // Initialize the station_times record for the first station.
         $now = now();
@@ -132,16 +138,16 @@ class ProductionController extends Controller
             'notes' => 'nullable|string|max:300',
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
-            'width' => 'nullable|numeric|min:0',
+            'width' => 'nullable|numeric|min:0', // Tu validación (numeric)
             'gauge' => 'nullable|string|max:255',
-            'large' => 'nullable|numeric|min:0',
+            'large' => 'nullable|numeric|min:0', // Tu validación (numeric)
             'look' => 'nullable|string|max:255',
             'faces' => 'nullable|numeric|min:0',
             'pps' => 'nullable|numeric|min:0',
             'adjust' => 'nullable|numeric|min:0',
             'sheets' => 'nullable|numeric|min:0',
             'ha' => 'nullable|numeric|min:0',
-            'pf' => 'nullable|numeric|min:0',
+            // 'pf' => 'nullable|numeric|min:0', // Estaba duplicado en tu validación original
             'ts' => 'nullable|numeric|min:0',
             'pf' => 'required|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
@@ -153,6 +159,28 @@ class ProductionController extends Controller
         $validated['materials'] = [$validated['materials']];
 
         $production->update($validated + ['modified_user_id' => auth()->id()]);
+
+        // --- LÓGICA DE COMPONENTES AÑADIDA ---
+        // Recalcular 'unassigned_quantity' si la cantidad total cambia y NO es un hijo
+        if ($request->has('quantity') && !$production->parent_production_id) {
+            
+            // Obtenemos la cantidad MÁXIMA de "juego" ya asignada a los hijos
+            $max_child_qty = $production->children()->max('part_quantity') ?? 0;
+            
+            // La nueva cantidad no asignada es el total nuevo MENOS lo ya asignado
+            $new_unassigned = $validated['quantity'] - $max_child_qty;
+
+            // Nos aseguramos de que no sea negativo
+            $production->unassigned_quantity = max(0, $new_unassigned);
+            
+            // Si la nueva cantidad total es CERO y no tiene hijos, la no asignada es 0
+            if ($validated['quantity'] <= 0 && $max_child_qty == 0) {
+                    $production->unassigned_quantity = 0;
+            }
+            
+            $production->save();
+        }
+        // --- FIN LÓGICA DE COMPONENTES ---
 
         return to_route('productions.index');
     }
@@ -166,6 +194,11 @@ class ProductionController extends Controller
 
     public function destroy(Production $production)
     {
+        // Opcional: Borrar hijos si se borra el padre
+        if (!$production->parent_production_id && $production->children()->count() > 0) {
+            $production->children()->delete();
+        }
+        
         $production->delete();
     }
 
@@ -177,9 +210,25 @@ class ProductionController extends Controller
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
+        // --- MERGE ---
+        // Tu query base
         $query = Production::with(['user', 'product', 'machine'])->latest('id');
 
-        // Get allowed stations for the user
+        // --- LÓGICA DE COMPONENTES AÑADIDA ---
+        // Filtro para mostrar solo Padres (no divididos) e Hijos (no terminados)
+        $query->where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->whereNull('parent_production_id')
+                    ->where('station', '!=', 'Dividida'); // 'Dividida' es el nuevo estado para padres inactivos
+            })
+            ->orWhere(function ($sub) {
+                $sub->whereNotNull('parent_production_id')
+                    ->where('station', '!=', 'Terminadas');
+            });
+        });
+        // --- FIN LÓGICA DE COMPONENTES ---
+
+        // Tu lógica de permisos de estación
         $user = auth()->user();
         $permissions = $user->getAllPermissions()
             ->filter(fn ($permission) => str_starts_with($permission->name, 'Ver en estacion'))
@@ -189,10 +238,12 @@ class ProductionController extends Controller
         if (!empty($permissions)) {
             $query->whereIn('station', $permissions);
         }
-
+        
         if ($search) {
+            // --- MERGE (Search) ---
             $query->where(function ($q) use ($search) {
                 $q->where('folio', 'like', "%{$search}%")
+                    ->orWhere('part_identifier', 'like', "%{$search}%") // Buscar por nombre de componente
                     ->orWhere('client', 'like', "%{$search}%")
                     ->orWhere('station', 'like', "%{$search}%")
                     ->orWhereHas('product', function ($q) use ($search) {
@@ -200,13 +251,16 @@ class ProductionController extends Controller
                             ->orWhere('season', 'like', "%{$search}%");
                     });
             });
+            // --- FIN MERGE ---
         }
+
+        // --- Conteo correcto (antes de offset/limit) ---
+        $total = $query->count();
 
         $items = $query->offset($offset)
             ->limit($perPage)
             ->get();
-
-        $total = $query->count();
+        // --- FIN Conteo ---
 
         return response()->json(compact('items', 'total'));
     }
@@ -221,12 +275,19 @@ class ProductionController extends Controller
             'shortage_quantity', 'production_shortage', 'quality_shortage', 'inspection_shortage',
             'close_production_notes', 'inspection_notes', 'quality_notes', 'partials', 'start_date',
             'packing_close_type', 'packing_notes', 'packing_scrap', 'packing_shortage', 'packing_partials',
-            'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'station_times'
+            'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'station_times',
+            // --- LÓGICA DE COMPONENTES AÑADIDA ---
+            'parent_production_id', 'part_identifier', 'part_quantity', 'unassigned_quantity'
+            // --- FIN LÓGICA DE COMPONENTES ---
         ]);
         $newProduction->folio = $lastProductionFolio + 1;
         $newProduction->type = 'Repetido';
         $newProduction->station = 'Material pendiente';
         $newProduction->start_date = now();
+
+        // --- LÓGICA DE COMPONENTES AÑADIDA ---
+        $newProduction->unassigned_quantity = $newProduction->quantity; // Reiniciar cantidad no asignada
+        // --- FIN LÓGICA DE COMPONENTES ---
 
         // Initialize the station_times record for the cloned production
         $now = now();
@@ -595,12 +656,14 @@ class ProductionController extends Controller
     private function finalizeCurrentStation(Production &$production, Carbon $now, $user_id, $details = '', $mode = 'finish')
     {
         $current_record = $this->getCurrentStationRecord($production);
-        if (!$current_record) return;
+        if (!$current_record || $current_record['status'] === 'Finalizada') { // Añadida comprobación de finalizada
+            return;
+        }
 
         // If it was paused, resume it virtually to calculate time correctly
         if ($current_record['status'] === 'En pausa') {
             $last_pause_key = count($current_record['pauses']) - 1;
-            if(isset($current_record['pauses'][$last_pause_key])) {
+            if(isset($current_record['pauses'][$last_pause_key]) && $current_record['pauses'][$last_pause_key]['resumed_at'] === null) { // Comprobar que no esté ya resumida
                 $current_record['pauses'][$last_pause_key]['resumed_at'] = $now->toDateTimeString();
             }
         }
@@ -610,7 +673,11 @@ class ProductionController extends Controller
         $current_record['history'][] = ['event' => "Finalizada ({$mode})", 'timestamp' => $now->toDateTimeString(), 'user_id' => $user_id, 'details' => $details];
 
         if ($mode === 'skip') { // Moved from 'En espera'
-            $current_record['times']['waiting_seconds'] = $now->diffInSeconds(Carbon::parse($current_record['entered_at']));
+            if (!empty($current_record['entered_at'])) { // Comprobar que entered_at exista
+                $current_record['times']['waiting_seconds'] = $now->diffInSeconds(Carbon::parse($current_record['entered_at']));
+            } else {
+                $current_record['times']['waiting_seconds'] = 0;
+            }
             $current_record['times']['effective_seconds'] = 0;
             $current_record['times']['paused_seconds'] = 0;
         } else { // Moved from 'En proceso' or 'En pausa'
@@ -618,6 +685,11 @@ class ProductionController extends Controller
                 $current_record['times']['waiting_seconds'] = Carbon::parse($current_record['started_at'])->diffInSeconds(Carbon::parse($current_record['entered_at']));
                 $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record);
                 $current_record['times']['effective_seconds'] = $this->calculateEffectiveTime($current_record, $now);
+            } else {
+                // Si se finaliza pero nunca se inició (ej. se pauso desde espera? - Lógica de seguridad)
+                if (!empty($current_record['entered_at'])) {
+                    $current_record['times']['waiting_seconds'] = $now->diffInSeconds(Carbon::parse($current_record['entered_at']));
+                }
             }
         }
 
@@ -676,5 +748,204 @@ class ProductionController extends Controller
         $total_paused_seconds = $this->calculateTotalPausedTime($record);
         $effective_seconds = $end_time->diffInSeconds($started_at) - $total_paused_seconds;
         return max(0, $effective_seconds); // Ensure it's not negative
+    }
+
+    // ===================================================================
+    // --- MÉTODOS AÑADIDOS PARA LÓGICA DE COMPONENTES ---
+    // ===================================================================
+
+    /**
+     * Divide una orden de producción principal en múltiples partes (componentes).
+     * --- LÓGICA CORREGIDA ---
+     */
+    public function splitProduction(Request $request, Production $production)
+    {
+        // Validación
+        $validated = $request->validate([
+            'parts' => 'required|array|min:1',
+            'parts.*.identifier' => 'required|string|max:100', // Nombre del componente (Base, Tapa)
+            'parts.*.quantity' => 'required|numeric|min:0.01',
+            'parts.*.station' => 'required|string', // TODO: Validar que exista
+            'parts.*.machine_id' => 'nullable|integer|exists:machines,id',
+        ]);
+
+        // --- LÓGICA DE CANTIDAD CORREGIDA (Tu Punto 1) ---
+        // La cantidad a deducir del padre es el MÁXIMO de las partes creadas.
+        $quantityToDeduct = collect($validated['parts'])->max('quantity');
+        $currentUnassigned = $production->unassigned_quantity ?? $production->quantity;
+
+        // Validar que la cantidad MÁXIMA de las partes no exceda la cantidad no asignada
+        if ($quantityToDeduct > $currentUnassigned) {
+            return back()->withErrors(['parts' => 'La cantidad de las partes (' . $quantityToDeduct . ') no puede exceder la cantidad no asignada ('. $currentUnassigned .').']);
+        }
+        // --- FIN LÓGICA DE CANTIDAD CORREGIDA ---
+
+        try {
+            DB::transaction(function () use ($validated, $production, $quantityToDeduct, $currentUnassigned) {
+                
+                foreach ($validated['parts'] as $partData) {
+                    // Replicamos la orden padre, excluyendo los campos que se reiniciarán
+                    $child = $production->replicate([
+                        'station', 'station_times', 'machine_id', 'finish_date', 'close_production_date', 
+                        'quality_released_date', 'production_close_type', 'quality_quantity', 'current_quantity',
+                        'close_quantity', 'scrap_quantity', 'production_scrap', 'quality_scrap', 'inspection_scrap',
+                        'shortage_quantity', 'production_shortage', 'quality_shortage', 'inspection_shortage',
+                        'close_production_notes', 'inspection_notes', 'quality_notes', 'partials',
+                        'packing_close_type', 'packing_notes', 'packing_scrap', 'packing_shortage', 'packing_partials',
+                        'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'returns',
+                        // También excluimos los campos de componentes
+                        'parent_production_id', 'part_identifier', 'part_quantity', 'unassigned_quantity'
+                    ]);
+                    
+                    $child->parent_production_id = $production->id;
+                    $child->part_identifier = $partData['identifier']; // Ej. "Base"
+                    $child->part_quantity = $partData['quantity']; // Cantidad del componente
+                    $child->unassigned_quantity = 0; // Los hijos no se pueden dividir
+                    $child->station = $partData['station'];
+                    $child->machine_id = $partData['machine_id'] ?? $production->machine_id; // Hereda la máquina si no se especifica
+
+                    // Creamos el historial de estación inicial para el hijo
+                    $child->station_times = [
+                        $this->createNewStationTimeRecord($partData['station'], now(), auth()->id(), "Componente '{$partData['identifier']}' creado")
+                    ];
+
+                    $child->save();
+                }
+
+                // Actualizamos la orden padre
+                $newUnassigned = $currentUnassigned - $quantityToDeduct;
+                $production->unassigned_quantity = $newUnassigned;
+
+                // Si ya no queda cantidad por asignar, marcamos el padre como 'Dividida'
+                if ($newUnassigned <= 0.01) { // Margen para floats
+                    $production->unassigned_quantity = 0;
+                    $production->station = 'Dividida';
+                    // Finalizamos cualquier registro de tiempo abierto en el padre
+                    $this->finalizeCurrentStation($production, now(), auth()->id(), 'Orden dividida en componentes');
+                }
+                
+                $production->save();
+            });
+        } catch (\Exception $e) {
+            Log::error('Error en splitProduction: ' . $e->getMessage());
+            return back()->withErrors(['general' => 'Error al dividir la orden: ' . $e->getMessage()]);
+        }
+
+        // Usamos redirect()->back() para que Inertia recargue las props en el modal/página
+        return redirect()->back()->with('success', 'Orden dividida exitosamente.');
+    }
+
+    /**
+     * Obtiene los hijos (componentes) de una orden padre.
+     */
+    public function getChildren(Production $production)
+    {
+        $children = $production->children()->with('machine')->get();
+        return response()->json($children);
+    }
+
+    /**
+     * Mueve todos los hijos especificados a una nueva estación.
+     */
+    public function moveAllChildren(Request $request)
+    {
+        $validated = $request->validate([
+            'child_ids' => 'required|array',
+            'child_ids.*' => 'integer|exists:productions,id',
+            'next_station' => 'required|string',
+            'machine_id' => 'nullable|integer|exists:machines,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        $userId = auth()->id();
+        $notes = $validated['notes'] ?? '';
+
+        try {
+            DB::transaction(function () use ($validated, $userId, $notes) {
+                $children = Production::findMany($validated['child_ids']);
+                
+                foreach ($children as $child) {
+                    // Solo movemos si la estación de destino es diferente a la actual
+                    if ($child->station !== $validated['next_station']) {
+                        $this->skipToStation(
+                            $child,
+                            $validated['next_station'],
+                            $validated['machine_id'], // Puede ser null
+                            $userId,
+                            $notes
+                        );
+                    }
+                }
+            });
+        } catch (\Exception $e) {
+            Log::error('Error en moveAllChildren: ' . $e->getMessage());
+            return back()->withErrors(['general' => 'Error al mover los componentes: ' . $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Componentes movidos.');
+    }
+
+    /**
+     * Lógica central para mover una orden a una nueva estación (tipo "skip").
+     * Esta es reutilizable para el movimiento masivo.
+     */
+    private function skipToStation(Production $production, string $nextStation, ?int $machineId, int $userId, string $notes = '')
+    {
+        $stationTimes = $production->station_times ?? [];
+        $now = now();
+
+        if (!empty($stationTimes)) {
+            $lastIndex = count($stationTimes) - 1;
+            $currentRecord = $stationTimes[$lastIndex];
+
+            // Solo finalizamos si no está ya finalizada
+            if ($currentRecord['status'] !== 'Finalizada') {
+                $currentRecord['status'] = 'Finalizada';
+                $currentRecord['finished_at'] = $now->toDateTimeString();
+                
+                $status = $currentRecord['status']; // El estado *antes* de finalizarlo
+
+                // Calculamos el tiempo transcurrido en el estado actual
+                if ($status === 'En espera' && !empty($currentRecord['entered_at'])) {
+                    $startTime = Carbon::parse($currentRecord['entered_at']);
+                    $currentRecord['times']['waiting_seconds'] += $now->diffInSeconds($startTime);
+
+                } else if ($status === 'En proceso' && !empty($currentRecord['started_at'])) {
+                     $currentRecord['times']['effective_seconds'] = $this->calculateEffectiveTime($currentRecord, $now);
+
+                } else if ($status === 'En pausa' && !empty($currentRecord['pauses'])) {
+                    $lastPauseKey = count($currentRecord['pauses']) - 1;
+                    if(isset($currentRecord['pauses'][$lastPauseKey]) && $currentRecord['pauses'][$lastPauseKey]['resumed_at'] === null) {
+                        $currentRecord['pauses'][$lastPauseKey]['resumed_at'] = $now->toDateTimeString();
+                    }
+                }
+                
+                // Calculamos los totales finales de pausa y efectivo (en caso de que viniera de "En Proceso" o "Pausa")
+                $currentRecord['times']['paused_seconds'] = $this->calculateTotalPausedTime($currentRecord);
+                if ($status !== 'En espera' && !empty($currentRecord['started_at'])) {
+                     $currentRecord['times']['effective_seconds'] = $this->calculateEffectiveTime($currentRecord, $now);
+                }
+
+
+                $currentRecord['history'][] = [
+                    'event' => 'Finalizada (Omitida)',
+                    'timestamp' => $now->toDateTimeString(),
+                    'user_id' => $userId,
+                    'details' => 'Movido a ' . $nextStation . '. ' . $notes,
+                ];
+                $stationTimes[$lastIndex] = $currentRecord;
+            }
+        }
+
+        // Crear el nuevo registro de estación (inicia "En espera")
+        $newRecordIdentifier = $production->part_identifier ?? 'Orden';
+        $stationTimes[] = $this->createNewStationTimeRecord($nextStation, $now, $userId, "Movimiento masivo: {$notes}");
+        
+        $production->station_times = $stationTimes;
+        $production->station = $nextStation;
+        if ($machineId) { // Solo actualiza la máquina si se proporciona una nueva
+            $production->machine_id = $machineId;
+        }
+        $production->save();
     }
 }
