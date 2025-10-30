@@ -33,10 +33,9 @@
                 <div>
                     <InputLabel value="Cliente*" />
                     <div class="flex items-center">
-                        <i v-if="fetchingClients" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingClients" class="text-[10px]">Cargando clientes</span>
-                        <el-select v-model="form.client" placeholder="" class="!w-full" filterable
-                            :disabled="fetchingClients">
+                        <el-select v-model="form.client" placeholder="Escribe para buscar..." class="!w-full"
+                            filterable remote reserve-keyword :remote-method="fetchClientsMatch"
+                            :loading="fetchingClients" no-match-text="No hay clientes coincidentes">
                             <el-option v-for="item in clients" :key="item.id" :label="item.name" :value="item.name" />
                         </el-select>
                     </div>
@@ -290,7 +289,11 @@ export default {
             form,
             products: [this.product],
             machines: [],
-            clients: [],
+            // --- MODIFICADO ---
+            // Inicializa 'clients' con el cliente actual para que se muestre.
+            // Usamos el nombre como 'id' y 'name' porque 'form.client' guarda el nombre.
+            clients: this.production.client ? [{ id: this.production.client, name: this.production.client }] : [],
+            // --- FIN MODIFICADO ---
             fetchingProducts: false,
             fetchingMachines: false,
             fetchingClients: false,
@@ -425,7 +428,8 @@ export default {
         },
         async fetchProductsMatch(query) {
             if (!query) {
-                this.products = [];
+                // No limpiar 'products' para que la opción actual siga seleccionada
+                // this.products = []; 
                 return;
             }
 
@@ -434,7 +438,13 @@ export default {
                 const response = await axios.get(route('products.get-match', { query }));
 
                 if (response.status === 200) {
-                    this.products = response.data.items;
+                    // Mantenemos el producto actual en la lista si no está en los resultados
+                    const currentProduct = this.product;
+                    if (currentProduct && !response.data.items.some(p => p.id === currentProduct.id)) {
+                        this.products = [currentProduct, ...response.data.items];
+                    } else {
+                        this.products = response.data.items;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching products:', error);
@@ -456,13 +466,24 @@ export default {
                 this.fetchingMachines = false;
             }
         },
-        async fetchClients() {
+        async fetchClientsMatch(query) {
+            if (!query) {
+                // No limpiar 'clients' para que la opción actual siga seleccionada
+                return;
+            }
+
             this.fetchingClients = true;
             try {
-                const response = await axios.get(route('clients.get-all'));
+                const response = await axios.get(route('clients.get-match', { query }));
 
                 if (response.status === 200) {
-                    this.clients = response.data.items;
+                    // Mantenemos el cliente actual en la lista si no está en los resultados
+                    const currentClient = { id: this.form.client, name: this.form.client };
+                    if (currentClient.name && !response.data.items.some(c => c.name === currentClient.name)) {
+                        this.clients = [currentClient, ...response.data.items];
+                    } else {
+                        this.clients = response.data.items;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching clients:', error);
@@ -473,7 +494,8 @@ export default {
     },
     mounted() {
         this.fetchMachines();
-        this.fetchClients();
+        this.handleDfh(); // Ejecuta esto al montar para calcular el 'dfh' inicial
+        this.handleSheet(); // Ejecuta esto para calcular todo lo demás
     },
 }
 </script>

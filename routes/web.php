@@ -177,6 +177,7 @@ Route::post('machines/get-matches', [MachineController::class, 'getMatches'])->n
 //------------------------------------------------------------------------------------------
 Route::resource('clients', ClientController::class)->middleware('auth');
 Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('clients.get-all')->middleware('auth');
+Route::get('clients/get-match/{query}', [ClientController::class, 'getMatch'])->name('clients.get-match')->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------

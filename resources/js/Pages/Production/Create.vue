@@ -30,16 +30,13 @@
                         value-format="YYYY-MM-DD" format="DD/MM/YYYY" />
                     <InputError :message="form.errors.estimated_date" />
                 </div>
-                <div>
+               <div>
                     <InputLabel value="Cliente*" />
-                    <div class="flex items-center">
-                        <i v-if="fetchingClients" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingClients" class="text-[10px]">Cargando clientes</span>
-                        <el-select v-model="form.client" placeholder="" class="!w-full" filterable
-                            :disabled="fetchingClients">
-                            <el-option v-for="item in clients" :key="item.id" :label="item.name" :value="item.name" />
-                        </el-select>
-                    </div>
+                    <el-select v-model="form.client" placeholder="Escribe para buscar..." class="!w-full"
+                        filterable remote reserve-keyword :remote-method="fetchClientsMatch"
+                        :loading="fetchingClients" no-match-text="No hay clientes coincidentes">
+                        <el-option v-for="item in clients" :key="item.id" :label="item.name" :value="item.name" />
+                    </el-select>
                     <InputError :message="form.errors.client" />
                 </div>
                 <div>
@@ -90,7 +87,7 @@
                     <InputError :message="form.errors.station" />
                 </div>
                 <div class="mt-1">
-                    <InputLabel value="Máquina" />
+                    <InputLabel value="Máquina*" />
                     <div class="flex items-center">
                         <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                         <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
@@ -219,7 +216,7 @@
                     <el-input v-model="form.ha" placeholder="H/A" disabled />
                 </div>
                 <div>
-                    <InputLabel value="P/F" />
+                    <InputLabel value="P/F *" />
                     <el-input-number v-model="form.pf" @change="handleHa" placeholder="P/F" :min="0" class="!w-full"
                         :step="0.01" />
                     <InputError :message="form.errors.pf" />
@@ -494,6 +491,26 @@ export default {
                 this.fetchingProducts = false;
             }
         },
+        async fetchClientsMatch(query) {
+            if (!query) {
+                this.clients = [];
+                return;
+            }
+
+            this.fetchingClients = true;
+            try {
+                // Asegúrate de que esta ruta exista en tu web.php
+                const response = await axios.get(route('clients.get-match', { query }));
+
+                if (response.status === 200) {
+                    this.clients = response.data.items;
+                }
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+            } finally {
+                this.fetchingClients = false;
+            }
+        },
         async fetchMachines() {
             this.fetchingMachines = true;
             try {
@@ -508,24 +525,9 @@ export default {
                 this.fetchingMachines = false;
             }
         },
-        async fetchClients() {
-            this.fetchingClients = true;
-            try {
-                const response = await axios.get(route('clients.get-all'));
-
-                if (response.status === 200) {
-                    this.clients = response.data.items;
-                }
-            } catch (error) {
-                console.error('Error fetching clients:', error);
-            } finally {
-                this.fetchingClients = false;
-            }
-        },
     },
     mounted() {
         this.fetchMachines();
-        this.fetchClients();
     },
 }
 </script>
