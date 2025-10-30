@@ -158,7 +158,6 @@ export default {
         currentStation() {
             return this.production?.station;
         },
-
         // --- Computed properties to show/hide conditional fields ---
         isMoveToQuality() {
             return this.form.next_station === 'Calidad' && this.currentStation !== 'Inspección';
@@ -206,19 +205,12 @@ export default {
             );
             this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
-            // --- LÓGICA DE CANTIDAD MODIFICADA ---
-            // Usar la cantidad de la parte (o la total si no es parte) como base
-            const baseQuantity = this.production?.part_quantity ?? this.production?.quantity ?? 0;
-
             if (this.isMoveToQuality) {
-                // Asumimos que Calidad recibe lo que se produjo en esta parte
-                this.form.quantity = baseQuantity; 
+                this.form.quantity = this.production?.quantity ?? 0;
             } else if (this.isMoveToInspection) {
-                // Inspección recibe lo que liberó producción (close_quantity)
                 this.form.quantity = this.production?.close_quantity ?? 0;
             } else if (this.isMoveToPacking) {
-                 // Empaques recibe lo que liberó calidad (quality_quantity)
-                 this.form.quantity = this.production?.quality_quantity ?? this.production?.close_quantity ?? baseQuantity;
+                 this.form.quantity = this.production?.quality_quantity ?? this.production?.close_quantity ?? this.production?.quantity;
             } else if (this.isReturnToReprocess || this.isReturnToQuality) {
                 this.form.quantity = this.isReturnToReprocess 
                     ? this.production?.close_quantity 
@@ -231,7 +223,6 @@ export default {
             if (newVal) {
                 this.form.processType = this.processType;
                 this.form.machine_id = this.production?.machine_id;
-                // Ajustado para usar la prop 'defaultQuantity' que ya calculamos en el modal padre
                 this.form.quantity = this.defaultQuantity;
             } else {
                 this.form.reset();
@@ -241,3 +232,4 @@ export default {
     }
 };
 </script>
+

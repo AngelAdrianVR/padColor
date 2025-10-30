@@ -6,15 +6,12 @@
                 <Loading />
             </div>
             <div v-else-if="selectedProduction" class="text-sm">
-                <!-- ------------ Header (MODIFICADO) ------------ -->
+                <!-- ------------ Header ------------ -->
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="flex items-center space-x-3">
-                            <!-- Título MODIFICADO para incluir componente -->
-                            <h1 class="font-bold text-lg text-gray-800">
-                                Orden de producción Nº. {{ selectedProduction.folio }}
-                                <span v-if="selectedProduction.part_identifier" class="text-blue-600">- {{ selectedProduction.part_identifier }}</span>
-                            </h1>
+                            <h1 class="font-bold text-lg text-gray-800">Orden de producción Nº. {{
+                                selectedProduction.folio }}</h1>
                             <!-- Status Chip -->
                             <span class="flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
                                 :class="[statusInfo.bgColor, statusInfo.textColor]">
@@ -23,29 +20,10 @@
                             </span>
                         </div>
                         <p class="text-sm text-gray-600 mt-1">Producto: {{ selectedProduction.product.name }}</p>
-                        
-                        <!-- Lógica de Cantidad MODIFICADA -->
-                        <p v-if="selectedProduction.part_quantity" class="text-sm text-gray-600">
-                            Cantidad de componente: <span class="font-semibold">{{ selectedProduction.part_quantity?.toLocaleString('es-MX') }}</span>
-                            (Total orden: {{ selectedProduction.quantity?.toLocaleString('es-MX') }})
-                        </p>
-                        <p v-else class="text-sm text-gray-600">
-                            Cantidad solicitada: <span class="font-semibold">{{ selectedProduction.quantity?.toLocaleString('es-MX') }}</span>
-                        </p>
-                         <p v-if="!selectedProduction.parent_production_id && (selectedProduction.unassigned_quantity !== null && selectedProduction.unassigned_quantity > 0)" class="text-sm text-amber-700 font-semibold">
-                            Cantidad por asignar: {{ selectedProduction.unassigned_quantity?.toLocaleString('es-MX') }}
-                        </p>
-                        <!-- Fin Lógica de Cantidad -->
-
+                        <p class="text-sm text-gray-600">Cantidad solicitada: <span class="font-semibold">{{
+                            selectedProduction.quantity?.toLocaleString('es-MX') }}</span></p>
                     </div>
                     <div class="flex items-center space-x-2 flex-shrink-0">
-                        <!-- Botón Dividir Orden AÑADIDO -->
-                        <PrimaryButton 
-                            v-if="$page.props.auth.user.permissions.includes('Editar producciones') && !selectedProduction.parent_production_id && (selectedProduction.unassigned_quantity === null ? selectedProduction.quantity : selectedProduction.unassigned_quantity) > 0 && selectedProduction.station !== 'Terminadas' && selectedProduction.station !== 'Dividida'"
-                            @click="showSplitModal = true"
-                            class="!bg-purple-600 hover:!bg-purple-700">
-                            Dividir Orden
-                        </PrimaryButton>
                         <a :href="route('productions.hoja-viajera', selectedProduction.id)" target="_blank"
                             class="text-sm text-[#EC4899] border border-[#EC4899] rounded-md px-3 py-1.5 hover:bg-[#FCE7F3] transition-all">
                             Hoja viajera
@@ -58,7 +36,7 @@
                     </div>
                 </div>
 
-                <!-- ------------ Tabs (MODIFICADO) ------------ -->
+                <!-- ------------ Tabs ------------ -->
                 <div class="mt-4">
                     <el-tabs v-model="activeTab">
                         <el-tab-pane label="Detalles de la orden" name="details">
@@ -69,11 +47,7 @@
                                         la orden</h2>
                                     <div class="grid grid-cols-3 gap-x-6 gap-y-2 mt-3 px-2">
                                         <p class="text-gray-500">N° de Orden:</p>
-                                        <!-- Folio MODIFICADO para incluir componente -->
-                                        <p class="font-semibold col-span-2">
-                                            {{ selectedProduction.folio }}
-                                            <span v-if="selectedProduction.part_identifier" class="text-blue-600">- {{ selectedProduction.part_identifier }}</span>
-                                        </p>
+                                        <p class="font-semibold col-span-2">{{ selectedProduction.folio }}</p>
                                         <p class="text-gray-500">Fecha de emisión:</p>
                                         <p class="col-span-2">{{ formatDate(selectedProduction.start_date) }}</p>
                                         <p class="text-gray-500">Fecha estimada:</p>
@@ -190,18 +164,10 @@
                                     </div>
                                 </section>
 
-                                <!-- Station Control (MODIFICADO) -->
+                                <!-- Station Control -->
                                 <section>
                                     <h2 class="font-bold px-3 pb-1">Control de estación</h2>
-                                    
-                                    <!-- Div AÑADIDO para deshabilitar controles en padres divididos -->
-                                    <div v-if="!selectedProduction.parent_production_id && selectedProduction.station === 'Dividida'" 
-                                        class="p-4 border rounded-lg bg-gray-100 text-center text-gray-600">
-                                        Esta orden ha sido dividida en componentes. Gestione cada componente de forma individual desde la pestaña "Partes / Componentes".
-                                    </div>
-                                    
-                                    <!-- Tus controles originales, ahora con v-else-if -->
-                                    <div v-else-if="currentStationRecord && currentStationRecord.status !== 'Finalizada'"
+                                    <div v-if="currentStationRecord && currentStationRecord.status !== 'Finalizada'"
                                         class="p-4 border rounded-lg bg-[#F2F2F2]">
                                         <!-- Waiting State -->
                                         <div v-if="currentStationStatus === 'En espera'">
@@ -302,10 +268,7 @@
                                         </div>
                                     </div>
                                     <div v-else class="text-center text-gray-500 py-8 border rounded-b-md">
-                                        <p v-if="selectedProduction.station === 'Dividida'">
-                                            Gestione los componentes en su pestaña.
-                                        </p>
-                                        <p v-else-if="currentStationRecord?.status === 'Finalizada'">La estación actual ya ha
+                                        <p v-if="currentStationRecord?.status === 'Finalizada'">La estación actual ya ha
                                             sido finalizada.</p>
                                         <p v-else>No hay un registro de tiempo para la estación actual.</p>
                                     </div>
@@ -482,18 +445,6 @@
                                 </div>
                             </div>
                         </el-tab-pane>
-
-                        <!-- Tab AÑADIDA -->
-                        <el-tab-pane label="Partes / Componentes" name="parts" v-if="!selectedProduction.parent_production_id">
-                            <ProductionChildrenList
-                                :parent-production="selectedProduction"
-                                :stations="availableStationsForSplit"
-                                :machines="machines"
-                                @child-clicked="handleChildClicked"
-                                @children-updated="handleChildrenUpdated"
-                            />
-                        </el-tab-pane>
-
                     </el-tabs>
                 </div>
             </div>
@@ -506,18 +457,8 @@
         :machines="machines" :production="selectedProduction" :default-quantity="moveDefaultQty"
         @close="showMoveModal = false" @submit="handleMoveSubmit" />
     <RegisterDeliveryModal :show="showDeliveryModal" :production="selectedProduction" :context="deliveryContext"
-        :default-quantity="deliveryDefaultQty" 
-        @close="showDeliveryModal = false"
-        @submit="handleDeliverySubmit" /> <!-- Prop 'is-partial' eliminada, el componente RegisterDeliveryModal ya no la usa -->
-
-    <!-- Modal de División AÑADIDO -->
-    <SplitProductionModal
-        :show="showSplitModal"
-        :production="selectedProduction"
-        :stations="availableStationsForSplit"
-        :machines="machines"
-        @close="showSplitModal = false"
-    />
+        :is-partial="isDeliveryPartial" :default-quantity="deliveryDefaultQty" @close="showDeliveryModal = false"
+        @submit="handleDeliverySubmit" />
 
 </template>
 
@@ -529,9 +470,6 @@ import StationTimeHistory from './StationTimeHistory.vue';
 import PauseStationModal from './PauseStationModal.vue';
 import MoveStationModal from './MoveStationModal.vue';
 import RegisterDeliveryModal from './RegisterDeliveryModal.vue';
-// Imports AÑADIDOS
-import SplitProductionModal from './SplitProductionModal.vue';
-import ProductionChildrenList from './ProductionChildrenList.vue';
 import { format, parseISO, differenceInSeconds } from 'date-fns';
 import es from 'date-fns/locale/es';
 import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/solid';
@@ -542,9 +480,7 @@ export default {
         DialogModal, Loading, PrimaryButton, StationTimeHistory,
         PauseStationModal, MoveStationModal, RegisterDeliveryModal,
         CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon,
-        QuestionMarkCircleIcon,
-        SplitProductionModal, // Componente AÑADIDO
-        ProductionChildrenList, // Componente AÑADIDO
+        QuestionMarkCircleIcon
     },
     props: {
         show: Boolean, selectedProduction: Object, updatingDetails: Boolean,
@@ -553,7 +489,6 @@ export default {
     emits: [
         'close', 'start-process', 'pause-process', 'resume-process',
         'finish-move-process', 'skip-move-process', 'register-delivery',
-        'open-child', // Emit AÑADIDO
     ],
     data() {
         return {
@@ -563,32 +498,20 @@ export default {
             showPauseModal: false,
             showMoveModal: false,
             showDeliveryModal: false,
-            showSplitModal: false, // Propiedad AÑADIDA
             moveModalMode: 'skip',
             deliveryContext: null,
-            isDeliveryPartial: false, // Esta prop ya no se usa en RegisterDeliveryModal, pero la dejamos por si acaso
+            isDeliveryPartial: false,
             deliveryDefaultQty: 0,
             moveDefaultQty: 0,
         };
     },
     watch: {
         selectedProduction(newVal) {
-            // No reseteamos a 'details' si la nueva producción es un hijo que abrimos desde la lista
-            if (newVal && this.activeTab !== 'parts') {
-                this.activeTab = 'details';
-            }
-            // Si el modal se cierra (selectedProduction se vuelve null), resetea el tab
-            if (!newVal) {
-                this.activeTab = 'details';
-            }
+            if (newVal) this.activeTab = 'details';
         },
         show(newVal) {
-            if (newVal) {
-                this.liveTimeTrigger = setInterval(() => { this.now = new Date(); }, 1000);
-            } else {
-                clearInterval(this.liveTimeTrigger);
-                this.activeTab = 'details'; // Resetea el tab al cerrar
-            }
+            if (newVal) this.liveTimeTrigger = setInterval(() => { this.now = new Date(); }, 1000);
+            else clearInterval(this.liveTimeTrigger);
         }
     },
     computed: {
@@ -648,17 +571,11 @@ export default {
             const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado'];
             return allStations.filter(s => !restricted.includes(s.name) && s.name !== current);
         },
-        // Propiedad AÑADIDA para filtro de estaciones en componentes
-        availableStationsForSplit() {
-            const restricted = ['Dividida', 'Terminadas', 'Empaques terminado'];
-            return this.stations.filter(s => !restricted.includes(s.name));
-        },
         totalEffectiveTime() {
             if (!this.selectedProduction?.station_times) return 0;
             let total = this.selectedProduction.station_times.reduce((acc, station) => acc + (station.times?.effective_seconds ?? 0), 0);
             if (this.currentStationStatus === 'En proceso') {
-                // Suma el tiempo "en vivo" solo si no es la suma de sí mismo (evita duplicar)
-                total += (this.liveEffectiveTime - this.accumulatedPausedTimeInCurrentStation);
+                total += this.liveEffectiveTime;
             }
             return total;
         },
@@ -685,8 +602,7 @@ export default {
         liveEffectiveTime() {
             if (this.currentStationStatus !== 'En proceso' || !this.currentStationRecord.started_at) return 0;
             const startedAt = parseISO(this.currentStationRecord.started_at);
-            // El tiempo efectivo "en vivo" es desde el inicio + pausas acumuladas
-            return differenceInSeconds(this.now, startedAt);
+            return differenceInSeconds(this.now, startedAt) - this.accumulatedPausedTimeInCurrentStation;
         },
         accumulatedPausedTimeInCurrentStation() {
             if (!this.currentStationRecord?.pauses?.length) return 0;
@@ -702,55 +618,32 @@ export default {
             const lastPause = this.currentStationRecord.pauses[this.currentStationRecord.pauses.length - 1];
             if (!lastPause.resumed_at) {
                 const currentPauseDuration = differenceInSeconds(this.now, parseISO(lastPause.paused_at));
-                // Sumamos el tiempo de esta pausa en vivo + las pausas ya completadas de esta estación
-                return this.accumulatedPausedTimeInCurrentStation + currentPauseDuration;
+                return currentPauseDuration;
             }
-            // Si la última pausa ya se reanudó (raro, debería estar 'En proceso'), solo devuelve las acumuladas
-            return this.accumulatedPausedTimeInCurrentStation;
+            return 0;
         }
     },
     methods: {
-        // Lógica de openMoveModal CORREGIDA
         openMoveModal(mode) {
             this.moveModalMode = mode;
-            
-            const prod = this.selectedProduction;
-            const station = prod.station;
-
-            // Determina la cantidad base correcta para el modal
-            if (station === 'Calidad') {
-                this.moveDefaultQty = prod.close_quantity ?? 0;
-            } else if (station === 'Inspección') {
-                this.moveDefaultQty = prod.quality_quantity ?? 0;
-            } else if (station === 'Empaques') {
-                this.moveDefaultQty = prod.packing_received_quantity ?? 0;
-            } else {
-                // Para todas las demás estaciones, la cantidad base es
-                // la cantidad del componente (si existe) o la cantidad total de la orden.
-                this.moveDefaultQty = prod.part_quantity ?? prod.quantity ?? 0;
-            }
-
             this.showMoveModal = true;
         },
         openDeliveryModal(context, isPartial) {
             this.deliveryContext = context;
-            this.isDeliveryPartial = isPartial; // Esta prop ya no la usa RegisterDeliveryModal, pero la mantenemos
+            this.isDeliveryPartial = isPartial;
 
-            // --- Lógica para calcular la cantidad restante (de tu archivo) ---
+            // --- NEW: Calculate remaining quantity ---
             const production = this.selectedProduction;
             let remainingQty = 0;
             if (context === 'inspection') {
                 const delivered = production.partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
-                // La base es la cantidad del componente (si existe) o la de calidad/cierre
-                const baseQty = production.part_quantity ?? (production.quality_quantity ?? production.close_quantity ?? 0);
-                remainingQty = baseQty - delivered;
+                remainingQty = (production.quality_quantity ?? production.close_quantity ?? 0) - delivered;
             } else if (context === 'packing') {
                 const delivered = production.packing_partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
-                const baseQty = production.part_quantity ?? (production.packing_received_quantity ?? 0);
-                remainingQty = baseQty - delivered;
+                remainingQty = (production.packing_received_quantity ?? 0) - delivered;
             }
             this.deliveryDefaultQty = remainingQty > 0 ? remainingQty : 0;
-            // --- Fin de la lógica de cantidad ---
+            // --- END NEW ---
 
             this.showDeliveryModal = true;
         },
@@ -764,27 +657,13 @@ export default {
             this.showMoveModal = false;
         },
         handleDeliverySubmit(form) {
-            // Tu componente RegisterDeliveryModal emite el 'form' directamente
             this.$emit('register-delivery', {
                 form: form,
                 context: this.deliveryContext,
-                isPartial: this.isDeliveryPartial, // Se sigue enviando por si acaso
+                isPartial: this.isDeliveryPartial,
             });
             this.showDeliveryModal = false;
         },
-        // --- Métodos AÑADIDOS ---
-        handleChildClicked(childId) {
-            this.$emit('open-child', childId);
-        },
-        handleChildrenUpdated() {
-            // Cierra el modal actual (que es el del padre)
-            this.$emit('close');
-            // El Index.vue (que escucha el 'close') se encargará de refrescar la lista
-            // Si 'updateDetails' está en Index.vue, esto funciona.
-            // Por si acaso, podemos forzar el refresco desde aquí si 'close' no lo hace.
-            // Pero 'close' es más limpio.
-        },
-        // --- Fin Métodos AÑADIDOS ---
         calculatePercentage(value, total) {
             if (!total || !value) return '0.0';
             return ((value / total) * 100).toFixed(1);

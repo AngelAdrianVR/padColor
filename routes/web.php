@@ -139,13 +139,6 @@ Route::post('productions-clone/{production}', [ProductionController::class, 'clo
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
 Route::get('productions-backfill', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill');
 
-// --- RUTA PARA DIVIDIR ---
-Route::post('productions/{production}/split', [ProductionController::class, 'splitProduction'])->name('productions.split');
-
-// --- NUEVAS RUTAS PARA MANEJAR HIJOS (Punto 2) ---
-Route::get('productions/{production}/children', [ProductionController::class, 'getChildren'])->name('productions.get-children');
-Route::post('productions/move-all-children', [ProductionController::class, 'moveAllChildren'])->name('productions.move-all-children');
-
 // --- STATION TIME TRACKING ---
 Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
     Route::post('/start', [ProductionController::class, 'startStationProcess'])->name('start');

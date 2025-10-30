@@ -5,17 +5,16 @@
                 @show-export="showExportFilters = true" />
 
             <div class="mt-2 text-center">
-                <el.tag v-if="search" size="large" closable @close="handleTagClose">
+                <el-tag v-if="search" size="large" closable @close="handleTagClose">
                     Estas buscando: <b>{{ search }}</b>
-                </el.tag>
+                </el-tag>
             </div>
             <div class="mt-6">
                 <el-pagination layout="total, prev, pager, next" size="small" v-model:page-size="pageSize"
                     v-model:current-page="currentPage" :total="total" @current-change="handleCurrentChange"
                     class="ml-2" />
                 <Loading v-if="fetching" />
-                <!-- CAMBIO: Se usa "processedProductions" en lugar de "productions" -->
-                <ProductionTable v-else :productions="processedProductions" :stations="stations" @row-click="handleRowClick"
+                <ProductionTable v-else :productions="productions" :stations="stations" @row-click="handleRowClick"
                     @command="handleCommand" />
             </div>
         </div>
@@ -34,7 +33,6 @@
             @finish-move-process="finishAndMoveProcess"
             @skip-move-process="skipAndMoveProcess" 
             @register-delivery="handleRegisterDelivery"
-            @open-child="handleOpenChild" 
          />
 
         <DialogModal :show="showExportFilters" @close="showExportFilters = false">
@@ -257,45 +255,10 @@ export default {
             ]
         }
     },
-    // --- SECCIÓN COMPUTED AÑADIDA ---
-    computed: {
-        /**
-         * Procesa la lista de producciones crudas para su visualización en la tabla.
-         * Crea 'display_folio' y 'display_quantity' para manejar padres e hijos.
-         */
-        processedProductions() {
-            return this.productions.map(prod => {
-                // Creamos un folio legible que incluye la parte
-                const displayFolio = prod.part_identifier 
-                                   ? `${prod.folio}-${prod.part_identifier}`
-                                   : prod.folio;
-                
-                let displayQuantity;
-                if (prod.part_quantity !== null) {
-                    // Es un componente hijo, muestra su cantidad
-                    displayQuantity = prod.part_quantity;
-                } else if (prod.unassigned_quantity !== null) {
-                    // Es una orden padre (o una orden normal/nueva), muestra la cantidad por asignar
-                    displayQuantity = prod.unassigned_quantity;
-                } else {
-                    // Fallback para órdenes muy antiguas sin 'unassigned_quantity'
-                    displayQuantity = prod.quantity;
-                }
-
-                return {
-                    ...prod,
-                    display_folio: displayFolio, // Nuevo campo para la tabla
-                    display_quantity: displayQuantity, // Nuevo campo para la tabla
-                };
-            });
-        }
-    },
     methods: {
         // --- Event Handlers from Children ---
         handleRowClick(row) {
-            // CAMBIO: Busca la producción original en el array 'productions' usando el ID
-            // ya que 'row' ahora viene de 'processedProductions'
-            this.selectedProduction = this.productions.find(p => p.id === row.id);
+            this.selectedProduction = row;
             this.showDetails = true;
         },
         handleCommand(command) {
@@ -473,28 +436,6 @@ export default {
                 this.showDetails = false; // Production might have been moved out of view
             }
             this.updatingDetails = false;
-        },
-        // --- MÉTODO NUEVO AÑADIDO ---
-        /**
-         * Se dispara desde el modal de detalles cuando se hace clic en un componente hijo.
-         * Abre el modal de detalles para ese hijo.
-         */
-        handleOpenChild(childId) {
-            // Busca el hijo en la lista de producciones
-            const childProduction = this.productions.find(p => p.id === childId);
-            if (childProduction) {
-                this.selectedProduction = childProduction;
-                this.showDetails = true; // Abre el modal con el hijo
-            } else {
-                // Si no se encuentra (raro), refresca la lista y busca de nuevo
-                this.updateDetails().then(() => {
-                     const foundChild = this.productions.find(p => p.id === childId);
-                     if (foundChild) {
-                         this.selectedProduction = foundChild;
-                         this.showDetails = true;
-                     }
-                });
-            }
         },
         async fetchUsers() {
             try {

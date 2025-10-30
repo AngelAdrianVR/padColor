@@ -11,8 +11,6 @@ class Production extends Model
 
     protected $fillable = [
         'folio',
-        'part_identifier', // Nuevo
-        'parent_production_id', // Nuevo
         'type',
         'client',
         'season',
@@ -39,8 +37,6 @@ class Production extends Model
         'estimated_date',
         'estimated_package_date',
         'quantity',
-        'part_quantity', // Nuevo
-        'unassigned_quantity', // Nuevo
         'production_close_type',
         'close_quantity',
         'quality_quantity',
@@ -63,7 +59,7 @@ class Production extends Model
         'close_production_notes',
         'quality_notes',
         'inspection_notes',
-
+        
         'packing_close_type',
         'packing_notes',
         'packing_scrap',
@@ -72,7 +68,7 @@ class Production extends Model
         'packing_received_quantity',
         'packing_received_date',
         'packing_finished_date',
-
+        
         'ha',
         'pf',
         'ts',
@@ -98,27 +94,9 @@ class Production extends Model
         'quality_released_date' => 'datetime',
         'packing_received_date' => 'datetime',
         'packing_finished_date' => 'datetime',
-        'part_quantity' => 'float', // Nuevo
-        'unassigned_quantity' => 'float', // Nuevo
     ];
 
     //realciones
-    /**
-     * Obtiene la orden padre (si esta es una parte).
-     */
-    public function parent()
-    {
-        return $this->belongsTo(Production::class, 'parent_production_id');
-    }
-
-    /**
-     * Obtiene las partes (hijos) de esta orden.
-     */
-    public function children()
-    {
-        return $this->hasMany(Production::class, 'parent_production_id');
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
