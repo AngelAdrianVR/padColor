@@ -102,6 +102,8 @@ class ProductionController extends Controller
             );
             $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
         }
+
+        return to_route('productions.index');
     }
 
     public function show(Production $production)
