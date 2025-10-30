@@ -48,4 +48,17 @@ class ClientController extends Controller
 
         return response()->json(compact('items'));
     }
+
+    /**
+     * NUEVO MÉTODO: Busca clientes que coincidan con la consulta.
+     */
+    public function getMatch($query)
+    {
+        $items = Client::latest('id')
+            ->where('name', 'like', "%$query%")
+            ->get(['name', 'id']) // Solo trae name e id
+            ->take(30); // Limita a 30 resultados
+
+        return response()->json(compact('items'));
+    }
 }

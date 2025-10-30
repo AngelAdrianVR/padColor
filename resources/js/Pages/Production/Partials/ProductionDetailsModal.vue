@@ -54,6 +54,8 @@
                                         <p class="col-span-2">{{ formatDate(selectedProduction.estimated_date) }}</p>
                                         <p class="text-gray-500">Cliente:</p>
                                         <p class="col-span-2">{{ selectedProduction.client }}</p>
+                                        <p class="text-gray-500">Observaciones:</p>
+                                        <p class="col-span-2">{{ selectedProduction.notes }}</p>
                                     </div>
                                 </section>
 
