@@ -367,55 +367,63 @@ export default {
                 onError: (err) => this.$notify({ title: "Error en importación", type: "error" }),
             });
         },
-        startProcess() {
-            this.$inertia.post(route('productions.station-process.start', this.selectedProduction.id), {}, {
-                onSuccess: () => this.updateDetails(),
+         startProcess(payload) { // Modificado
+            const id = payload ? payload.productionId : this.selectedProduction.id; // Modificado
+            this.$inertia.post(route('productions.station-process.start', id), {}, { // Modificado
+                onSuccess: () => this.updateDetails(id), // Modificado
                 onError: () => this.$notify({ title: "Error", message: "No se pudo iniciar el proceso", type: "error" }),
                 preserveScroll: true,
             });
         },
-        pauseProcess(payload) {
-            this.$inertia.post(route('productions.station-process.pause', this.selectedProduction.id), { reason: payload.reason, notes: payload.notes }, {
-                onSuccess: () => this.updateDetails(),
+        pauseProcess(payload) { // Modificado
+            const id = payload.productionId || this.selectedProduction.id; // Modificado
+            this.$inertia.post(route('productions.station-process.pause', id), { reason: payload.reason, notes: payload.notes }, { // Modificado
+                onSuccess: () => this.updateDetails(id), // Modificado
                 onError: (errors) => this.$notify({ title: "Error", message: errors.reason || "No se pudo pausar el proceso", type: "error" }),
                 preserveScroll: true,
             });
         },
-        resumeProcess() {
-            this.$inertia.post(route('productions.station-process.resume', this.selectedProduction.id), {}, {
-                onSuccess: () => this.updateDetails(),
+        resumeProcess(payload) { // Modificado
+            const id = payload ? payload.productionId : this.selectedProduction.id; // Modificado
+            this.$inertia.post(route('productions.station-process.resume', id), {}, { // Modificado
+                onSuccess: () => this.updateDetails(id), // Modificado
                 onError: () => this.$notify({ title: "Error", message: "No se pudo reanudar el proceso", type: "error" }),
                 preserveScroll: true,
             });
         },
-        finishAndMoveProcess(payload) {
-            const isReturn = (payload.next_station === 'X Reproceso' && this.selectedProduction.station === 'Calidad') ||
-                             (payload.next_station === 'Calidad' && this.selectedProduction.station === 'Inspección');
+        finishAndMoveProcess(payload) { // Modificado
+            const id = payload.productionId || this.selectedProduction.id; // Modificado
+            const production = payload.productionObject || this.selectedProduction; // Modificado
+
+            const isReturn = (payload.next_station === 'X Reproceso' && production.station === 'Calidad') ||
+                             (payload.next_station === 'Calidad' && production.station === 'Inspección');
 
             if (isReturn) {
-                 this.$inertia.post(route('productions.return-station', this.selectedProduction.id), payload, {
-                    onSuccess: () => this.updateDetails(true),
+                 this.$inertia.post(route('productions.return-station', id), payload, { // Modificado
+                    onSuccess: () => this.updateDetails(id, true), // Modificado
                     onError: () => this.$notify({ title: "Error", message: "No se pudo regresar la orden", type: "error" }),
                  });
             } else {
-                 this.$inertia.post(route('productions.station-process.finishAndMove', this.selectedProduction.id), payload, {
-                    onSuccess: () => this.updateDetails(true),
+                 this.$inertia.post(route('productions.station-process.finishAndMove', id), payload, { // Modificado
+                    onSuccess: () => this.updateDetails(id, true), // Modificado
                     onError: (e) => this.$notify({ title: "Error", message: "No se pudo finalizar y mover la orden", type: "error" }),
                  });
             }
         },
-        skipAndMoveProcess(payload) {
-            this.$inertia.post(route('productions.station-process.skipAndMove', this.selectedProduction.id), payload, {
-                 onSuccess: () => this.updateDetails(true),
+        skipAndMoveProcess(payload) { // Modificado
+            const id = payload.productionId || this.selectedProduction.id; // Modificado
+            this.$inertia.post(route('productions.station-process.skipAndMove', id), payload, { // Modificado
+                 onSuccess: () => this.updateDetails(id, true), // Modificado
                  onError: () => this.$notify({ title: "Error", message: "No se pudo mover la estación", type: "error" }),
             });
         },
-        handleRegisterDelivery(payload) {
+        handleRegisterDelivery(payload) { // Modificado
+            const id = payload.productionId || this.selectedProduction.id; // Modificado
             const data = { ...payload.form, context: payload.context };
-            this.$inertia.post(route('productions.station-process.register-delivery', this.selectedProduction.id), data, {
+            this.$inertia.post(route('productions.station-process.register-delivery', id), data, { // Modificado
                 onSuccess: () => {
                     this.$notify({ title: "Entrega registrada", type: "success" });
-                    this.updateDetails();
+                    this.updateDetails(id); // Modificado
                 },
                 onError: (e) => {
                     this.$notify({ title: "Error", message: "No se pudo registrar la entrega. Revisa los datos.", type: "error" });
@@ -423,17 +431,40 @@ export default {
                 preserveScroll: true,
             });
         },
-        async updateDetails(closeOnSuccess = false) {
+        async updateDetails(updatedId = null, closeOnSuccess = false) { // Modificado
             this.updatingDetails = true;
-            await this.fetchProductions();
-            const updatedProduction = this.productions.find(p => p.id == this.selectedProduction?.id);
-            if (updatedProduction) {
-                this.selectedProduction = updatedProduction;
-                if (closeOnSuccess) {
-                    this.showDetails = false;
+            await this.fetchProductions(); // Refresca la lista principal de padres
+            
+            // ID a buscar (puede ser el padre o un hijo que se actualizó)
+            const idToFind = updatedId || this.selectedProduction?.id;
+
+            // Si la orden es dividida, necesitamos recargar los hijos
+            if (this.selectedProduction?.station === 'Producción dividida') {
+                try {
+                    const response = await axios.get(route('productions.get-children', this.selectedProduction.id));
+                    // selectedProduction se actualiza desde la lista de padres
+                    const updatedParent = this.productions.find(p => p.id == this.selectedProduction.id);
+                    if (updatedParent) {
+                        this.selectedProduction = { ...updatedParent, children: response.data.items }; // Sobrescribimos/añadimos los hijos actualizados
+                    } else {
+                        this.showDetails = false; // El padre ya no está (raro)
+                    }
+                } catch (e) {
+                    console.error("Error recargando componentes", e);
+                    this.showDetails = false; // Error cargando hijos
                 }
             } else {
-                this.showDetails = false; // Production might have been moved out of view
+                // Lógica de orden simple (como antes)
+                const updatedProduction = this.productions.find(p => p.id == idToFind);
+                if (updatedProduction) {
+                    this.selectedProduction = updatedProduction;
+                } else {
+                    this.showDetails = false; // Production might have been moved out of view
+                }
+            }
+            
+            if (closeOnSuccess) {
+                this.showDetails = false;
             }
             this.updatingDetails = false;
         },
