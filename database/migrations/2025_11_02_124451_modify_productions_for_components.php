@@ -34,7 +34,7 @@ return new class extends Migration
                  logger('No se pudo dropear la constraint unique de folio. ' . $e->getMessage());
             }
            
-            // Hacer la columna 'folio' nullable
+            // Hacer la columnas 'folio' nullable
             $table->unsignedBigInteger('folio')->nullable()->change();
 
             // 3. Añadir la restricción unique condicional

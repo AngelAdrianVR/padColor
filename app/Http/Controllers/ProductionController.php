@@ -10,12 +10,26 @@ use App\Imports\ProductionsImport;
 use App\Notifications\ProductionForwardedNotification;
 use App\Traits\NotifiesViaEvents;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionController extends Controller
 {
     use NotifiesViaEvents;
+
+    // --- INICIO: NUEVAS CONSTANTES DE HORARIO LABORAL ---
+    /**
+     * Define la hora de inicio de la jornada laboral (formato HH:mm:ss).
+     */
+    private const WORK_START_TIME = '08:00:00';
+
+    /**
+     * Define la hora de fin de la jornada laboral (formato HH:mm:ss).
+     */
+    private const WORK_END_TIME = '17:30:00';
+    // --- FIN: NUEVAS CONSTANTES DE HORARIO LABORAL ---
+
 
     public function dashboard()
     {
@@ -26,6 +40,7 @@ class ProductionController extends Controller
 
     public function index()
     {
+        // Solo trae producciones padre (o simples)
         return inertia('Production/Index');
     }
 
@@ -36,33 +51,27 @@ class ProductionController extends Controller
 
     public function create()
     {
-        // Esta lógica de "nextFolio" sigue funcionando porque busca el último folio,
-        // y los folios solo existen en los padres.
-        $nextProduction = Production::whereNotNull('folio')->latest('folio')->first();
+        $nextProduction = Production::whereNull('parent_id')->latest('folio')->first();
         $nextProduction = $nextProduction ? $nextProduction->folio + 1 : 1;
 
         return inertia('Production/Create', compact('nextProduction'));
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        // --- REGLAS DE VALIDACIÓN MODIFICADAS ---
+        // Validación adaptada para componentes
         $validated = $request->validate([
-            // 'folio' es requerido y único SÓLO si es un padre (parent_id es NULL)
-            'folio' => 'required|numeric|unique:productions,folio,NULL,id,parent_id,NULL',
+            'folio' => 'required_if:has_components,false|nullable|numeric|unique:productions,folio,NULL,id,parent_id,NULL',
             'type' => 'nullable|string|max:255',
             'start_date' => 'required|date',
             'estimated_date' => 'required|date',
             'client' => 'required|string|max:255',
             'changes' => 'required|numeric|min:0',
             'product_id' => 'required|min:1|integer|exists:products,id',
-            'quantity' => 'required|numeric|min:1', // Cantidad de la orden padre
+            'quantity' => 'required_if:has_components,false|nullable|numeric|min:1',
             'materials' => 'nullable|string|max:255',
-            
-            // Estación y máquina son requeridas si NO tiene componentes
             'station' => 'required_if:has_components,false|nullable|string|max:255',
             'machine_id' => 'required_if:has_components,false|nullable|min:1|integer|exists:machines,id',
-            
             'notes' => 'nullable|string|max:300',
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
@@ -80,114 +89,135 @@ class ProductionController extends Controller
             'ps' => 'nullable|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
             'varnish_type' => 'required_if_accepted:has_varnish',
-
-            // Validar los componentes
+            // Validación de componentes
             'has_components' => 'required|boolean',
-            'components' => 'nullable|array|required_if:has_components,true',
-            'components.*.name' => 'required|string|max:255',
-            'components.*.quantity' => 'required|numeric|min:1',
-            'components.*.station' => 'required|string|max:255',
-            'components.*.machine_id' => 'required|min:1|integer|exists:machines,id',
-
+            'components' => 'exclude_if:has_components,false|required|array|min:2',
+            'components.*.name' => 'required_if:has_components,true|string|max:255',
+            'components.*.quantity' => 'required_if:has_components,true|numeric|min:1',
+            'components.*.station' => 'required_if:has_components,true|string|max:255',
+            'components.*.machine_id' => 'required_if:has_components,true|integer|exists:machines,id',
         ], [
             'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
-            'station.required_if' => 'La estación es requerida si la orden no tiene componentes.',
-            'machine_id.required_if' => 'La máquina es requerida si la orden no tiene componentes.',
-            'components.required_if' => 'Debe agregar al menos un componente.',
-            'components.*.name.required' => 'El nombre del componente es requerido.',
-            'components.*.quantity.required' => 'La cantidad del componente es requerida.',
-            'components.*.station.required' => 'La estación del componente es requerida.',
-            'components.*.machine_id.required' => 'La máquina del componente es requerida.',
+            'folio.required_if' => 'El folio es requerido.',
+            'folio.unique' => 'El folio ya ha sido registrado.',
+            'components.*.name.required_if' => 'El nombre del componente es requerido.',
+            'components.*.quantity.required_if' => 'La cantidad del componente es requerida.',
+            'components.*.station.required_if' => 'La estación del componente es requerida.',
+            'components.*.machine_id.required_if' => 'La máquina del componente es requerida.',
         ]);
 
         $validated['user_id'] = auth()->id();
-        $validated['modified_user_id'] = auth()->id();
         $validated['materials'] = [$validated['materials']];
         $now = now();
 
-        // --- LÓGICA DE CREACIÓN MODIFICADA ---
+        DB::transaction(function () use ($validated, $now) {
+            // --- Caso 1: Tiene componentes (Orden Padre + Hijos) ---
+            if ($validated['has_components']) {
+                // $totalQuantity = collect($validated['components'])->sum('quantity'); //descomentar si se quiere la cantidad total como suma de componentes
+                $totalQuantity = $validated['quantity'];
 
-        if (!$validated['has_components']) {
-            // --- CASO 1: ORDEN SIMPLE (como antes) ---
-            $validated['station_times'] = [
-                $this->createNewStationTimeRecord($validated['station'], $now, auth()->id(), 'Creación de la orden de producción')
-            ];
-            $production = Production::create($validated);
-
-            // Notificar si va a 'Material pendiente'
-            if ($validated['station'] == 'Material pendiente') {
-                $notificationInstance = new ProductionForwardedNotification(
-                    $production,
-                    'Material pendiente',
-                    $production->quantity
-                );
-                $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
-            }
-        } else {
-            // --- CASO 2: ORDEN CON COMPONENTES ---
-            
-            // 1. Crear la Orden Padre
-            $parentData = $validated;
-            $parentData['station'] = 'Producción dividida'; // Estación "virtual" para el padre
-            // Asignamos la máquina del primer componente como referencia, o la dejamos null
-            $parentData['machine_id'] = $validated['components'][0]['machine_id']; 
-            $parentData['station_times'] = [
-                $this->createNewStationTimeRecord($parentData['station'], $now, auth()->id(), 'Creación de orden padre (dividida)')
-            ];
-
-            $parentProduction = Production::create($parentData);
-
-            // 2. Crear las Órdenes Hijo (Componentes)
-            foreach ($validated['components'] as $component) {
-                $childData = $parentData; // Copiamos datos comunes (cliente, producto, fechas, etc.)
-                
-                $childData['parent_id'] = $parentProduction->id;
-                $childData['folio'] = null; // Los hijos no tienen folio
-                $childData['component_name'] = $component['name'];
-                $childData['quantity'] = $component['quantity']; // Cantidad específica del componente
-                $childData['station'] = $component['station'];
-                $childData['machine_id'] = $component['machine_id'];
-                
-                // Cada hijo tiene su propio historial de estaciones
-                $childData['station_times'] = [
-                    $this->createNewStationTimeRecord($component['station'], $now, auth()->id(), 'Creación de componente: ' . $component['name'])
+                // Crear la orden "Padre"
+                $parentData = $validated;
+                unset($parentData['components'], $parentData['has_components']);
+                $parentData['station'] = 'Producción dividida'; // Estación virtual para el padre
+                $parentData['quantity'] = $totalQuantity;
+                $parentData['machine_id'] = null; // El padre no tiene máquina, la tienen los hijos
+                $parentData['folio'] = $validated['folio']; // Folio se guarda en el padre
+                $parentData['station_times'] = [
+                    $this->createFinalizedStationTimeRecord('Producción dividida', $now, auth()->id(), 'Orden creada como padre de componentes.')
                 ];
 
-                $childProduction = Production::create($childData);
+                $parentProduction = Production::create($parentData + ['modified_user_id' => auth()->id()]);
 
-                // Notificar si algún componente va a 'Material pendiente'
-                if ($childProduction->station == 'Material pendiente') {
-                     $notificationInstance = new ProductionForwardedNotification(
-                        $childProduction, // Notificar sobre el componente específico
+                // Crear las órdenes "Hijo" (componentes)
+                foreach ($validated['components'] as $component) {
+                    $childData = $parentData; // Hereda la mayoría de los datos del padre
+                    unset($childData['folio'], $childData['notes']); // Los hijos no tienen folio ni notas principales
+                    
+                    $childData['parent_id'] = $parentProduction->id;
+                    $childData['component_name'] = $component['name'];
+                    $childData['quantity'] = $component['quantity'];
+                    $childData['station'] = $component['station'];
+                    $childData['machine_id'] = $component['machine_id'];
+                    $childData['station_times'] = [
+                        $this->createNewStationTimeRecord($component['station'], $now, auth()->id(), 'Creación de componente.')
+                    ];
+
+                    $childProduction = Production::create($childData);
+
+                    // Notificar si el *hijo* va a 'Material pendiente'
+                    if ($childProduction->station == 'Material pendiente') {
+                        $notificationInstance = new ProductionForwardedNotification(
+                            $childProduction, // Notificar sobre el hijo
+                            'Material pendiente',
+                            $childProduction->quantity,
+                            $parentProduction->folio // Incluir el folio del padre para referencia
+                        );
+                        $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
+                    }
+                }
+
+            } else {
+                // --- Caso 2: Orden Simple (como antes) ---
+                unset($validated['components'], $validated['has_components']);
+                $validated['station_times'] = [
+                    $this->createNewStationTimeRecord($validated['station'], $now, auth()->id(), 'Creación de la orden de producción')
+                ];
+
+                $production = Production::create($validated + ['modified_user_id' => auth()->id()]);
+
+                // Notificar si va a 'Material pendiente'
+                if ($validated['station'] == 'Material pendiente') {
+                    $notificationInstance = new ProductionForwardedNotification(
+                        $production,
                         'Material pendiente',
-                        $childProduction->quantity,
-                        $parentProduction->folio // Añadir el folio padre como referencia
+                        $production->quantity,
+                        $production->folio
                     );
                     $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
                 }
             }
-        }
+        });
 
         return to_route('productions.index');
     }
+
 
     public function show(Production $production)
     {
         //
     }
 
-    public function edit(Production $production)
+   public function edit(Production $production)
     {
-        $product = $production->product;
-        // TO-DO: A futuro, el edit debería cargar los children si es un parent.
+        // Si el usuario intenta editar un hijo, redirigirlo al padre
+        if ($production->parent_id) {
+            return to_route('productions.edit', $production->parent_id);
+        }
+
+        // Cargar el producto principal
+        $production->load('product');
+
+        // Si es una orden dividida, cargar los hijos y sus máquinas
+        if ($production->station === 'Producción dividida') {
+            $production->load('children.machine');
+        }
+
+        // El prop 'product' es esperado por el frontend
+        $product = $production->product; 
+
         return inertia('Production/Edit', compact('production', 'product'));
     }
 
     public function update(Request $request, Production $production)
     {
-        // --- VALIDACIÓN DE UPDATE MODIFICADA ---
+        // No permitir la actualización directa de un hijo
+        if ($production->parent_id) {
+            abort(403, 'Los componentes se editan desde la orden padre.');
+        }
+
         $validated = $request->validate([
-            // Validar unique folio SÓLO si es un padre
+            // Regla de folio: único para padres (parent_id NULL), ignorando el ID actual
             'folio' => 'required|numeric|unique:productions,folio,' . $production->id . ',id,parent_id,NULL',
             'type' => 'nullable|string|max:255',
             'start_date' => 'required|date',
@@ -195,10 +225,8 @@ class ProductionController extends Controller
             'client' => 'required|string|max:255',
             'changes' => 'required|numeric|min:0',
             'product_id' => 'required|min:1|integer|exists:products,id',
-            'quantity' => 'required|numeric|min:1',
+            'quantity' => 'required_if:has_components,false|nullable|numeric|min:1', // Cantidad requerida solo si es simple
             'materials' => 'nullable|string|max:255',
-            'station' => 'required|string|max:255', // En edit, el padre ya tiene "Producción dividida"
-            'machine_id' => 'required|min:1|integer|exists:machines,id',
             'notes' => 'nullable|string|max:300',
             'dfi' => 'nullable|string|max:255',
             'material' => 'nullable|string|max:255',
@@ -211,23 +239,131 @@ class ProductionController extends Controller
             'adjust' => 'nullable|numeric|min:0',
             'sheets' => 'nullable|numeric|min:0',
             'ha' => 'nullable|numeric|min:0',
-            'pf' => 'nullable|numeric|min:0',
+            'pf' => 'required|numeric|min:0', // Se mantiene 'pf' requerido como en 'create'
             'ts' => 'nullable|numeric|min:0',
-            'pf' => 'required|numeric|min:0',
+            'ps' => 'nullable|numeric|min:0',
             'tps' => 'nullable|numeric|min:0',
             'varnish_type' => 'required_if_accepted:has_varnish',
+            
+            // --- Validación de Lógica de Componentes ---
+            'has_components' => 'required|boolean',
+            // Estación y máquina principal son requeridas solo si NO tiene componentes
+            'station' => 'required_if:has_components,false|nullable|string|max:255',
+            'machine_id' => 'required_if:has_components,false|nullable|min:1|integer|exists:machines,id',
+            
+            // Componentes: requerido si 'has_components' es true, y debe tener al menos 1
+            // NOTA: Esto previene la "degradación" de orden dividida a simple, lo cual es más seguro.
+            'components' => 'exclude_if:has_components,false|required|array|min:2',
+            'components.*.id' => 'nullable|integer|exists:productions,id', // ID del hijo (si ya existe)
+            'components.*.name' => 'required|string|max:255',
+            'components.*.quantity' => 'required|numeric|min:1',
+            'components.*.station' => 'required|string|max:255',
+            'components.*.machine_id' => 'required|integer|exists:machines,id',
         ], [
             'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
+            'folio.unique' => 'El folio ya ha sido registrado.',
+            'components.min' => 'Una orden dividida debe tener al menos un componente.',
+            'components.*.name.required' => 'El nombre del componente es requerido.',
+            'components.*.quantity.required' => 'La cantidad del componente es requerida.',
+            'components.*.station.required' => 'La estación del componente es requerida.',
+            'components.*.machine_id.required' => 'La máquina del componente es requerida.',
         ]);
 
-        // TO-DO: A futuro, la actualización debería manejar la actualización/creación/eliminación
-        // de componentes hijos, lo cual es más complejo.
-        // Por ahora, solo actualiza el padre.
+        $now = now();
+        $user_id = auth()->id();
 
-        $validated['materials'] = [$validated['materials']];
+        DB::transaction(function () use ($production, $validated, $now, $user_id) {
+            
+            $parentData = $validated;
+            $parentData['materials'] = [$validated['materials']];
+            $parentData['modified_user_id'] = $user_id;
 
-        $production->update($validated + ['modified_user_id' => auth()->id()]);
+            // --- Lógica para Orden Dividida (Padre) ---
+            if ($validated['has_components']) {
+                
+                $totalQuantity = 0;
+                $existingChildIds = [];
 
+                foreach ($validated['components'] as $component) {
+                    $totalQuantity += $component['quantity'];
+
+                    $childData = [
+                        'component_name' => $component['name'],
+                        'quantity' => $component['quantity'],
+                        'station' => $component['station'],
+                        'machine_id' => $component['machine_id'],
+                        'modified_user_id' => $user_id,
+                        // Heredar campos del padre
+                        'product_id' => $validated['product_id'],
+                        'client' => $validated['client'],
+                        'start_date' => $validated['start_date'],
+                        'estimated_date' => $validated['estimated_date'],
+                        // ... (heredar otros campos relevantes si es necesario)
+                    ];
+
+                    if (isset($component['id'])) {
+                        // --- 1. Actualizar Hijo Existente ---
+                        $childProduction = Production::find($component['id']);
+                        
+                        // Doble chequeo de seguridad
+                        if ($childProduction && $childProduction->parent_id === $production->id) {
+                            
+                            // Si la estación cambió en el formulario, registrar el cambio
+                            if ($childProduction->station !== $component['station']) {
+                                $this->finalizeCurrentStation($childProduction, $now, $user_id, "Estación cambiada manualmente a " . $component['station']);
+                                $station_times = $childProduction->station_times;
+                                $station_times[] = $this->createNewStationTimeRecord($component['station'], $now, $user_id, 'Cambio manual de estación desde edición.');
+                                $childData['station_times'] = $station_times;
+                            }
+                            
+                            $childProduction->update($childData);
+                            $existingChildIds[] = $childProduction->id;
+                        }
+                    } else {
+                        // --- 2. Crear Nuevo Hijo ---
+                        // Heredar todos los datos del padre, excepto los que son únicos del padre/hijo
+                        $childBaseData = $production->toArray();
+                        
+                        // Limpiar campos que no debe heredar
+                        unset(
+                            $childBaseData['id'], $childBaseData['folio'], $childBaseData['notes'], 
+                            $childBaseData['station_times'], $childBaseData['created_at'], $childBaseData['updated_at'],
+                            $childBaseData['children'], $childBaseData['parent_id'], $childBaseData['component_name'],
+                            $childBaseData['quantity'], $childBaseData['station'], $childBaseData['machine_id']
+                        );
+                        
+                        $newChildData = array_merge($childBaseData, $childData, [
+                            'parent_id' => $production->id,
+                            'user_id' => $production->user_id, // Asegurar que hereda el creador original
+                            'station_times' => [$this->createNewStationTimeRecord($component['station'], $now, $user_id, 'Componente agregado en edición.')],
+                        ]);
+                        
+                        $newChildProduction = Production::create($newChildData);
+                        $existingChildIds[] = $newChildProduction->id;
+                    }
+                }
+
+                // --- 3. Eliminar Hijos Borrados ---
+                $production->children()->whereNotIn('id', $existingChildIds)->delete();
+
+                // Actualizar la cantidad total del padre
+                // $parentData['quantity'] = $totalQuantity; //descomentar si se quiere la cantidad total como suma de componentes
+                $parentData['quantity'] = $validated['quantity'];
+                
+                // Limpiar campos de componente del array de datos del padre
+                unset($parentData['components'], $parentData['has_components']);
+
+            } else {
+                // --- Lógica para Orden Simple ---
+                // (Se asume que no se puede degradar una orden dividida a simple)
+                unset($parentData['components'], $parentData['has_components']);
+            }
+            
+            // --- 4. Actualizar el Padre (o la Orden Simple) ---
+            $production->update($parentData);
+        });
+
+        // Redirigir de vuelta al índice
         return to_route('productions.index');
     }
 
@@ -240,22 +376,12 @@ class ProductionController extends Controller
 
     public function destroy(Production $production)
     {
-        // Gracias al onDelete('cascade') de la migración,
-        // si se borra un padre, se borrarán sus hijos automáticamente.
+        // Si es un padre, borrar también a los hijos
+        if ($production->parent_id === null) {
+            $production->children()->delete();
+        }
         $production->delete();
     }
-
-    // --- INICIO DE NUEVO MÉTODO ---
-    public function getChildren(Production $production)
-    {
-        // Carga los hijos con sus relaciones 'machine' y 'product'
-        $children = $production->children()->with(['machine', 'product'])->get();
-
-        return response()->json([
-            'items' => $children
-        ]);
-    }
-    // --- FIN DE NUEVO MÉTODO ---
 
     public function getByPage()
     {
@@ -265,10 +391,11 @@ class ProductionController extends Controller
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
-        // --- MODIFICADO: Traer solo órdenes padre ---
+        // --- LÓGICA DE FILTRADO DE PADRES ---
+        // Traer solo los que son 'padre' (parent_id IS NULL)
         $query = Production::with(['user', 'product', 'machine'])
-                    ->whereNull('parent_id') // ¡¡CLAVE!!
-                    ->latest('id');
+            ->whereNull('parent_id') 
+            ->latest('id');
 
         // Get allowed stations for the user
         $user = auth()->user();
@@ -276,13 +403,14 @@ class ProductionController extends Controller
             ->filter(fn ($permission) => str_starts_with($permission->name, 'Ver en estacion'))
             ->map(fn ($permission) => str_replace('Ver en estacion ', '', $permission->name))
             ->toArray();
-        
-        // Incluir la nueva estación virtual si el usuario puede ver cualquier estación
-        if (!empty($permissions)) {
-            $permissions[] = 'Producción dividida'; 
-            $query->whereIn('station', $permissions);
-        }
 
+        // Añadir permisos para ver estaciones "divididas" si tienen permiso de ver cualquier estación de producción
+        if (!empty($permissions)) {
+             $permissions[] = 'Producción dividida'; // Siempre permitir ver padres si tienen algún permiso
+             $query->whereIn('station', $permissions);
+        }
+         // Si no tiene permisos de estación, no debería ver nada (la query fallará y devolverá 0)
+         // O si es un admin sin esa estructura de permisos, $permissions estará vacío y no se aplicará el filtro WhereIn
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -292,6 +420,11 @@ class ProductionController extends Controller
                     ->orWhereHas('product', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
                             ->orWhere('season', 'like', "%{$search}%");
+                    })
+                    // Buscar también en hijos
+                    ->orWhereHas('children', function($q) use ($search) {
+                        $q->where('component_name', 'like', "%{$search}%")
+                          ->orWhere('station', 'like', "%{$search}%");
                     });
             });
         }
@@ -305,48 +438,97 @@ class ProductionController extends Controller
         return response()->json(compact('items', 'total'));
     }
 
+    /**
+     * Obtiene los componentes (hijos) de una orden de producción padre.
+     */
+    public function getChildren(Production $production)
+    {
+        // Asegurarse de que solo se puedan obtener hijos de un padre
+        if ($production->parent_id !== null) {
+            abort(403, 'Esta no es una orden padre.');
+        }
+
+        $items = $production->children()->with('machine')->get();
+
+        return response()->json(compact('items'));
+    }
+
+
     public function clone(Production $production)
     {
-        // Esta función de clonar clonará el padre.
-        // TO-DO: A futuro, debería clonar también los hijos.
-        // Por ahora, clona el padre como una orden nueva simple.
-        
-        $lastProductionFolio = Production::whereNotNull('folio')->latest('folio')->first()?->folio;
-        $newProduction = $production->replicate([
-            'finish_date', 'close_production_date', 'quality_released_date', 'estimated_package_date',
-            'estimated_date', 'production_close_type', 'quality_quantity', 'current_quantity',
-            'close_quantity', 'scrap_quantity', 'production_scrap', 'quality_scrap', 'inspection_scrap',
-            'shortage_quantity', 'production_shortage', 'quality_shortage', 'inspection_shortage',
-            'close_production_notes', 'inspection_notes', 'quality_notes', 'partials', 'start_date',
-            'packing_close_type', 'packing_notes', 'packing_scrap', 'packing_shortage', 'packing_partials',
-            'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'station_times',
-            'parent_id', 'component_name' // No clonar estatus de componente
-        ]);
-        $newProduction->folio = $lastProductionFolio + 1;
-        $newProduction->type = 'Repetido';
-        $newProduction->station = 'Material pendiente'; // Inicia simple
-        $newProduction->start_date = now();
+        // Solo se pueden clonar padres
+        if ($production->parent_id) {
+             abort(403, 'No se pueden clonar componentes individuales.');
+        }
 
-        // Initialize the station_times record for the cloned production
+        $lastProductionFolio = Production::whereNull('parent_id')->latest('folio')->first()?->folio;
         $now = now();
-        $newProduction->station_times = [
-            $this->createNewStationTimeRecord(
-                'Material pendiente',
-                $now,
-                auth()->id(),
-                'Registro inicial de orden clonada.'
-            )
-        ];
+        $user_id = auth()->id();
+        
+        $newProduction = DB::transaction(function() use ($production, $lastProductionFolio, $now, $user_id) {
+            // 1. Replicar el Padre
+            $newParent = $production->replicate([
+                'finish_date', 'close_production_date', 'quality_released_date', 'estimated_package_date',
+                'estimated_date', 'production_close_type', 'quality_quantity', 'current_quantity',
+                'close_quantity', 'scrap_quantity', 'production_scrap', 'quality_scrap', 'inspection_scrap',
+                'shortage_quantity', 'production_shortage', 'quality_shortage', 'inspection_shortage',
+                'close_production_notes', 'inspection_notes', 'quality_notes', 'partials', 'start_date',
+                'packing_close_type', 'packing_notes', 'packing_scrap', 'packing_shortage', 'packing_partials',
+                'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'station_times'
+            ]);
+            $newParent->folio = $lastProductionFolio + 1;
+            $newParent->type = 'Repetido';
+            $newParent->start_date = $now;
+            
+            // Si era una orden simple
+            if ($production->station !== 'Producción dividida') {
+                $newParent->station = 'Material pendiente';
+                $newParent->station_times = [
+                    $this->createNewStationTimeRecord('Material pendiente', $now, $user_id, 'Registro inicial de orden clonada.')
+                ];
+            } else {
+                // Si era una orden dividida (padre)
+                $newParent->station = 'Producción dividida';
+                 $newParent->station_times = [
+                    $this->createFinalizedStationTimeRecord('Producción dividida', $now, $user_id, 'Orden (padre) clonada.')
+                ];
+            }
+            
+            $newParent->save();
 
-        $newProduction->save();
+            // 2. Replicar los Hijos (si los tenía)
+            if ($production->station === 'Producción dividida') {
+                foreach ($production->children as $child) {
+                    $newChild = $child->replicate([
+                        'finish_date', 'close_production_date', 'quality_released_date', 'estimated_package_date',
+                        'estimated_date', 'production_close_type', 'quality_quantity', 'current_quantity',
+                        'close_quantity', 'scrap_quantity', 'production_scrap', 'quality_scrap', 'inspection_scrap',
+                        'shortage_quantity', 'production_shortage', 'quality_shortage', 'inspection_shortage',
+                        'close_production_notes', 'inspection_notes', 'quality_notes', 'partials', 'start_date',
+                        'packing_close_type', 'packing_notes', 'packing_scrap', 'packing_shortage', 'packing_partials',
+                        'packing_received_quantity', 'packing_received_date', 'packing_finished_date', 'station_times',
+                        'folio' // Los hijos no tienen folio
+                    ]);
+
+                    $newChild->parent_id = $newParent->id;
+                    $newChild->station = 'Material pendiente'; // Todos los hijos clonados empiezan en pendiente
+                    $newChild->start_date = $now;
+                    $newChild->station_times = [
+                         $this->createNewStationTimeRecord('Material pendiente', $now, $user_id, 'Registro inicial de componente clonado.')
+                    ];
+                    $newChild->save();
+                }
+            }
+            
+            return $newParent;
+        });
+
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
     }
 
     public function returnStation(Request $request, Production $production)
     {
-        // Esta función se aplica a un 'hijo' o a una orden 'simple'.
-        // El modal de detalles deberá llamar a esto con el ID del hijo.
         $validated = $request->validate([
             'next_station' => 'required|string',
             'quantity' => 'required|numeric|min:0',
@@ -383,7 +565,6 @@ class ProductionController extends Controller
     // --- NEW UNIFIED METHOD FOR DELIVERIES ---
     public function registerDelivery(Request $request, Production $production)
     {
-        // Esta función se aplica a un 'hijo' o a una orden 'simple'.
         $validated = $request->validate([
             'context' => 'required|string|in:inspection,packing',
             'type' => 'required|string|in:Única,Parcialidades',
@@ -503,21 +684,26 @@ class ProductionController extends Controller
         $station = request('station');
 
         $query = Production::with(['user', 'product', 'machine', 'modifiedUser'])
+            ->whereNull('parent_id') // Solo exportar padres
             ->whereDate('created_at', '>=', $startDate)
-            ->whereDate('created_at', '<=', $endDate)
-            ->when($season !== 'Todas', fn ($q) => $q->whereHas('product', fn ($q) => $q->where('season', $season)));
+            ->whereDate('created_at', '<=', $endDate);
 
-        // Modificación: Si se filtra por estación, incluir hijos Y padres de esa estación.
-        if ($station !== 'Todos') {
-             $query->where(function ($q) use ($station) {
-                $q->where('station', $station) // Padres o hijos en esa estación
-                    ->orWhereHas('children', fn($sq) => $sq->where('station', $station)); // Padres cuyos hijos estén en esa estación
-            });
-        } else {
-            // Si es "Todos", mostrar solo los padres
-             $query->whereNull('parent_id');
+        if ($season !== 'Todas') {
+             $query->whereHas('product', fn ($q) => $q->where('season', $season));
         }
-
+           
+        if ($station !== 'Todos') {
+            if ($station === 'Producción dividida') {
+                 $query->where('station', $station);
+            } else {
+                // Buscar padres que tengan *algún hijo* en esa estación
+                $query->where(function($q) use ($station) {
+                    $q->where('station', $station) // O el padre está en esa estación (si es simple)
+                      ->orWhereHas('children', fn($cq) => $cq->where('station', $station)); // O un hijo está ahí
+                });
+            }
+        }
+            
         $productions = $query->get();
 
         return Excel::download(new ProductionsExport($productions), 'producciones.xlsx');
@@ -526,16 +712,15 @@ class ProductionController extends Controller
     public function exportExcelReport()
     {
         $folio = request('folio');
-        // Traer el padre Y sus hijos para el reporte
-        $productions = Production::with(['user', 'product', 'machine', 'modifiedUser'])
-                            ->where('folio', $folio)
-                            ->whereNull('parent_id') // El padre
-                            ->with('children.machine') // Cargar hijos con sus máquinas
-                            ->get();
-                            
-        // Podríamos necesitar cargar los hijos también, o el reporte debe modificarse
-        // Dejémoslo así por ahora, asumiendo que el reporte se basa en el padre.
+        // Buscar el padre por el folio
+        $parentProduction = Production::where('folio', $folio)->whereNull('parent_id')->firstOrFail();
         
+        // Cargar las producciones (padre + hijos)
+        $productions = Production::with(['user', 'product', 'machine', 'modifiedUser'])
+            ->where('id', $parentProduction->id)
+            ->orWhere('parent_id', $parentProduction->id)
+            ->get();
+            
         return Excel::download(new ProductionReportExport($productions), 'reporte_produccion.xlsx');
     }
 
@@ -546,15 +731,20 @@ class ProductionController extends Controller
 
     public function hojaViajera(Production $production)
     {
-        // Cargar el padre Y sus hijos
-        $production->load(['product', 'machine', 'modifiedUser', 'children.machine']);
+        // Si es un hijo, redirigir a la hoja viajera del padre
+        if ($production->parent_id) {
+            return to_route('productions.hoja-viajera', $production->parent_id);
+        }
+
+        // Cargar hijos con sus relaciones para la hoja viajera
+        $production->load(['product', 'machine', 'modifiedUser', 'children.machine', 'children.product']);
         return inertia('Production/HojaViajera', compact('production'));
     }
 
     public function backfillStationTimes()
     {
         $updatedCount = 0;
-        $adminUserId = auth()->id(); 
+        $adminUserId = auth()->id() ?? 1; // Usar admin o fallback
         Production::where(fn ($q) => $q->whereNull('station_times')->orWhere('station_times', '=', '[]'))
             ->chunk(200, function ($productions) use (&$updatedCount, $adminUserId) {
             foreach ($productions as $production) {
@@ -564,7 +754,10 @@ class ProductionController extends Controller
                 $station_times = [];
                 if (in_array($production->station, $finalStations)) {
                     $station_times[] = $this->createFinalizedStationTimeRecord($production->station, $entryDate, $adminUserId, 'Registro final creado por script.');
-                } else {
+                } else if ($production->station === 'Producción dividida') {
+                    $station_times[] = $this->createFinalizedStationTimeRecord($production->station, $entryDate, $adminUserId, 'Registro de padre creado por script.');
+                }
+                else {
                     $station_times[] = $this->createNewStationTimeRecord($production->station, $entryDate, $adminUserId, 'Registro inicial creado por script.');
                 }
                 
@@ -578,8 +771,6 @@ class ProductionController extends Controller
 
     // ===================================================================
     // STATION TIME CONTROL METHODS
-    // (Estos métodos ahora aplican a la 'production' que se les pase,
-    // ya sea un padre, un hijo o una orden simple)
     // ===================================================================
 
     public function startStationProcess(Production $production)
@@ -595,7 +786,9 @@ class ProductionController extends Controller
         $current_record['history'][] = ['event' => 'Iniciada', 'timestamp' => $now->toDateTimeString(), 'user_id' => auth()->id(), 'details' => null];
 
         $entered_at = Carbon::parse($current_record['entered_at']);
-        $current_record['times']['waiting_seconds'] = $now->diffInSeconds($entered_at);
+        // --- CÁLCULO DE HORARIO LABORAL ---
+        $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds($entered_at, $now);
+        // --- FIN DE CÁLCULO ---
 
         $this->updateCurrentStationRecord($production, $current_record);
         $production->save();
@@ -616,7 +809,10 @@ class ProductionController extends Controller
         $current_record['pauses'][] = ['paused_at' => $now->toDateTimeString(), 'resumed_at' => null, 'reason' => $validated['reason'], 'user_id' => auth()->id()];
         $current_record['history'][] = ['event' => 'Pausada', 'timestamp' => $now->toDateTimeString(), 'user_id' => auth()->id(), 'details' => $validated['reason']];
         
+        // --- CÁLCULO DE HORARIO LABORAL ---
+        // El tiempo efectivo se calcula desde 'started_at' hasta 'now', restando pausas.
         $current_record['times']['effective_seconds'] = $this->calculateEffectiveTime($current_record, $now);
+        // --- FIN DE CÁLCULO ---
 
         $this->updateCurrentStationRecord($production, $current_record);
         $production->save();
@@ -639,7 +835,11 @@ class ProductionController extends Controller
         }
 
         $current_record['history'][] = ['event' => 'Reanudada', 'timestamp' => $now->toDateTimeString(), 'user_id' => auth()->id(), 'details' => null];
+        
+        // --- CÁLCULO DE HORARIO LABORAL ---
+        // El tiempo total en pausa se recalcula sumando todas las pausas completadas.
         $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record);
+        // --- FIN DE CÁLCULO ---
 
         $this->updateCurrentStationRecord($production, $current_record);
         $production->save();
@@ -664,7 +864,6 @@ class ProductionController extends Controller
 
     private function handleMoveLogic(Request $request, Production $production, $mode)
     {
-        // Este 'production' es el 'hijo' o 'simple' que se está moviendo
         $validated = $request->validate([
             'next_station' => 'required|string|max:255', 'machine_id' => 'nullable|integer|exists:machines,id',
             'notes' => 'nullable|string|max:255', 'quantity' => 'nullable|numeric|min:0', 'date' => 'nullable|date',
@@ -701,11 +900,13 @@ class ProductionController extends Controller
 
         // --- NEW NOTIFICATION LOGIC ---
         if (in_array($validated['next_station'], ['X Compra', 'Surtido'])) {
+            $folio = $production->parent->folio ?? $production->folio; // Obtener folio del padre si existe
+
             $notificationInstance = new ProductionForwardedNotification(
                 $production,
                 $validated['next_station'],
                 $validated['quantity'] ?? $production->quantity, // Use passed quantity or fallback to total
-                $production->parent?->folio // Añadir folio padre si existe
+                $folio // Pasar el folio
             );
 
             if ($validated['next_station'] === 'X Compra') {
@@ -724,10 +925,10 @@ class ProductionController extends Controller
         $current_record = $this->getCurrentStationRecord($production);
         if (!$current_record) return;
 
-        // If it was paused, resume it virtually to calculate time correctly
+        // Si estaba en pausa, reanudarla virtualmente en 'now' para el cálculo
         if ($current_record['status'] === 'En pausa') {
             $last_pause_key = count($current_record['pauses']) - 1;
-            if(isset($current_record['pauses'][$last_pause_key])) {
+            if(isset($current_record['pauses'][$last_pause_key]) && $current_record['pauses'][$last_pause_key]['resumed_at'] === null) {
                 $current_record['pauses'][$last_pause_key]['resumed_at'] = $now->toDateTimeString();
             }
         }
@@ -736,17 +937,24 @@ class ProductionController extends Controller
         $current_record['finished_at'] = $now->toDateTimeString();
         $current_record['history'][] = ['event' => "Finalizada ({$mode})", 'timestamp' => $now->toDateTimeString(), 'user_id' => $user_id, 'details' => $details];
 
-        if ($mode === 'skip') { // Moved from 'En espera'
-            $current_record['times']['waiting_seconds'] = $now->diffInSeconds(Carbon::parse($current_record['entered_at']));
+        // --- CÁLCULO DE HORARIO LABORAL ---
+        if ($mode === 'skip') { // Movido desde 'En espera'
+            $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), $now);
             $current_record['times']['effective_seconds'] = 0;
             $current_record['times']['paused_seconds'] = 0;
-        } else { // Moved from 'En proceso' or 'En pausa'
+        } else { // Movido desde 'En proceso' o 'En pausa'
             if (!empty($current_record['started_at'])) {
-                $current_record['times']['waiting_seconds'] = Carbon::parse($current_record['started_at'])->diffInSeconds(Carbon::parse($current_record['entered_at']));
-                $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record);
-                $current_record['times']['effective_seconds'] = $this->calculateEffectiveTime($current_record, $now);
+                $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), Carbon::parse($current_record['started_at']));
+                $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record); // Helper ya usa horario laboral
+                $current_record['times']['effective_seconds'] = $this->calculateEffectiveTime($current_record, $now); // Helper ya usa horario laboral
+            } else {
+                 // Fallback si se finaliza sin haber iniciado (ej. script, error)
+                $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), $now);
+                $current_record['times']['effective_seconds'] = 0;
+                $current_record['times']['paused_seconds'] = 0;
             }
         }
+        // --- FIN DE CÁLCULO ---
 
         $this->updateCurrentStationRecord($production, $current_record);
     }
@@ -786,22 +994,92 @@ class ProductionController extends Controller
         ];
     }
 
-    private function calculateTotalPausedTime($record)
+    /**
+     * Calcula el tiempo total en pausa (en segundos laborales) para un registro de estación.
+     */
+    private function calculateTotalPausedTime($record): int
     {
-        return collect($record['pauses'] ?? [])->reduce(function ($carry, $pause) {
+        return (int) collect($record['pauses'] ?? [])->reduce(function ($carry, $pause) {
             if (isset($pause['resumed_at'])) {
-                return $carry + Carbon::parse($pause['resumed_at'])->diffInSeconds(Carbon::parse($pause['paused_at']));
+                // --- CÁLCULO DE HORARIO LABORAL ---
+                return $carry + $this->calculateBusinessSeconds(Carbon::parse($pause['paused_at']), Carbon::parse($pause['resumed_at']));
+                // --- FIN DE CÁLCULO ---
             }
             return $carry;
         }, 0);
     }
 
-    private function calculateEffectiveTime($record, Carbon $end_time)
+    /**
+     * Calcula el tiempo efectivo (en segundos laborales) para un registro de estación hasta un $end_time.
+     */
+    private function calculateEffectiveTime($record, Carbon $end_time): int
     {
         if (empty($record['started_at'])) return 0;
+
+        // --- CÁLCULO DE HORARIO LABORAL ---
         $started_at = Carbon::parse($record['started_at']);
+
+        // 1. Calcular el tiempo laboral total desde el inicio hasta el fin.
+        $total_span_business_seconds = $this->calculateBusinessSeconds($started_at, $end_time);
+
+        // 2. Calcular el tiempo total en pausa (que ya usa horario laboral).
         $total_paused_seconds = $this->calculateTotalPausedTime($record);
-        $effective_seconds = $end_time->diffInSeconds($started_at) - $total_paused_seconds;
+
+        // 3. El tiempo efectivo es el total menos las pausas.
+        $effective_seconds = $total_span_business_seconds - $total_paused_seconds;
+        // --- FIN DE CÁLCULO ---
+
         return max(0, $effective_seconds); // Ensure it's not negative
     }
+
+    // --- INICIO: NUEVO HELPER DE HORARIO LABORAL ---
+    /**
+     * Calcula los segundos transcurridos entre dos fechas, contando solo el horario laboral.
+     * Horario: Lunes a Viernes, de 08:00:00 a 17:30:00.
+     *
+     * @param Carbon $start Fecha y hora de inicio.
+     * @param Carbon $end Fecha y hora de fin.
+     * @return int Segundos laborales transcurridos.
+     */
+    private function calculateBusinessSeconds(Carbon $start, Carbon $end): int
+    {
+        // Si el inicio es después del fin, no hay tiempo transcurrido.
+        if ($start->greaterThanOrEqualTo($end)) {
+            return 0;
+        }
+
+        $totalBusinessSeconds = 0;
+
+        // Iterar por cada día en el rango
+        $period = CarbonPeriod::create($start->copy()->startOfDay(), '1 day', $end->copy()->startOfDay());
+
+        foreach ($period as $day) {
+            // Omitir fines de semana
+            if (!$day->isWeekday()) {
+                continue;
+            }
+
+            // Establecer las horas de inicio y fin laboral para ESTE día
+            $workdayStart = $day->copy()->setTimeFromTimeString(self::WORK_START_TIME);
+            $workdayEnd = $day->copy()->setTimeFromTimeString(self::WORK_END_TIME);
+
+            // Determinar el inicio efectivo para el cálculo de este día
+            // Es el más tardío entre el inicio de la jornada y el inicio real ($start)
+            $effectiveStart = $start->greaterThan($workdayStart) ? $start : $workdayStart;
+
+            // Determinar el fin efectivo para el cálculo de este día
+            // Es el más temprano entre el fin de la jornada y el fin real ($end)
+            $effectiveEnd = $end->lessThan($workdayEnd) ? $end : $workdayEnd;
+
+            // Si el inicio efectivo es ANTES del fin efectivo, significa que hay un solapamiento
+            // de tiempo laboral en este día.
+            if ($effectiveStart->lessThan($effectiveEnd)) {
+                $totalBusinessSeconds += $effectiveStart->diffInSeconds($effectiveEnd);
+            }
+        }
+
+        return (int) $totalBusinessSeconds;
+    }
+    // --- FIN: NUEVO HELPER DE HORARIO LABORAL ---
 }
+

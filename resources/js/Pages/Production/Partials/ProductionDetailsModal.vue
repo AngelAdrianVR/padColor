@@ -1,5 +1,5 @@
 <template>
-    <!-- Modal aumentado a 5xl para dar espacio a los componentes -->
+    <!-- Modal -->
     <DialogModal :show="show" @close="$emit('close')" maxWidth="4xl">
         <template #content>
             <div v-if="updatingDetails" class="my-60">
@@ -93,12 +93,10 @@
                                     <div v-if="isFetchingChildren" class="text-center py-6">
                                         <Loading />
                                     </div>
-                                    <div v-else-if="children.length > 0" class="mt-3 px-2 space-y-4">
-                                        <div v-for="child in children" :key="child.id" class="border rounded-lg p-3 grid grid-cols-4 gap-x-4 gap-y-2">
+                                    <div v-else-if="children.length > 0" class="mt-3 px-2 space-y-3">
+                                        <div v-for="child in children" :key="child.id" class="border rounded-lg p-3 grid grid-cols-4 gap-x-3 gap-y-2">
                                             <p class="text-gray-500 col-span-4 font-bold text-base">{{ child.component_name }}</p>
                                             
-                                            <p class="text-gray-500">ID Componente:</p>
-                                            <p class="font-medium">{{ child.id }}</p>
                                             <p class="text-gray-500">Cantidad:</p>
                                             <p class="font-medium">{{ child.quantity?.toLocaleString('es-MX') }} pzs</p>
 
@@ -216,7 +214,7 @@
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-3">
-                                                <PrimaryButton @click="$emit('start-process')" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton @click="$emit('start-process', { productionId: selectedProduction.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Iniciar
                                                 </PrimaryButton>
                                                 <PrimaryButton @click="openMoveModal('skip', selectedProduction)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
@@ -268,7 +266,7 @@
                                             <p class="text-sm text-gray-700 text-center mt-2">Motivo: <span
                                                     class="font-semibold italic">"{{ lastPauseReason(selectedProduction) }}"</span></p>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <PrimaryButton @click="$emit('resume-process')" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton @click="$emit('resume-process', { productionId: selectedProduction.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Reanudar
                                                 </PrimaryButton>
                                                 <PrimaryButton @click="openMoveModal('finish', selectedProduction)" class="!bg-[#008CF0] flex items-center !rounded-lg">
@@ -327,7 +325,7 @@
                                 <!-- Loop por cada componente -->
                                 <section v-for="child in children" :key="child.id" class="border rounded-lg">
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-t-md">
-                                        Componente: {{ child.component_name }} (ID: {{ child.id }})
+                                        Componente: {{ child.component_name }}
                                     </h2>
 
                                     <!-- ***** INICIO: NUEVA SECCIÓN DE TOTALES POR HIJO ***** -->
@@ -591,35 +589,8 @@
                                     <!-- Loop por cada componente -->
                                     <div v-for="child in children" :key="child.id" class="border rounded-lg">
                                         <h3 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-t-md">Componente: {{ child.component_name }}</h3>
+                                        
                                         <div class="p-4 space-y-4">
-                                            <section v-if="child.close_production_date" class="bg-gray-50 p-4 rounded-lg space-y-2">
-                                                <h3 class="font-semibold text-gray-700">Liberado por producción</h3>
-                                                <div class="grid grid-cols-2 gap-x-4 text-xs">
-                                                    <span>Fecha de liberación:</span> <span class="font-medium">{{
-                                                        formatDateTime(child.close_production_date) }}</span>
-                                                    <span>Cantidad entregada:</span> <span class="font-medium">{{
-                                                        child.close_quantity?.toLocaleString('es-MX') }}</span>
-                                                    <span>Notas:</span> <span class="font-medium">{{
-                                                        child.close_production_notes ?? '-' }}</span>
-                                                </div>
-                                            </section>
-                                            <section v-if="child.quality_released_date" class="bg-gray-50 p-4 rounded-lg space-y-2">
-                                                <h3 class="font-semibold text-gray-700">Liberado por calidad</h3>
-                                                <div class="grid grid-cols-2 gap-x-4 text-xs">
-                                                    <span>Fecha de liberación:</span> <span class="font-medium">{{
-                                                        formatDateTime(child.quality_released_date) }}</span>
-                                                    <span>Cantidad entregada:</span> <span class="font-medium">{{
-                                                        child.quality_quantity?.toLocaleString('es-MX') }}</span>
-                                                    <span>Merma:</span> <span class="font-medium">{{
-                                                        child.quality_scrap?.toLocaleString('es-MX') }} ({{
-                                                            calculatePercentage(child.quality_scrap,
-                                                                child.close_quantity) }}%)</span>
-                                                    <span>Diferencia:</span> <span class="font-medium">{{
-                                                        child.quality_shortage?.toLocaleString('es-MX') }}</span>
-                                                    <span>Notas:</span> <span class="font-medium">{{
-                                                        child.quality_notes ?? '-' }}</span>
-                                                </div>
-                                            </section>
                                             <!-- Inspección (por hijo) -->
                                             <section v-if="shouldShowInspectionSection(child)" class="bg-gray-50 p-4 rounded-lg space-y-2">
                                                 <div class="flex justify-between items-center">
@@ -753,6 +724,12 @@ import es from 'date-fns/locale/es';
 import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon, QuestionMarkCircleIcon, RectangleStackIcon } from '@heroicons/vue/24/solid';
 import axios from 'axios';
 
+// --- INICIO: NUEVAS CONSTANTES DE HORARIO LABORAL ---
+const WORK_START_TIME = '08:00:00';
+const WORK_END_TIME = '17:30:00';
+// --- FIN: NUEVAS CONSTANTES DE HORARIO LABORAL ---
+
+
 export default {
     name: 'ProductionDetailsModal',
     components: {
@@ -805,7 +782,6 @@ export default {
                 this.children = []; // Limpiar hijos al cerrar
             }
         },
-        // ***** INICIO: CORRECCIÓN BUG 1 *****
         // Observa la prop 'updatingDetails' que viene de Index.vue
         updatingDetails(newVal, oldVal) {
             // Cuando 'updatingDetails' pasa de true a false, significa que Index.vue terminó de actualizar.
@@ -817,7 +793,6 @@ export default {
                 }
             }
         }
-        // ***** FIN: CORRECCIÓN BUG 1 *****
     },
     computed: {
         isDividedOrder() {
@@ -877,6 +852,59 @@ export default {
         },
     },
     methods: {
+        // --- INICIO: NUEVO HELPER DE HORARIO LABORAL (JS) ---
+        /**
+         * Calcula los segundos transcurridos entre dos fechas, contando solo el horario laboral.
+         * Horario: Lunes a Viernes, de 08:00:00 a 17:30:00.
+         *
+         * @param {Date} startDate Fecha y hora de inicio.
+         * @param {Date} endDate Fecha y hora de fin.
+         * @return {number} Segundos laborales transcurridos.
+         */
+        calculateBusinessSeconds(startDate, endDate) {
+            if (startDate >= endDate) {
+                return 0;
+            }
+
+            let totalBusinessSeconds = 0;
+            
+            const [startH, startM, startS] = WORK_START_TIME.split(':').map(Number);
+            const [endH, endM, endS] = WORK_END_TIME.split(':').map(Number);
+
+            // Creamos un iterador que es el inicio del día de startDate
+            let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const endDateStartOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+            // Iterar por cada día en el rango
+            while (currentDate <= endDateStartOfDay) {
+                const dayOfWeek = currentDate.getDay();
+
+                // Omitir fines de semana (0 = Domingo, 6 = Sábado)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    // Establecer las horas de inicio y fin laboral para ESTE día
+                    const workdayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), startH, startM, startS);
+                    const workdayEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), endH, endM, endS);
+
+                    // Determinar el inicio efectivo (el más tardío entre el inicio del rango y el inicio de la jornada)
+                    const effectiveStart = startDate > workdayStart ? startDate : workdayStart;
+                    
+                    // Determinar el fin efectivo (el más temprano entre el fin del rango y el fin de la jornada)
+                    const effectiveEnd = endDate < workdayEnd ? endDate : workdayEnd;
+
+                    // Si hay un solapamiento de tiempo laboral en este día
+                    if (effectiveStart < effectiveEnd) {
+                        totalBusinessSeconds += (effectiveEnd - effectiveStart) / 1000; // Diferencia en milisegundos
+                    }
+                }
+                
+                // Avanzar al siguiente día
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return Math.round(totalBusinessSeconds);
+        },
+        // --- FIN: NUEVO HELPER DE HORARIO LABORAL (JS) ---
+
         // --- NUEVOS MÉTODOS ---
         async fetchChildren() {
             if (!this.selectedProduction) return;
@@ -942,11 +970,14 @@ export default {
             const relevantStations = ['Empaques', 'Empaques terminado', 'Terminadas'];
             return relevantStations.includes(production.station) || production.packing_partials?.length > 0;
         },
+        
         // --- CÁLCULOS DE TIEMPO (revisados) ---
+        // Suma los tiempos ya guardados (que vienen del backend, ya con horario laboral)
         totalEffectiveTime(production) {
             if (!production?.station_times) return 0;
             let total = production.station_times.reduce((acc, station) => acc + (station.times?.effective_seconds ?? 0), 0);
             if (this.currentStationStatus(production) === 'En proceso') {
+                // Suma el tiempo "en vivo" de la estación actual (calculado con horario laboral)
                 total += this.liveEffectiveTime(production);
             }
             return total;
@@ -955,6 +986,7 @@ export default {
             if (!production?.station_times) return 0;
             let total = production.station_times.reduce((acc, station) => acc + (station.times?.paused_seconds ?? 0), 0);
             if (this.currentStationStatus(production) === 'En pausa') {
+                 // Suma el tiempo "en vivo" de la pausa actual (calculado con horario laboral)
                 total += this.livePausedTime(production);
             }
             return total;
@@ -963,21 +995,26 @@ export default {
             if (!production?.station_times) return 0;
             let total = production.station_times.reduce((acc, station) => acc + (station.times?.waiting_seconds ?? 0), 0);
             if (this.currentStationStatus(production) === 'En espera') {
+                 // Suma el tiempo "en vivo" de la espera actual (calculado con horario laboral)
                 total += this.liveWaitingTime(production);
             }
             return total;
         },
+        
+        // --- CÁLCULOS DE TIEMPO "EN VIVO" (MODIFICADOS) ---
         liveWaitingTime(production) {
             const record = this.currentStationRecord(production);
             if (this.currentStationStatus(production) !== 'En espera' || !record.entered_at) return 0;
-            return differenceInSeconds(this.now, parseISO(record.entered_at));
+            // Usa el helper de horario laboral
+            return this.calculateBusinessSeconds(parseISO(record.entered_at), this.now);
         },
         accumulatedPausedTimeInStation(production) {
             const record = this.currentStationRecord(production);
             if (!record?.pauses?.length) return 0;
             return record.pauses.reduce((acc, pause) => {
                 if (pause.resumed_at) {
-                    return acc + differenceInSeconds(parseISO(pause.resumed_at), parseISO(pause.paused_at));
+                    // Usa el helper de horario laboral
+                    return acc + this.calculateBusinessSeconds(parseISO(pause.paused_at), parseISO(pause.resumed_at));
                 }
                 return acc;
             }, 0);
@@ -985,16 +1022,23 @@ export default {
         liveEffectiveTime(production) {
             const record = this.currentStationRecord(production);
             if (this.currentStationStatus(production) !== 'En proceso' || !record.started_at) return 0;
+            
             const startedAt = parseISO(record.started_at);
-            return differenceInSeconds(this.now, startedAt) - this.accumulatedPausedTimeInStation(production);
+            // 1. Calcula el tiempo laboral total desde el inicio de la estación hasta ahora
+            const totalSpanSeconds = this.calculateBusinessSeconds(startedAt, this.now);
+            // 2. Obtiene el total de pausas (que ya usa horario laboral)
+            const accumulatedPause = this.accumulatedPausedTimeInStation(production);
+
+            return totalSpanSeconds - accumulatedPause;
         },
         livePausedTime(production) {
             const record = this.currentStationRecord(production);
             if (this.currentStationStatus(production) !== 'En pausa' || !record.pauses.length) return 0;
+            
             const lastPause = record.pauses[record.pauses.length - 1];
             if (!lastPause.resumed_at) {
-                const currentPauseDuration = differenceInSeconds(this.now, parseISO(lastPause.paused_at));
-                return currentPauseDuration;
+                 // Calcula la duración de la pausa actual (desde que inició hasta ahora) en horario laboral
+                return this.calculateBusinessSeconds(parseISO(lastPause.paused_at), this.now);
             }
             return 0;
         },
@@ -1007,6 +1051,16 @@ export default {
         openMoveModal(mode, production) {
             this.moveModalMode = mode;
             this.moveModalProduction = production; // Guardar qué producción se mueve
+            
+            // Lógica para determinar la cantidad por defecto en el modal de movimiento
+            if (production.station === 'Calidad') {
+                this.moveDefaultQty = production.close_quantity ?? 0;
+            } else if (production.station === 'Inspección') {
+                 this.moveDefaultQty = production.quality_quantity ?? 0;
+            } else {
+                 this.moveDefaultQty = production.quantity ?? 0;
+            }
+
             this.showMoveModal = true;
         },
         openDeliveryModal(context, isPartial, production) {
@@ -1018,15 +1072,15 @@ export default {
             let remainingQty = 0;
             if (context === 'inspection') {
                 const delivered = production.partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
-                remainingQty = (production.quality_quantity ?? production.close_quantity ?? 0) - delivered;
+                const baseQty = production.quality_quantity ?? production.close_quantity ?? 0;
+                remainingQty = baseQty - delivered;
             } else if (context === 'packing') {
                 const delivered = production.packing_partials?.reduce((acc, curr) => acc + curr.quantity, 0) ?? 0;
                 remainingQty = (production.packing_received_quantity ?? 0) - delivered;
             }
             this.deliveryDefaultQty = remainingQty > 0 ? remainingQty : 0;
             
-            this.showMoveModal = false; // <-- ERROR SUTIL EN TU CÓDIGO. Debe ser showDeliveryModal = true
-            this.showDeliveryModal = true; // <-- Esta es la corrección
+            this.showDeliveryModal = true; 
         },
         handlePauseSubmit(reason) {
             // Enviar el ID de la producción pausada
@@ -1080,6 +1134,10 @@ export default {
         },
         formatDate(dateString) {
             if (!dateString) return '-';
+            // Asegurarse de que parseISO maneje la fecha simple correctamente (puede necesitar 'T00:00:00')
+            if (dateString && dateString.length === 10) {
+                 return format(parseISO(dateString + 'T00:00:00'), 'dd MMMM yyyy', { locale: es });
+            }
             return format(parseISO(dateString), 'dd MMMM yyyy', { locale: es });
         },
         formatDateTime(dateString) {
@@ -1092,3 +1150,4 @@ export default {
     },
 };
 </script>
+
