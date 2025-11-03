@@ -6,7 +6,8 @@
         <el-table-column width="40">
             <template #default="scope">
                 <el-tooltip :content="getStatus(scope.row).text" placement="top">
-                    <component :is="getStatus(scope.row).icon" class="size-5" :class="getStatus(scope.row).color" />
+                    <!-- Usamos v-if para el caso de 'Producción dividida' que puede no tener icono -->
+                    <component v-if="getStatus(scope.row).icon" :is="getStatus(scope.row).icon" class="size-5" :class="getStatus(scope.row).color" />
                 </el-tooltip>
             </template>
         </el-table-column>
@@ -35,12 +36,13 @@
             </template>
         </el-table-column>
         <el-table-column prop="client" label="Cliente" />
-        <el-table-column prop="station" label="Progreso" width="160">
+        <el-table-column prop="station" label="Progreso" width="180"> <!-- Ancho ajustado -->
             <template #default="scope">
                 <div class="flex items-center space-x-2">
-                    <div class="rounded-full size-6 flex items-center justify-center"
-                        :style="{ backgroundColor: stations.find(s => s.name === scope.row.station)?.light, color: stations.find(s => s.name === scope.row.station)?.dark }">
-                        <component :is="stations.find(s => s.name === scope.row.station)?.icon" class="size-4" />
+                    <!-- Usamos v-if para el caso de 'Producción dividida' que puede no tener icono -->
+                    <div v-if="getStationInfo(scope.row.station)" class="rounded-full size-6 flex items-center justify-center"
+                        :style="{ backgroundColor: getStationInfo(scope.row.station).light, color: getStationInfo(scope.row.station).dark }">
+                        <component :is="getStationInfo(scope.row.station).icon" class="size-4" />
                     </div>
                     <p>{{ scope.row.station }}</p>
                 </div>
@@ -110,7 +112,7 @@
 </template>
 
 <script>
-import { CheckCircleIcon, PlayCircleIcon, PauseCircleIcon, ClockIcon } from '@heroicons/vue/24/solid';
+import { CheckCircleIcon, PlayCircleIcon, PauseCircleIcon, ClockIcon, RectangleStackIcon } from '@heroicons/vue/24/solid'; // Importamos RectangleStackIcon
 
 export default {
     name: 'ProductionTable',
@@ -118,7 +120,8 @@ export default {
         CheckCircleIcon,
         PlayCircleIcon,
         PauseCircleIcon,
-        ClockIcon
+        ClockIcon,
+        RectangleStackIcon, // Lo registramos
     },
     props: {
         productions: Array,
@@ -126,7 +129,25 @@ export default {
     },
     emits: ['row-click', 'command'],
     methods: {
+        getStationInfo(stationName) {
+            // Caso especial para la estación virtual del padre
+            if (stationName === 'Producción dividida') {
+                return {
+                    name: 'Producción dividida',
+                    icon: RectangleStackIcon, // Icono de "stack"
+                    light: '#E5E7EB', // gray-200
+                    dark: '#374151',  // gray-700
+                };
+            }
+            // Caso normal, busca en el prop
+            return this.stations.find(s => s.name === stationName);
+        },
         getStatus(production) {
+            // Caso especial para el padre
+            if (production.station === 'Producción dividida') {
+                 return { icon: RectangleStackIcon, color: 'text-gray-500', text: 'Orden Dividida' };
+            }
+
             const lastTimeRecord = production.station_times?.[production.station_times.length - 1];
             const status = lastTimeRecord?.status;
 
@@ -140,6 +161,10 @@ export default {
                 case 'Finalizada':
                     return { icon: CheckCircleIcon, color: 'text-[#008cf0]', text: 'Finalizada' };
                 default:
+                    // Puede que sea una orden dividida que aún no tiene 'station_times' o estado (aunque no debería)
+                    if (production.parent_id === null && production.folio !== null) {
+                         return { icon: RectangleStackIcon, color: 'text-gray-500', text: 'Orden Padre' };
+                    }
                     return { icon: null, color: '', text: 'Sin estado' };
             }
         },

@@ -51,9 +51,9 @@ return new class extends Migration
             $table->string('material')->nullable();
             $table->text('notes')->nullable();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->foreignId('machine_id')->constrained('machines')->cascadeOnDelete();
+            $table->foreignId('machine_id')->nullable()->constrained('machines')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('modified_user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('modified_user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->date('estimated_date')->nullable();
             $table->date('estimated_package_date')->nullable();
             $table->timestamp('close_production_date')->nullable();

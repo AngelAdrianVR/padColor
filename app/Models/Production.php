@@ -10,6 +10,8 @@ class Production extends Model
     use HasFactory;
 
     protected $fillable = [
+        'parent_id', // Añadido
+        'component_name', // Añadido
         'folio',
         'type',
         'client',
@@ -96,7 +98,26 @@ class Production extends Model
         'packing_finished_date' => 'datetime',
     ];
 
-    //realciones
+    // --- NUEVAS RELACIONES ---
+
+    /**
+     * Obtiene la orden padre (si esta es un componente).
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Production::class, 'parent_id');
+    }
+
+    /**
+     * Obtiene los componentes hijos (si esta es una orden padre).
+     */
+    public function children()
+    {
+        return $this->hasMany(Production::class, 'parent_id');
+    }
+
+    // --- Relaciones existentes ---
+    
     public function user()
     {
         return $this->belongsTo(User::class);

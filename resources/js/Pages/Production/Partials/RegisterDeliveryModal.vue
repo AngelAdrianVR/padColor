@@ -5,7 +5,8 @@
         </template>
         <template #content>
             <div class="space-y-4">
-                <div>
+                <!-- Este div ahora se oculta si isPartial es true -->
+                <div v-if="!isPartial">
                     <InputLabel value="Tipo de entrega" />
                     <el-select v-model="form.type" placeholder="Seleccione" class="!w-full">
                         <el-option v-for="item in ['Única', 'Parcialidades']" :key="item" :label="item" :value="item" />
@@ -83,6 +84,7 @@ export default {
         show: Boolean,
         production: Object,
         context: String, // 'inspection' or 'packing'
+        isPartial: Boolean, // <-- Propiedad añadida
         defaultQuantity: Number,
     },
     emits: ['close', 'submit'],
@@ -107,6 +109,16 @@ export default {
                 this.form.context = this.context;
                 this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
+                // --- Lógica actualizada ---
+                // Si isPartial es true, fuerza el tipo a 'Parcialidades'
+                // Si no, ponlo en null para que el usuario elija
+                if (this.isPartial) {
+                    this.form.type = 'Parcialidades';
+                } else {
+                    this.form.type = null;
+                }
+                // --- Fin de lógica actualizada ---
+
                 // Set default quantity for unique delivery or first partial
                 this.form.quantity = this.defaultQuantity;
             }
@@ -116,7 +128,10 @@ export default {
                 this.form.is_last_delivery = true;
                 this.form.quantity = this.defaultQuantity;
             } else {
-                this.form.is_last_delivery = false;
+                // No cambiamos is_last_delivery a false automáticamente
+                // por si el usuario cambia de 'Única' a 'Parcialidades'
+                // y quiere marcarla como la última.
+                // Lo dejamos como estaba en el reset (false)
             }
         }
     },
