@@ -148,6 +148,9 @@ Route::prefix('productions/{production}/station-process')->name('productions.sta
     Route::post('/skip-and-move', [ProductionController::class, 'skipAndMoveStation'])->name('skipAndMove');
     Route::post('/register-delivery', [ProductionController::class, 'registerDelivery'])->name('register-delivery');
 });
+Route::get('productions/{production}/get-children', [ProductionController::class, 'getChildren'])
+    ->name('productions.get-children')
+    ->middleware('auth');
 Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
 
 

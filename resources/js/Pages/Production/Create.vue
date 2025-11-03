@@ -5,6 +5,8 @@
             <form @submit.prevent="store" ref="formContainer"
                 class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-3/4 mx-auto mt-7 md:grid grid-cols-2 gap-x-3 gap-y-2">
                 <h1 class="font-semibold ml-2 col-span-full">Crear orden de producción</h1>
+                
+                <!-- SECCIÓN 1: INFO ORDEN -->
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-4">Información de la orden</h2>
                 <div>
                     <InputLabel value="N° de orden*" />
@@ -44,6 +46,8 @@
                     <el-input v-model="form.changes" placeholder="Ingresa el número de cambios" />
                     <InputError :message="form.errors.changes" />
                 </div>
+
+                <!-- SECCIÓN 2: INFO PRODUCTO -->
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Información del producto</h2>
                 <div>
                     <InputLabel value="Producto*" />
@@ -68,37 +72,113 @@
                     </el-select>
                     <InputError :message="form.errors.materials" />
                 </div>
+
+                <!-- SECCIÓN 3: PROCESOS (LÓGICA NUEVA) -->
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Procesos de producción</h2>
-                <div>
-                    <InputLabel>
-                        <div class="flex items-center space-x-3">
-                            <span>Progreso*</span>
-                            <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
-                                :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }">
-                                <component :is="stations.find(s => s.name === form.station)?.icon" class="size-4" />
+                <div class="col-span-full">
+                     <el-checkbox v-model="form.has_components" label="El producto consta de componentes (dividir orden)" size="large" />
+                     <InputError :message="form.errors.has_components" />
+                     <InputError :message="form.errors.components" />
+                </div>
+
+                <!-- CASO 1: ORDEN SIMPLE -->
+                <template v-if="!form.has_components">
+                    <div>
+                        <InputLabel>
+                            <div class="flex items-center space-x-3">
+                                <span>Progreso*</span>
+                                <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
+                                    :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }">
+                                    <component :is="stations.find(s => s.name === form.station)?.icon" class="size-4" />
+                                </div>
+                            </div>
+                        </InputLabel>
+                        <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual"
+                            class="!w-full">
+                            <el-option v-for="station in stations" :key="station.name" :label="station.name"
+                                :value="station.name" />
+                        </el-select>
+                        <InputError :message="form.errors.station" />
+                    </div>
+                    <div class="mt-1">
+                        <InputLabel value="Máquina*" />
+                        <div class="flex items-center">
+                            <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                            <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
+                            <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina"
+                                class="!w-full" :disabled="fetchingMachines">
+                                <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                                    :value="machine.id" />
+                            </el-select>
+                        </div>
+                        <InputError :message="form.errors.machine_id" />
+                    </div>
+                </template>
+
+                <!-- CASO 2: ORDEN CON COMPONENTES -->
+                <template v-if="form.has_components">
+                    <div class="col-span-full border border-gray-200 rounded-lg p-3 relative">
+                        <h3 class="font-semibold text-gray-700 mb-2">Componentes de la orden</h3>
+                        <p class="text-xs text-gray-500 mb-4">
+                            Define los componentes que se producirán. Cada uno podrá ser rastreado en estaciones diferentes.
+                        </p>
+
+                        <div v-for="(component, index) in form.components" :key="index" 
+                             class="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-2 items-start py-3"
+                             :class="{ 'border-t border-gray-200': index > 0 }">
+                            
+                            <!-- Col 1: Nombre -->
+                            <div>
+                                <InputLabel :value="`Componente ${index + 1}*`" />
+                                <el-input v-model="component.name" placeholder="Ej. Tapa" />
+                                <InputError :message="form.errors[`components.${index}.name`]" />
+                            </div>
+
+                            <!-- Col 2: Cantidad -->
+                            <div>
+                                <InputLabel value="Cantidad*" />
+                                <el-input-number v-model="component.quantity" placeholder="Ingresa la cantidad"
+                                    :min="0.01" :step="0.01" class="!w-full" />
+                                <InputError :message="form.errors[`components.${index}.quantity`]" />
+                            </div>
+
+                            <!-- Col 3: Estación -->
+                            <div>
+                                <InputLabel value="Estación inicial*" />
+                                <el-select v-model="component.station" filterable placeholder="Selecciona el progreso" class="!w-full">
+                                    <el-option v-for="station in stations" :key="station.name" :label="station.name" :value="station.name" />
+                                </el-select>
+                                <InputError :message="form.errors[`components.${index}.station`]" />
+                            </div>
+
+                            <!-- Col 4: Máquina y Botón Eliminar -->
+                            <div>
+                                <InputLabel value="Máquina inicial*" />
+                                <div class="flex items-center space-x-2">
+                                    <el-select v-model="component.machine_id" filterable placeholder="Selecciona la máquina"
+                                        class="!w-full" :disabled="fetchingMachines">
+                                        <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                                            :value="machine.id" />
+                                    </el-select>
+                                    <button @click="removeComponent(index)" type="button" class="text-red-500 hover:text-red-700 size-8 rounded-full flex-shrink-0 flex items-center justify-center hover:bg-red-50 transition-all">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                                <InputError :message="form.errors[`components.${index}.machine_id`]" />
                             </div>
                         </div>
-                    </InputLabel>
-                    <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual"
-                        class="!w-full">
-                        <el-option v-for="station in stations" :key="station.name" :label="station.name"
-                            :value="station.name" />
-                    </el-select>
-                    <InputError :message="form.errors.station" />
-                </div>
-                <div class="mt-1">
-                    <InputLabel value="Máquina*" />
-                    <div class="flex items-center">
-                        <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
-                        <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina"
-                            class="!w-full" :disabled="fetchingMachines">
-                            <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
-                                :value="machine.id" />
-                        </el-select>
+
+                        <!-- Botón para añadir más -->
+                        <div class="mt-4">
+                            <PrimaryButton type="button" @click="addComponent" class="!bg-blue-600 hover:!bg-blue-700">
+                                <i class="fa-solid fa-plus mr-2"></i>
+                                Agregar componente
+                            </PrimaryButton>
+                        </div>
                     </div>
-                    <InputError :message="form.errors.machine_id" />
-                </div>
+                </template>
+
+
                 <div class="col-span-full">
                     <InputLabel value="Notas" />
                     <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
@@ -106,7 +186,9 @@
                         show-word-limit clearable />
                     <InputError :message="form.errors.notes" />
                 </div>
-                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas</h2>
+
+                <!-- SECCIÓN 4: MATERIALES Y MEDIDAS -->
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas (Info. Padre)</h2>
                 <div>
                     <InputLabel value="Material" />
                     <el-input v-model="form.material" placeholder="Escribe el material" />
@@ -301,12 +383,12 @@ export default {
             client: 'PadColor',
             changes: null,
             season: null,
-            station: 'Material pendiente',
+            station: 'Material pendiente', // Estación por defecto para orden simple
             quantity: null,
             materials: null,
             notes: null,
             product_id: null,
-            machine_id: null,
+            machine_id: null, // Máquina por defecto para orden simple
             material: null,
             width: null,
             gauge: null,
@@ -326,6 +408,10 @@ export default {
             varnish_type: null,
             start_date: format(new Date(), "yyyy-MM-dd"), // Establece la fecha de hoy por defecto
             estimated_date: null,
+
+            // --- NUEVOS CAMPOS ---
+            has_components: false, // Flag para la UI
+            components: [], // Array para los componentes hijos
         });
 
         return {
@@ -339,7 +425,7 @@ export default {
             // calculos
             dfh: null,
             // opciones
-            stations: stations,
+            stations: stations.filter(s => s.name !== 'Producción dividida'), // No se puede seleccionar manualmente
             materials: [
                 'Ninguno',
                 'Caja base',
@@ -376,12 +462,31 @@ export default {
     },
     emits: ['created'],
     methods: {
+        // --- NUEVOS MÉTODOS ---
+        addComponent() {
+            this.form.components.push({
+                name: '',
+                quantity: this.form.quantity ?? 1, // Default a la cantidad padre
+                station: 'Material pendiente', // Default a la primera estación
+                machine_id: null,
+            });
+        },
+        removeComponent(index) {
+             this.form.components.splice(index, 1);
+        },
+        // --- MÉTODOS EXISTENTES ---
         handleVarnish() {
             if (!this.form.has_varnish) {
                 this.form.varnish_type = null;
             }
         },
         store() {
+            // Limpiar campos de orden simple si se envían componentes
+            if (this.form.has_components) {
+                this.form.station = null;
+                this.form.machine_id = null;
+            }
+
             this.form.post(route('productions.store'), {
                 onSuccess: () => {
                     this.cleanForm();
@@ -395,14 +500,15 @@ export default {
                     });
                     this.$emit('created');
                 },
-                onError: () => {
-                    console.log(this.form.errors);
+                onError: (errors) => {
+                    console.log(errors);
                     this.$refs.formContainer.scrollIntoView({
                         behavior: 'smooth',
                     });
 
                     this.$notify({
                         title: 'Verifique los campos requeridos',
+                        message: 'Algunos campos, incluidos los de componentes, pueden ser obligatorios.',
                         type: 'warning',
                     });
                 },
@@ -413,7 +519,10 @@ export default {
             this.form.material = productSelected.material;
         },
         cleanForm() {
+            // Guardamos el folio siguiente antes de resetear
+            const nextFolio = this.form.folio;
             this.form.reset();
+            this.form.folio = nextFolio; // Re-asignamos el folio incrementado
             this.dfh = null;
         },
         handleDfh() {
