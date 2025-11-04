@@ -10,8 +10,10 @@
             <div class="space-y-4">
                 <!-- Campos Principales -->
                 <div>
-                    <InputLabel value="Siguiente estación*" />
-                    <el-select v-model="form.next_station" class="w-full" placeholder="Selecciona la siguiente estación"
+                    <!-- El label cambia según el contexto -->
+                    <InputLabel :value="showReturnFields ? 'Estación a la que regresa*' : 'Siguiente estación*'" />
+                    <el-select v-model="form.next_station" class="w-full"
+                        :placeholder="showReturnFields ? 'Selecciona estación de regreso' : 'Selecciona la siguiente estación'"
                         @change="handleStationChange">
                         <el-option v-for="station in availableStations" :key="station.name" :label="station.name"
                             :value="station.name" />
@@ -28,6 +30,7 @@
                 </div>
 
                 <!-- Campos Condicionales para Entregas (Calidad, Inspección) -->
+                <!-- CORRECCIÓN: Añadido chequeo de processType -->
                 <div v-if="showDeliveryFields" class="grid grid-cols-2 gap-x-3 gap-y-2 border-t pt-4">
                     <div class="col-span-full" v-if="isMoveToPacking">
                         <InputLabel value="Cantidad a mover a empaques*" />
@@ -35,7 +38,7 @@
                             class="!w-full" />
                         <InputError :message="form.errors.quantity" />
                     </div>
-                     <div class="col-span-full" v-else>
+                    <div class="col-span-full" v-else>
                         <InputLabel value="Cantidad a entregar*" />
                         <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="0"
                             class="!w-full" />
@@ -62,16 +65,18 @@
                     </div>
                 </div>
 
-                 <!-- Campos Condicionales para Regresos (Reproceso) -->
+                <!-- Campos Condicionales para Regresos (Reproceso) -->
                 <div v-if="showReturnFields" class="grid grid-cols-1 gap-y-2 border-t pt-4">
                     <div>
                         <InputLabel value="Cantidad a regresar*" />
-                        <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="0" class="!w-full" />
+                        <el-input-number v-model="form.quantity" placeholder="Ingresa la cantidad" :min="0"
+                            class="!w-full" />
                         <InputError :message="form.errors.quantity" />
                     </div>
                     <div>
                         <InputLabel value="Motivo de regreso*" />
-                        <el-input v-model="form.reason" :rows="3" type="textarea" placeholder="Escribe el motivo del regreso" />
+                        <el-input v-model="form.reason" :rows="3" type="textarea"
+                            placeholder="Escribe el motivo del regreso" />
                         <InputError :message="form.errors.reason" />
                     </div>
                 </div>
@@ -118,7 +123,7 @@ export default {
     },
     props: {
         show: Boolean,
-        processType: String,
+        processType: String, // 'skip', 'finish', 'return'
         availableStations: Array,
         machines: Array,
         production: Object,
@@ -141,6 +146,10 @@ export default {
         };
     },
     computed: {
+        // --- CORRECCIÓN: 'showReturnFields' ahora solo depende de processType ---
+        showReturnFields() {
+            return this.processType === 'return';
+        },
         title() {
             if (this.showReturnFields) return 'Regresar de estación';
             return this.processType === 'skip' ? 'Mover a la siguiente estación' : 'Finalizar y mover de estación';
@@ -158,7 +167,7 @@ export default {
         currentStation() {
             return this.production?.station;
         },
-        // --- Computed properties to show/hide conditional fields ---
+        // --- Computadas para lógica de campos de entrega ---
         isMoveToQuality() {
             return this.form.next_station === 'Calidad' && this.currentStation !== 'Inspección';
         },
@@ -168,18 +177,10 @@ export default {
         isMoveToPacking() {
             return this.form.next_station === 'Empaques';
         },
+        // --- CORRECCIÓN: 'showDeliveryFields' no debe mostrarse si es 'return' ---
         showDeliveryFields() {
+            if (this.processType === 'return') return false;
             return this.isMoveToQuality || this.isMoveToInspection || this.isMoveToPacking;
-        },
-        isReturnToReprocess() {
-            return this.form.next_station === 'X Reproceso' && this.currentStation === 'Calidad';
-        },
-        isReturnToQuality() {
-            return this.form.next_station === 'Calidad' && this.currentStation === 'Inspección';
-        },
-        showReturnFields() {
-            return this.processType == 'skip';
-            return this.isReturnToReprocess || this.isReturnToQuality;
         },
         // --- Form validation ---
         isFormValid() {
@@ -190,7 +191,7 @@ export default {
             }
 
             if (this.showReturnFields) {
-                 if (this.form.quantity === null || !this.form.reason) return false;
+                if (this.form.quantity === null || !this.form.reason) return false;
             }
 
             return true;
@@ -200,32 +201,47 @@ export default {
         submit() {
             this.$emit('submit', { ...this.form.data() });
         },
+        // --- MÉTODO ACTUALIZADO ---
         handleStationChange(newStation) {
+            // Resetear todos los campos condicionales
             this.form.reset(
                 'quantity', 'date', 'scrap_quantity', 'shortage_quantity', 'reason'
             );
+            // Poner fecha por defecto para campos de entrega
             this.form.date = format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
-            if (this.isMoveToQuality) {
-                this.form.quantity = this.production?.quantity ?? 0;
-            } else if (this.isMoveToInspection) {
-                this.form.quantity = this.production?.close_quantity ?? 0;
-            } else if (this.isMoveToPacking) {
-                 this.form.quantity = this.production?.quality_quantity ?? this.production?.close_quantity ?? this.production?.quantity;
-            } else if (this.isReturnToReprocess || this.isReturnToQuality) {
-                this.form.quantity = this.isReturnToReprocess 
-                    ? this.production?.close_quantity 
-                    : this.production?.quality_quantity;
+            if (this.processType === 'return') {
+                // Si es un regreso, la cantidad por defecto es la que se está regresando
+                this.form.quantity = this.defaultQuantity;
+            } else {
+                // Lógica para 'finish' o 'skip' (movimiento hacia adelante)
+                if (newStation === 'Calidad') { // Hacia Calidad
+                    this.form.quantity = this.production?.quantity ?? 0;
+                } else if (newStation === 'Inspección') { // Hacia Inspección
+                    this.form.quantity = this.production?.close_quantity ?? 0;
+                } else if (newStation === 'Empaques') { // Hacia Empaques
+                    this.form.quantity = this.production?.quality_quantity ?? this.production?.close_quantity ?? this.production?.quantity;
+                }
             }
         }
     },
     watch: {
         show(newVal) {
             if (newVal) {
+                // Configuración inicial al abrir
                 this.form.processType = this.processType;
                 this.form.machine_id = this.production?.machine_id;
                 this.form.quantity = this.defaultQuantity;
+                
+                // --- MEJORA: Autoseleccionar si es 'return' ---
+                if (this.processType === 'return' && this.availableStations?.length === 1) {
+                    this.form.next_station = this.availableStations[0].name;
+                    // Llamar manualmente al handler porque el @change no se dispara
+                    this.handleStationChange(this.form.next_station);
+                }
+
             } else {
+                // Limpiar al cerrar
                 this.form.reset();
                 this.form.clearErrors();
             }
@@ -233,4 +249,3 @@ export default {
     }
 };
 </script>
-

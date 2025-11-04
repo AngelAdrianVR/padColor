@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Exports\ProductionsExport;
 use App\Imports\ProductionsImport;
 use App\Notifications\ProductionForwardedNotification;
-use App\Notifications\ProductionReturnedNotification;
+use App\Notifications\ProductionReturnedNotification; // Asegúrate que esta notificación exista
 use App\Traits\NotifiesViaEvents;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -93,7 +93,7 @@ class ProductionController extends Controller
             'varnish_type' => 'required_if_accepted:has_varnish',
             // Validación de componentes
             'has_components' => 'required|boolean',
-            'components' => 'exclude_if:has_components,false|required|array|min:2',
+            'components' => 'exclude_if:has_components,false|required|array|min:1', // Permitir 1 o más componentes
             'components.*.name' => 'required_if:has_components,true|string|max:255',
             'components.*.quantity' => 'required_if:has_components,true|numeric|min:1',
             'components.*.station' => 'required_if:has_components,true|string|max:255',
@@ -102,6 +102,7 @@ class ProductionController extends Controller
             'varnish_type.required_if_accepted' => 'El tipo de barniz es requerido.',
             'folio.required_if' => 'El folio es requerido.',
             'folio.unique' => 'El folio ya ha sido registrado.',
+            'components.min' => 'Debe tener al menos 1 componente.',
             'components.*.name.required_if' => 'El nombre del componente es requerido.',
             'components.*.quantity.required_if' => 'La cantidad del componente es requerida.',
             'components.*.station.required_if' => 'La estación del componente es requerida.',
@@ -115,8 +116,7 @@ class ProductionController extends Controller
         DB::transaction(function () use ($validated, $now) {
             // --- Caso 1: Tiene componentes (Orden Padre + Hijos) ---
             if ($validated['has_components']) {
-                // $totalQuantity = collect($validated['components'])->sum('quantity'); //descomentar si se quiere la cantidad total como suma de componentes
-                $totalQuantity = $validated['quantity'];
+                $totalQuantity = collect($validated['components'])->sum('quantity');
 
                 // Crear la orden "Padre"
                 $parentData = $validated;
@@ -253,8 +253,7 @@ class ProductionController extends Controller
             'machine_id' => 'required_if:has_components,false|nullable|min:1|integer|exists:machines,id',
 
             // Componentes: requerido si 'has_components' es true, y debe tener al menos 1
-            // NOTA: Esto previene la "degradación" de orden dividida a simple, lo cual es más seguro.
-            'components' => 'exclude_if:has_components,false|required|array|min:2',
+            'components' => 'exclude_if:has_components,false|required|array|min:1',
             'components.*.id' => 'nullable|integer|exists:productions,id', // ID del hijo (si ya existe)
             'components.*.name' => 'required|string|max:255',
             'components.*.quantity' => 'required|numeric|min:1',
@@ -356,8 +355,7 @@ class ProductionController extends Controller
                 $production->children()->whereNotIn('id', $existingChildIds)->delete();
 
                 // Actualizar la cantidad total del padre
-                // $parentData['quantity'] = $totalQuantity; //descomentar si se quiere la cantidad total como suma de componentes
-                $parentData['quantity'] = $validated['quantity'];
+                $parentData['quantity'] = $totalQuantity;
 
                 // Limpiar campos de componente del array de datos del padre
                 unset($parentData['components'], $parentData['has_components']);
@@ -589,13 +587,15 @@ class ProductionController extends Controller
             'next_station' => 'required|string',
             'quantity' => 'required|numeric|min:0',
             'reason' => 'required|string|max:255',
+            'notes' => 'nullable|string', // Añadido para validación
         ]);
 
         $old_station = $production->station;
         $now = now();
         $user_id = auth()->id();
 
-        $this->finalizeCurrentStation($production, $now, $user_id, "Regresado a {$validated['next_station']}");
+        // --- CORRECCIÓN: Pasar 'return' como modo ---
+        $this->finalizeCurrentStation($production, $now, $user_id, "Regresado a {$validated['next_station']}", 'return');
 
         $returns = $production->returns ?? [];
         $returns[] = [
@@ -615,7 +615,29 @@ class ProductionController extends Controller
 
         $production->station = $validated['next_station'];
         $production->modified_user_id = $user_id;
+
+        // --- INICIO: LÓGICA DE NOTIFICACIÓN MOVIDA AQUÍ ---
+        Log::info('modo return. ' . $validated['next_station']);
+        $folio = $production->parent->folio ?? $production->folio;
+
+        $notificationInstance = new ProductionReturnedNotification(
+            $production,
+            $validated['next_station'],
+            $validated['quantity'] ?? $production->quantity,
+            $validated['reason'] ?? $validated['notes'] ?? '-No especificado-',
+            $folio
+        );
+
+        if ($validated['next_station'] === 'X Reproceso') {
+            $this->sendNotification('production.returned.reprocess', $notificationInstance);
+        } elseif ($validated['next_station'] === 'Calidad') {
+            $this->sendNotification('production.returned.quality', $notificationInstance);
+        }
+        // --- FIN: LÓGICA DE NOTIFICACIÓN MOVIDA ---
+
         $production->save();
+
+        return back(); // Añadido return
     }
 
     // --- NEW UNIFIED METHOD FOR DELIVERIES ---
@@ -970,8 +992,9 @@ class ProductionController extends Controller
         }
 
         // --- NEW NOTIFICATION LOGIC ---
-        if ($mode === 'finish') {
-            Log::info('modo finish. ' . $validated['next_station']);
+        // --- CORRECCIÓN: Lógica de 'return' eliminada de aquí ---
+        if ($mode === 'skip' || $mode === 'finish') {
+            Log::info('modo siguiente: ' . $validated['next_station']);
             $folio = $production->parent->folio ?? $production->folio; // Obtener folio del padre si existe
 
             $notificationInstance = new ProductionForwardedNotification(
@@ -996,20 +1019,6 @@ class ProductionController extends Controller
             } elseif ($validated['next_station'] === 'Surtido') {
                 $this->sendNotification('production.forwarded.assortment', $notificationInstance);
             }
-        } else { // modo 'skip' (regreso de estación)
-            Log::info('modo skip. ' . $validated['next_station']);
-            $notificationInstance = new ProductionReturnedNotification(
-                $production,
-                $validated['next_station'],
-                $validated['quantity'] ?? $production->quantity, // Use passed quantity or fallback to total
-                $validated['reason'] ?? $validated['notes'] ?? '-No especificado-'
-            );
-
-            if ($validated['next_station'] === 'X Reproceso') {
-                $this->sendNotification('production.returned.reprocess', $notificationInstance);
-            } elseif ($validated['next_station'] === 'Calidad') {
-                $this->sendNotification('production.returned.quality', $notificationInstance);
-            }
         }
 
         $production->save();
@@ -1032,12 +1041,20 @@ class ProductionController extends Controller
         $current_record['finished_at'] = $now->toDateTimeString();
         $current_record['history'][] = ['event' => "Finalizada ({$mode})", 'timestamp' => $now->toDateTimeString(), 'user_id' => $user_id, 'details' => $details];
 
-        // --- CÁLCULO DE HORARIO LABORAL ---
-        if ($mode === 'skip') { // Movido desde 'En espera'
+        // --- CÁLCULO DE HORARIO LABORAL (CORREGIDO) ---
+        // Si se "salta" o se "regresa", el tiempo en esta estación fue "en espera".
+        if ($mode === 'skip' || $mode === 'return') {
             $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), $now);
-            $current_record['times']['effective_seconds'] = 0;
-            $current_record['times']['paused_seconds'] = 0;
-        } else { // Movido desde 'En proceso' o 'En pausa'
+            // Asegurarse de que el tiempo de pausa se sume si se saltó/regresó desde una pausa
+            $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record);
+            $current_record['times']['effective_seconds'] = $this->calculateEffectiveTime($current_record, $now); // Calcular efectivo (debería ser 0 o muy poco si estaba en espera)
+
+            // Ajuste final: si estaba en espera, el tiempo efectivo debe ser 0.
+            if ($current_record['started_at'] === null) {
+                 $current_record['times']['effective_seconds'] = 0;
+            }
+
+        } else { // 'finish' - Movido desde 'En proceso' o 'En pausa'
             if (!empty($current_record['started_at'])) {
                 $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), Carbon::parse($current_record['started_at']));
                 $current_record['times']['paused_seconds'] = $this->calculateTotalPausedTime($current_record); // Helper ya usa horario laboral
@@ -1185,3 +1202,4 @@ class ProductionController extends Controller
     }
     // --- FIN: NUEVO HELPER DE HORARIO LABORAL ---
 }
+
