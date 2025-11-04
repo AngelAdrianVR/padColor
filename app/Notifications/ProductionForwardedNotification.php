@@ -21,7 +21,7 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
 
     public function via(object $notifiable): array
     {
-        if (app()->environment() == 'production') {
+        if (app()->environment() == 'production' || true) {
             Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
             return ['mail'];
         } else {
@@ -32,7 +32,7 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
 
     public function toMail(object $notifiable): MailMessage
     {
-        Log::info("Iniciando toMail para producción {$this->production->id}..."); // Log de depuración
+        // Log::info("Iniciando toMail para producción {$this->production->id}..."); // Log de depuración
 
         // Stations that require the number of units transferred to be displayed
         $stationsWithUnits = ['X Reproceso', 'Inspección', 'Calidad', 'Empaques'];
