@@ -74,13 +74,14 @@
                                         <p class="col-span-2">{{ selectedProduction.product.description ?? '-' }}</p>
                                         <p class="text-gray-500">Lista de material:</p>
                                         <p class="col-span-2">{{ selectedProduction.materials?.join(', ') }}</p>
-                                        
+
                                         <!-- Estación (condicional) -->
                                         <p class="text-gray-500">Estación actual:</p>
                                         <div class="col-span-2 flex items-center space-x-2">
                                             <div class="rounded-full size-6 flex items-center justify-center"
                                                 :style="{ backgroundColor: getStationStyling(selectedProduction.station).light, color: getStationStyling(selectedProduction.station).dark }">
-                                                <component :is="getStationStyling(selectedProduction.station).icon" class="size-4" />
+                                                <component :is="getStationStyling(selectedProduction.station).icon"
+                                                    class="size-4" />
                                             </div>
                                             <p>{{ selectedProduction.station }}</p>
                                         </div>
@@ -89,14 +90,17 @@
 
                                 <!-- NUEVO: Información de Componentes (Hijos) -->
                                 <section v-if="isDividedOrder">
-                                    <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Componentes de la orden</h2>
+                                    <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-md">Componentes de
+                                        la orden</h2>
                                     <div v-if="isFetchingChildren" class="text-center py-6">
                                         <Loading />
                                     </div>
                                     <div v-else-if="children.length > 0" class="mt-3 px-2 space-y-3">
-                                        <div v-for="child in children" :key="child.id" class="border rounded-lg p-3 grid grid-cols-4 gap-x-3 gap-y-2">
-                                            <p class="text-gray-500 col-span-4 font-bold text-base">{{ child.component_name }}</p>
-                                            
+                                        <div v-for="child in children" :key="child.id"
+                                            class="border rounded-lg p-3 grid grid-cols-4 gap-x-3 gap-y-2">
+                                            <p class="text-gray-500 col-span-4 font-bold text-base">{{
+                                                child.component_name }}</p>
+
                                             <p class="text-gray-500">Cantidad:</p>
                                             <p class="font-medium">{{ child.quantity?.toLocaleString('es-MX') }} pzs</p>
 
@@ -104,7 +108,8 @@
                                             <div class="flex items-center space-x-2">
                                                 <div class="rounded-full size-6 flex items-center justify-center"
                                                     :style="{ backgroundColor: getStationStyling(child.station).light, color: getStationStyling(child.station).dark }">
-                                                    <component :is="getStationStyling(child.station).icon" class="size-4" />
+                                                    <component :is="getStationStyling(child.station).icon"
+                                                        class="size-4" />
                                                 </div>
                                                 <p class="font-medium">{{ child.station }}</p>
                                             </div>
@@ -166,7 +171,7 @@
                             </div>
                         </el-tab-pane>
                         <el-tab-pane label="Producción" name="production">
-                            
+
                             <!-- CASO 1: ORDEN SIMPLE -->
                             <div v-if="!isDividedOrder" class="p-1 mt-2 space-y-6">
                                 <!-- General Time Summary -->
@@ -197,28 +202,42 @@
                                     <h2 class="font-bold px-3 pb-1">Control de estación</h2>
                                     <div v-if="currentStationRecord(selectedProduction) && currentStationRecord(selectedProduction).status !== 'Finalizada'"
                                         class="p-4 border rounded-lg bg-[#F2F2F2]">
-                                        
+
                                         <!-- Waiting State -->
                                         <div v-if="currentStationStatus(selectedProduction) === 'En espera'">
                                             <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(selectedProduction).station_name).light, color: getStationStyling(currentStationRecord(selectedProduction).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(selectedProduction).station_name }}</p>
+                                                    <p class="font-bold">{{
+                                                        currentStationRecord(selectedProduction).station_name }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
                                                     <p class="text-xs text-right">Tiempo en espera</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(liveWaitingTime(selectedProduction)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(liveWaitingTime(selectedProduction)) }}</p>
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-3">
-                                                <PrimaryButton @click="$emit('start-process', { productionId: selectedProduction.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton
+                                                    v-if="selectedProduction.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', selectedProduction)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton
+                                                    @click="$emit('start-process', { productionId: selectedProduction.id })"
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Iniciar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip', selectedProduction)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
-                                                    Mover a siguiente <ArrowRightIcon class="size-5 ml-2" />
+                                                <PrimaryButton @click="openMoveModal('skip', selectedProduction)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    Mover a siguiente
+                                                    <ArrowRightIcon class="size-5 ml-2" />
                                                 </PrimaryButton>
                                             </div>
                                         </div>
@@ -227,22 +246,34 @@
                                         <div v-else-if="currentStationStatus(selectedProduction) === 'En proceso'">
                                             <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
-                                                     <div class="rounded-full size-6 flex items-center justify-center"
+                                                    <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(selectedProduction).station_name).light, color: getStationStyling(currentStationRecord(selectedProduction).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(selectedProduction).station_name }}</p>
+                                                    <p class="font-bold">{{
+                                                        currentStationRecord(selectedProduction).station_name }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
                                                     <p class="text-xs text-right">Tiempo efectivo</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(liveEffectiveTime(selectedProduction)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(liveEffectiveTime(selectedProduction)) }}</p>
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <PrimaryButton @click="openPauseModal(selectedProduction)" class="!bg-[#FDA10F] flex items-center !rounded-lg">
+                                                <PrimaryButton
+                                                    v-if="selectedProduction.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', selectedProduction)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openPauseModal(selectedProduction)"
+                                                    class="!bg-[#FDA10F] flex items-center !rounded-lg">
                                                     <PauseIcon class="size-5 mr-2" /> Pausar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish', selectedProduction)" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish', selectedProduction)"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" /> Finalizar y mover
                                                 </PrimaryButton>
                                             </div>
@@ -254,29 +285,44 @@
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(selectedProduction).station_name).light, color: getStationStyling(currentStationRecord(selectedProduction).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(selectedProduction).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(selectedProduction).station_name }}</p>
+                                                    <p class="font-bold">{{
+                                                        currentStationRecord(selectedProduction).station_name }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 space-x-2 rounded-lg">
                                                     <p class="text-xs text-right">Tiempo en pausa</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(livePausedTime(selectedProduction)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(livePausedTime(selectedProduction)) }}</p>
                                                 </div>
                                             </div>
                                             <p class="text-sm text-gray-700 text-center mt-2">Motivo: <span
-                                                    class="font-semibold italic">"{{ lastPauseReason(selectedProduction) }}"</span></p>
+                                                    class="font-semibold italic">"{{ lastPauseReason(selectedProduction)
+                                                    }}"</span></p>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <PrimaryButton @click="$emit('resume-process', { productionId: selectedProduction.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton
+                                                    v-if="selectedProduction.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', selectedProduction)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton
+                                                    @click="$emit('resume-process', { productionId: selectedProduction.id })"
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Reanudar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish', selectedProduction)" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish', selectedProduction)"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" /> Finalizar y mover
                                                 </PrimaryButton>
                                             </div>
                                         </div>
                                     </div>
                                     <div v-else class="text-center text-gray-500 py-8 border rounded-b-md">
-                                        <p v-if="currentStationRecord(selectedProduction)?.status === 'Finalizada'">La estación actual ya ha
+                                        <p v-if="currentStationRecord(selectedProduction)?.status === 'Finalizada'">La
+                                            estación actual ya ha
                                             sido finalizada.</p>
                                         <p v-else>No hay un registro de tiempo para la estación actual.</p>
                                     </div>
@@ -296,19 +342,23 @@
 
                                 <!-- ***** INICIO: NUEVA SECCIÓN DE GRAN TOTAL ***** -->
                                 <section>
-                                    <h2 class="bg-blue-100 font-bold text-blue-800 py-2 px-3 rounded-md">Resumen general de la orden (Todos los componentes)</h2>
+                                    <h2 class="bg-blue-100 font-bold text-blue-800 py-2 px-3 rounded-md">Resumen general
+                                        de la orden (Todos los componentes)</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 text-center">
                                         <div class="bg-green-100 border border-green-200 rounded-lg p-3">
                                             <p class="text-sm text-green-800">Tiempo efectivo (Gran Total)</p>
-                                            <p class="font-bold text-xl text-green-900 mt-1">{{ formatDuration(grandTotalEffectiveTime) }}</p>
+                                            <p class="font-bold text-xl text-green-900 mt-1">{{
+                                                formatDuration(grandTotalEffectiveTime) }}</p>
                                         </div>
                                         <div class="bg-orange-100 border border-orange-200 rounded-lg p-3">
                                             <p class="text-sm text-orange-800">Tiempo en pausa (Gran Total)</p>
-                                            <p class="font-bold text-xl text-orange-900 mt-1">{{ formatDuration(grandTotalPausedTime) }}</p>
+                                            <p class="font-bold text-xl text-orange-900 mt-1">{{
+                                                formatDuration(grandTotalPausedTime) }}</p>
                                         </div>
                                         <div class="bg-gray-200 border border-gray-300 rounded-lg p-3">
                                             <p class="text-sm text-gray-800">Tiempo en espera (Gran Total)</p>
-                                            <p class="font-bold text-xl text-gray-900 mt-1">{{ formatDuration(grandTotalWaitingTime) }}</p>
+                                            <p class="font-bold text-xl text-gray-900 mt-1">{{
+                                                formatDuration(grandTotalWaitingTime) }}</p>
                                         </div>
                                     </div>
                                 </section>
@@ -321,7 +371,7 @@
                                 <div v-else-if="children.length === 0" class="text-center py-12 text-gray-500">
                                     No se encontraron componentes para esta orden.
                                 </div>
-                                
+
                                 <!-- Loop por cada componente -->
                                 <section v-for="child in children" :key="child.id" class="border rounded-lg">
                                     <h2 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-t-md">
@@ -332,45 +382,61 @@
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white border-t">
                                         <div class="bg-green-100 border border-green-200 rounded-lg p-3">
                                             <p class="text-sm text-green-800">Tiempo efectivo total (Componente)</p>
-                                            <p class="font-bold text-xl text-green-900 mt-1">{{ formatDuration(totalEffectiveTime(child)) }}</p>
+                                            <p class="font-bold text-xl text-green-900 mt-1">{{
+                                                formatDuration(totalEffectiveTime(child)) }}</p>
                                         </div>
                                         <div class="bg-orange-100 border border-orange-200 rounded-lg p-3">
                                             <p class="text-sm text-orange-800">Tiempo en pausa total (Componente)</p>
-                                            <p class="font-bold text-xl text-orange-900 mt-1">{{ formatDuration(totalPausedTime(child)) }}</p>
+                                            <p class="font-bold text-xl text-orange-900 mt-1">{{
+                                                formatDuration(totalPausedTime(child)) }}</p>
                                         </div>
                                         <div class="bg-gray-200 border border-gray-300 rounded-lg p-3">
                                             <p class="text-sm text-gray-800">Tiempo en espera total (Componente)</p>
-                                            <p class="font-bold text-xl text-gray-900 mt-1">{{ formatDuration(totalWaitingTime(child)) }}</p>
+                                            <p class="font-bold text-xl text-gray-900 mt-1">{{
+                                                formatDuration(totalWaitingTime(child)) }}</p>
                                         </div>
                                     </div>
                                     <!-- ***** FIN: NUEVA SECCIÓN DE TOTALES POR HIJO ***** -->
 
 
                                     <!-- Control de Estación (para este hijo) -->
-                                     <div v-if="currentStationRecord(child) && currentStationRecord(child).status !== 'Finalizada'"
+                                    <div v-if="currentStationRecord(child) && currentStationRecord(child).status !== 'Finalizada'"
                                         class="p-4 border-t bg-[#F2F2F2]">
-                                        
+
                                         <!-- Waiting State -->
                                         <div v-if="currentStationStatus(child) === 'En espera'">
                                             <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(child).station_name).light, color: getStationStyling(currentStationRecord(child).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(child).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(child).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}</p>
+                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}
+                                                    </p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
                                                     <p class="text-xs text-right">Tiempo en espera</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(liveWaitingTime(child)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(liveWaitingTime(child)) }}</p>
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-3">
-                                                <PrimaryButton @click="$emit('start-process', { productionId: child.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton v-if="child.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', child)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton
+                                                    @click="$emit('start-process', { productionId: child.id })"
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Iniciar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip', child)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
-                                                    Mover a siguiente <ArrowRightIcon class="size-5 ml-2" />
+                                                <PrimaryButton @click="openMoveModal('skip', child)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    Mover a siguiente
+                                                    <ArrowRightIcon class="size-5 ml-2" />
                                                 </PrimaryButton>
                                             </div>
                                         </div>
@@ -379,22 +445,33 @@
                                         <div v-else-if="currentStationStatus(child) === 'En proceso'">
                                             <div class="flex justify-between items-center bg-white px-3 rounded-lg">
                                                 <div class="flex items-center space-x-2">
-                                                     <div class="rounded-full size-6 flex items-center justify-center"
+                                                    <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(child).station_name).light, color: getStationStyling(currentStationRecord(child).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(child).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(child).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}</p>
+                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}
+                                                    </p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 rounded-lg space-x-2">
                                                     <p class="text-xs text-right">Tiempo efectivo</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(liveEffectiveTime(child)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(liveEffectiveTime(child)) }}</p>
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <PrimaryButton @click="openPauseModal(child)" class="!bg-[#FDA10F] flex items-center !rounded-lg">
+                                                <PrimaryButton v-if="child.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', child)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton @click="openPauseModal(child)"
+                                                    class="!bg-[#FDA10F] flex items-center !rounded-lg">
                                                     <PauseIcon class="size-5 mr-2" /> Pausar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish', child)" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish', child)"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" /> Finalizar y mover
                                                 </PrimaryButton>
                                             </div>
@@ -406,22 +483,35 @@
                                                 <div class="flex items-center space-x-2">
                                                     <div class="rounded-full size-6 flex items-center justify-center"
                                                         :style="{ backgroundColor: getStationStyling(currentStationRecord(child).station_name).light, color: getStationStyling(currentStationRecord(child).station_name).dark }">
-                                                        <component :is="getStationStyling(currentStationRecord(child).station_name).icon" class="size-4" />
+                                                        <component
+                                                            :is="getStationStyling(currentStationRecord(child).station_name).icon"
+                                                            class="size-4" />
                                                     </div>
-                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}</p>
+                                                    <p class="font-bold">{{ currentStationRecord(child).station_name }}
+                                                    </p>
                                                 </div>
                                                 <div class="flex justify-between items-center p-3 space-x-2 rounded-lg">
                                                     <p class="text-xs text-right">Tiempo en pausa</p>
-                                                    <p class="font-bold text-lg text-right">{{ formatDuration(livePausedTime(child)) }}</p>
+                                                    <p class="font-bold text-lg text-right">{{
+                                                        formatDuration(livePausedTime(child)) }}</p>
                                                 </div>
                                             </div>
                                             <p class="text-sm text-gray-700 text-center mt-2">Motivo: <span
-                                                    class="font-semibold italic">"{{ lastPauseReason(child) }}"</span></p>
+                                                    class="font-semibold italic">"{{ lastPauseReason(child) }}"</span>
+                                            </p>
                                             <div class="flex justify-center items-center space-x-3 mt-4">
-                                                <PrimaryButton @click="$emit('resume-process', { productionId: child.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
+                                                <PrimaryButton v-if="child.station != 'Material pendiente'"
+                                                    @click="openMoveModal('return', child)"
+                                                    class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Regresar
+                                                </PrimaryButton>
+                                                <PrimaryButton
+                                                    @click="$emit('resume-process', { productionId: child.id })"
+                                                    class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Reanudar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('finish', child)" class="!bg-[#008CF0] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish', child)"
+                                                    class="!bg-[#008CF0] flex items-center !rounded-lg">
                                                     <CheckCircleIcon class="size-5 mr-2" /> Finalizar y mover
                                                 </PrimaryButton>
                                             </div>
@@ -429,14 +519,18 @@
                                     </div>
                                     <!-- Si ya está finalizada -->
                                     <div v-else class="text-center text-gray-500 py-8 border-t">
-                                        <p v-if="currentStationRecord(child)?.status === 'Finalizada'">La estación actual de este componente ({{ currentStationRecord(child).station_name }}) ya ha
+                                        <p v-if="currentStationRecord(child)?.status === 'Finalizada'">La estación
+                                            actual de este componente ({{ currentStationRecord(child).station_name }})
+                                            ya ha
                                             sido finalizada.</p>
-                                        <p v-else>No hay un registro de tiempo para la estación actual de este componente.</p>
+                                        <p v-else>No hay un registro de tiempo para la estación actual de este
+                                            componente.</p>
                                     </div>
 
                                     <!-- Resumen de Tiempos (para este hijo) -->
                                     <div class="border-t">
-                                         <h3 class="font-semibold text-gray-600 px-3 pt-3 pb-1 text-xs">Historial de tiempos ({{ child.component_name }})</h3>
+                                        <h3 class="font-semibold text-gray-600 px-3 pt-3 pb-1 text-xs">Historial de
+                                            tiempos ({{ child.component_name }})</h3>
                                         <StationTimeHistory :stationTimes="child.station_times" :users="users" />
                                     </div>
                                 </section>
@@ -450,17 +544,22 @@
 
                                 <div v-if="!hasAnyDeliveryInfo"
                                     class="text-center text-gray-500 py-12 bg-gray-50 rounded-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 mx-auto text-gray-300">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="size-12 mx-auto text-gray-300">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                     </svg>
                                     <p class="font-semibold mt-3">Aún no hay entregas registradas</p>
-                                    <p class="text-xs mt-1">Aquí aparecerá la lista de entregas. <span v-if="isDividedOrder">Las entregas se registran a nivel de componente.</span></p>
+                                    <p class="text-xs mt-1">Aquí aparecerá la lista de entregas. <span
+                                            v-if="isDividedOrder">Las entregas se registran a nivel de
+                                            componente.</span></p>
                                 </div>
 
                                 <!-- Contenido (Orden Simple) -->
                                 <div v-if="!isDividedOrder" class="space-y-4">
                                     <!-- ... (toda la lógica de entregas de orden simple se queda igual) ... -->
-                                     <section v-if="selectedProduction.close_production_date" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <section v-if="selectedProduction.close_production_date"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
                                         <h3 class="font-semibold text-gray-700">Liberado por producción</h3>
                                         <div class="grid grid-cols-2 gap-x-4 text-xs">
                                             <span>Fecha de liberación:</span> <span class="font-medium">{{
@@ -471,7 +570,8 @@
                                                 selectedProduction.close_production_notes ?? '-' }}</span>
                                         </div>
                                     </section>
-                                    <section v-if="selectedProduction.quality_released_date" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <section v-if="selectedProduction.quality_released_date"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
                                         <h3 class="font-semibold text-gray-700">Liberado por calidad</h3>
                                         <div class="grid grid-cols-2 gap-x-4 text-xs">
                                             <span>Fecha de liberación:</span> <span class="font-medium">{{
@@ -488,13 +588,18 @@
                                                 selectedProduction.quality_notes ?? '-' }}</span>
                                         </div>
                                     </section>
-                                    <section v-if="shouldShowInspectionSection(selectedProduction)" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <section v-if="shouldShowInspectionSection(selectedProduction)"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
                                         <div class="flex justify-between items-center">
                                             <h3 class="font-semibold text-gray-700">Inspección</h3>
-                                            <PrimaryButton @click="openDeliveryModal('inspection', false, selectedProduction)" v-if="selectedProduction.station === 'Inspección' && !selectedProduction.production_close_type">
+                                            <PrimaryButton
+                                                @click="openDeliveryModal('inspection', false, selectedProduction)"
+                                                v-if="selectedProduction.station === 'Inspección' && !selectedProduction.production_close_type">
                                                 Registrar entrega
                                             </PrimaryButton>
-                                            <PrimaryButton @click="openDeliveryModal('inspection', true, selectedProduction)" v-if="selectedProduction.station === 'Inspección' && selectedProduction.production_close_type === 'Parcialidades'">
+                                            <PrimaryButton
+                                                @click="openDeliveryModal('inspection', true, selectedProduction)"
+                                                v-if="selectedProduction.station === 'Inspección' && selectedProduction.production_close_type === 'Parcialidades'">
                                                 Registrar parcialidad
                                             </PrimaryButton>
                                         </div>
@@ -535,13 +640,18 @@
                                             </div>
                                         </div>
                                     </section>
-                                    <section v-if="shouldShowPackingSection(selectedProduction)" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <section v-if="shouldShowPackingSection(selectedProduction)"
+                                        class="bg-gray-50 p-4 rounded-lg space-y-2">
                                         <div class="flex justify-between items-center">
                                             <h3 class="font-semibold text-gray-700">Empaques</h3>
-                                            <PrimaryButton @click="openDeliveryModal('packing', false, selectedProduction)" v-if="selectedProduction.station === 'Empaques' && !selectedProduction.packing_close_type">
+                                            <PrimaryButton
+                                                @click="openDeliveryModal('packing', false, selectedProduction)"
+                                                v-if="selectedProduction.station === 'Empaques' && !selectedProduction.packing_close_type">
                                                 Registrar entrega
                                             </PrimaryButton>
-                                            <PrimaryButton @click="openDeliveryModal('packing', true, selectedProduction)" v-if="selectedProduction.station === 'Empaques' && selectedProduction.packing_close_type === 'Parcialidades'">
+                                            <PrimaryButton
+                                                @click="openDeliveryModal('packing', true, selectedProduction)"
+                                                v-if="selectedProduction.station === 'Empaques' && selectedProduction.packing_close_type === 'Parcialidades'">
                                                 Registrar parcialidad
                                             </PrimaryButton>
                                         </div>
@@ -588,26 +698,33 @@
                                 <div v-if="isDividedOrder && children.length > 0" class="space-y-4">
                                     <!-- Loop por cada componente -->
                                     <div v-for="child in children" :key="child.id" class="border rounded-lg">
-                                        <h3 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-t-md">Componente: {{ child.component_name }}</h3>
-                                        
+                                        <h3 class="bg-gray-100 font-bold text-gray-700 py-2 px-3 rounded-t-md">
+                                            Componente: {{ child.component_name }}</h3>
+
                                         <div class="p-4 space-y-4">
                                             <!-- Inspección (por hijo) -->
-                                            <section v-if="shouldShowInspectionSection(child)" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                            <section v-if="shouldShowInspectionSection(child)"
+                                                class="bg-gray-50 p-4 rounded-lg space-y-2">
                                                 <div class="flex justify-between items-center">
                                                     <h3 class="font-semibold text-gray-700">Inspección</h3>
-                                                    <PrimaryButton @click="openDeliveryModal('inspection', false, child)" v-if="child.station === 'Inspección' && !child.production_close_type">
+                                                    <PrimaryButton
+                                                        @click="openDeliveryModal('inspection', false, child)"
+                                                        v-if="child.station === 'Inspección' && !child.production_close_type">
                                                         Registrar entrega
                                                     </PrimaryButton>
-                                                    <PrimaryButton @click="openDeliveryModal('inspection', true, child)" v-if="child.station === 'Inspección' && child.production_close_type === 'Parcialidades'">
+                                                    <PrimaryButton @click="openDeliveryModal('inspection', true, child)"
+                                                        v-if="child.station === 'Inspección' && child.production_close_type === 'Parcialidades'">
                                                         Registrar parcialidad
                                                     </PrimaryButton>
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-x-4 text-xs">
-                                                    <span>Tipo de entrega:</span> <span class="font-medium">{{ child.production_close_type ?? 'Pendiente' }}</span>
+                                                    <span>Tipo de entrega:</span> <span class="font-medium">{{
+                                                        child.production_close_type ?? 'Pendiente' }}</span>
                                                 </div>
                                                 <!-- ***** INICIO: CORRECCIÓN ENTREGAS HIJOS ***** -->
-                                                <div v-if="child.production_close_type === 'Única'" class="grid grid-cols-2 gap-x-4 text-xs border-t pt-2 mt-2">
-                                                   <span>Cantidad entregada:</span> <span class="font-medium">{{
+                                                <div v-if="child.production_close_type === 'Única'"
+                                                    class="grid grid-cols-2 gap-x-4 text-xs border-t pt-2 mt-2">
+                                                    <span>Cantidad entregada:</span> <span class="font-medium">{{
                                                         child.current_quantity?.toLocaleString('es-MX') }}</span>
                                                     <span>Merma:</span> <span class="font-medium">{{
                                                         child.inspection_scrap?.toLocaleString('es-MX') }} ({{
@@ -619,19 +736,22 @@
                                                     <span>Notas:</span> <span class="font-medium">{{
                                                         child.inspection_notes ?? '-' }}</span>
                                                 </div>
-                                                <div v-if="child.production_close_type === 'Parcialidades'" class="text-xs border-t pt-2 mt-2 space-y-3">
+                                                <div v-if="child.production_close_type === 'Parcialidades'"
+                                                    class="text-xs border-t pt-2 mt-2 space-y-3">
                                                     <div v-for="(partial, index) in child.partials" :key="index"
                                                         class="pb-2"
                                                         :class="{ 'border-b': index !== child.partials.length - 1 }">
                                                         <p class="font-semibold mb-1">Parcialidad {{ index + 1 }} <span
                                                                 v-if="partial.is_last_delivery"
-                                                                class="font-normal text-gray-500">(Última entrega)</span></p>
+                                                                class="font-normal text-gray-500">(Última
+                                                                entrega)</span></p>
                                                         <div class="grid grid-cols-2 gap-x-4">
                                                             <span>Fecha:</span> <span class="font-medium">{{
                                                                 formatDateTime(partial.date) }}</span>
                                                             <span>Cantidad:</span> <span class="font-medium">{{
                                                                 partial.quantity?.toLocaleString('es-MX') }}</span>
-                                                            <span>Notas:</span> <span class="font-medium">{{ partial.notes ??
+                                                            <span>Notas:</span> <span class="font-medium">{{
+                                                                partial.notes ??
                                                                 '-' }}</span>
                                                         </div>
                                                     </div>
@@ -640,13 +760,16 @@
                                             </section>
 
                                             <!-- Packing (por hijo) -->
-                                            <section v-if="shouldShowPackingSection(child)" class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                            <section v-if="shouldShowPackingSection(child)"
+                                                class="bg-gray-50 p-4 rounded-lg space-y-2">
                                                 <div class="flex justify-between items-center">
                                                     <h3 class="font-semibold text-gray-700">Empaques</h3>
-                                                    <PrimaryButton @click="openDeliveryModal('packing', false, child)" v-if="child.station === 'Empaques' && !child.packing_close_type">
+                                                    <PrimaryButton @click="openDeliveryModal('packing', false, child)"
+                                                        v-if="child.station === 'Empaques' && !child.packing_close_type">
                                                         Registrar entrega
                                                     </PrimaryButton>
-                                                    <PrimaryButton @click="openDeliveryModal('packing', true, child)" v-if="child.station === 'Empaques' && child.packing_close_type === 'Parcialidades'">
+                                                    <PrimaryButton @click="openDeliveryModal('packing', true, child)"
+                                                        v-if="child.station === 'Empaques' && child.packing_close_type === 'Parcialidades'">
                                                         Registrar parcialidad
                                                     </PrimaryButton>
                                                 </div>
@@ -671,18 +794,20 @@
                                                 </div>
                                                 <div v-if="child.packing_close_type === 'Parcialidades'"
                                                     class="text-xs border-t pt-2 mt-2 space-y-3">
-                                                    <div v-for="(partial, index) in child.packing_partials"
-                                                        :key="index" class="pb-2"
+                                                    <div v-for="(partial, index) in child.packing_partials" :key="index"
+                                                        class="pb-2"
                                                         :class="{ 'border-b': index !== child.packing_partials.length - 1 }">
                                                         <p class="font-semibold mb-1">Parcialidad {{ index + 1 }} <span
                                                                 v-if="partial.is_last_delivery"
-                                                                class="font-normal text-gray-500">(Última entrega)</span></p>
+                                                                class="font-normal text-gray-500">(Última
+                                                                entrega)</span></p>
                                                         <div class="grid grid-cols-2 gap-x-4">
                                                             <span>Fecha:</span> <span class="font-medium">{{
                                                                 formatDateTime(partial.date) }}</span>
                                                             <span>Cantidad:</span> <span class="font-medium">{{
                                                                 partial.quantity?.toLocaleString('es-MX') }}</span>
-                                                            <span>Notas:</span> <span class="font-medium">{{ partial.notes ??
+                                                            <span>Notas:</span> <span class="font-medium">{{
+                                                                partial.notes ??
                                                                 '-' }}</span>
                                                         </div>
                                                     </div>
@@ -702,9 +827,12 @@
 
     <!-- Other Modals -->
     <PauseStationModal :show="showPauseModal" @close="showPauseModal = false" @submit="handlePauseSubmit" />
-    <MoveStationModal :show="showMoveModal" :processType="moveModalMode" :available-stations="availableNextStations"
+    <!-- ***** INICIO: MODIFICACIÓN ***** -->
+    <!-- :available-stations ahora apunta a moveModalStations -->
+    <MoveStationModal :show="showMoveModal" :processType="moveModalMode" :available-stations="moveModalStations"
         :machines="machines" :production="moveModalProduction" :default-quantity="moveDefaultQty"
         @close="showMoveModal = false" @submit="handleMoveSubmit" />
+    <!-- ***** FIN: MODIFICACIÓN ***** -->
     <RegisterDeliveryModal :show="showDeliveryModal" :production="deliveryProduction" :context="deliveryContext"
         :is-partial="isDeliveryPartial" :default-quantity="deliveryDefaultQty" @close="showDeliveryModal = false"
         @submit="handleDeliverySubmit" />
@@ -721,7 +849,7 @@ import MoveStationModal from './MoveStationModal.vue';
 import RegisterDeliveryModal from './RegisterDeliveryModal.vue';
 import { format, parseISO, differenceInSeconds } from 'date-fns';
 import es from 'date-fns/locale/es';
-import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon, QuestionMarkCircleIcon, RectangleStackIcon } from '@heroicons/vue/24/solid';
+import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ArrowLeftIcon, ClockIcon, QuestionMarkCircleIcon, RectangleStackIcon } from '@heroicons/vue/24/solid';
 import axios from 'axios';
 
 // --- INICIO: NUEVAS CONSTANTES DE HORARIO LABORAL ---
@@ -735,7 +863,7 @@ export default {
     components: {
         DialogModal, Loading, PrimaryButton, StationTimeHistory,
         PauseStationModal, MoveStationModal, RegisterDeliveryModal,
-        CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon,
+        CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ArrowLeftIcon, ClockIcon,
         QuestionMarkCircleIcon, RectangleStackIcon,
     },
     props: {
@@ -745,6 +873,7 @@ export default {
     emits: [
         'close', 'start-process', 'pause-process', 'resume-process',
         'finish-move-process', 'skip-move-process', 'register-delivery',
+        'return-process',
     ],
     data() {
         return {
@@ -822,9 +951,9 @@ export default {
             // Esta lógica ahora depende de la producción que se esté moviendo (moveModalProduction)
             if (!this.moveModalProduction) return [];
             const current = this.moveModalProduction.station;
-            
+
             // Usamos this.stations (el prop) que debería tener todas las estaciones
-            const allStations = this.stations; 
+            const allStations = this.stations;
 
             if (current === 'Material pendiente') {
                 return allStations.filter(s => ['X Compra', 'Surtido'].includes(s.name));
@@ -839,11 +968,48 @@ export default {
                 return allStations.filter(s => ['Empaques terminado'].includes(s.name));
             }
             if (current === 'Inspección') {
-                return allStations.filter(s => ['Calidad', 'Terminadas'].includes(s.name));
+                return allStations.filter(s => ['Terminadas'].includes(s.name));
             }
             const restricted = ['Inspección', 'X Reproceso', 'Empaques terminado', 'Producción dividida'];
             return allStations.filter(s => !restricted.includes(s.name) && s.name !== current);
         },
+        // --- INICIO: NUEVA LÓGICA DE "REGRESAR" ---
+        /**
+         * Calcula las estaciones previas a las que se puede regresar.
+         * Por ahora, solo devuelve la estación inmediatamente anterior.
+         */
+        availablePrevStations() {
+            if (this.moveModalProduction?.station == 'Calidad') {
+                return this.stations?.filter(s => ['X Reproceso'].includes(s.name));
+            }
+
+            if (!this.moveModalProduction || !this.moveModalProduction.station_times || this.moveModalProduction.station_times.length < 2) {
+                // No hay historial suficiente para regresar
+                return [];
+            }
+            
+            const stationHistory = this.moveModalProduction.station_times;
+            // Obtiene el nombre de la estación anterior (penúltimo registro)
+            const prevStationName = stationHistory[stationHistory.length - 2].station_name;
+
+            // Busca el objeto de estación completo de la estación anterior
+            const prevStation = this.stations.find(s => s.name === prevStationName);
+
+            // Devuelve un array con esa estación (si se encontró)
+            return prevStation ? [prevStation] : [];
+        },
+        /**
+         * Decide qué lista de estaciones pasar al modal de movimiento
+         * basado en el modo ('return', 'finish', 'skip').
+         */
+        moveModalStations() {
+            if (this.moveModalMode === 'return') {
+                return this.availablePrevStations;
+            }
+            // Para 'finish' y 'skip', usamos la lógica de siguientes estaciones
+            return this.availableNextStations;
+        },
+        // --- FIN: NUEVA LÓGICA DE "REGRESAR" ---
         hasAnyDeliveryInfo() {
             if (this.isDividedOrder) {
                 return this.children.some(child => this.hasDeliveryInfo(child));
@@ -867,7 +1033,7 @@ export default {
             }
 
             let totalBusinessSeconds = 0;
-            
+
             const [startH, startM, startS] = WORK_START_TIME.split(':').map(Number);
             const [endH, endM, endS] = WORK_END_TIME.split(':').map(Number);
 
@@ -887,7 +1053,7 @@ export default {
 
                     // Determinar el inicio efectivo (el más tardío entre el inicio del rango y el inicio de la jornada)
                     const effectiveStart = startDate > workdayStart ? startDate : workdayStart;
-                    
+
                     // Determinar el fin efectivo (el más temprano entre el fin del rango y el fin de la jornada)
                     const effectiveEnd = endDate < workdayEnd ? endDate : workdayEnd;
 
@@ -896,7 +1062,7 @@ export default {
                         totalBusinessSeconds += (effectiveEnd - effectiveStart) / 1000; // Diferencia en milisegundos
                     }
                 }
-                
+
                 // Avanzar al siguiente día
                 currentDate.setDate(currentDate.getDate() + 1);
             }
@@ -970,7 +1136,7 @@ export default {
             const relevantStations = ['Empaques', 'Empaques terminado', 'Terminadas'];
             return relevantStations.includes(production.station) || production.packing_partials?.length > 0;
         },
-        
+
         // --- CÁLCULOS DE TIEMPO (revisados) ---
         // Suma los tiempos ya guardados (que vienen del backend, ya con horario laboral)
         totalEffectiveTime(production) {
@@ -986,7 +1152,7 @@ export default {
             if (!production?.station_times) return 0;
             let total = production.station_times.reduce((acc, station) => acc + (station.times?.paused_seconds ?? 0), 0);
             if (this.currentStationStatus(production) === 'En pausa') {
-                 // Suma el tiempo "en vivo" de la pausa actual (calculado con horario laboral)
+                // Suma el tiempo "en vivo" de la pausa actual (calculado con horario laboral)
                 total += this.livePausedTime(production);
             }
             return total;
@@ -995,12 +1161,12 @@ export default {
             if (!production?.station_times) return 0;
             let total = production.station_times.reduce((acc, station) => acc + (station.times?.waiting_seconds ?? 0), 0);
             if (this.currentStationStatus(production) === 'En espera') {
-                 // Suma el tiempo "en vivo" de la espera actual (calculado con horario laboral)
+                // Suma el tiempo "en vivo" de la espera actual (calculado con horario laboral)
                 total += this.liveWaitingTime(production);
             }
             return total;
         },
-        
+
         // --- CÁLCULOS DE TIEMPO "EN VIVO" (MODIFICADOS) ---
         liveWaitingTime(production) {
             const record = this.currentStationRecord(production);
@@ -1022,7 +1188,7 @@ export default {
         liveEffectiveTime(production) {
             const record = this.currentStationRecord(production);
             if (this.currentStationStatus(production) !== 'En proceso' || !record.started_at) return 0;
-            
+
             const startedAt = parseISO(record.started_at);
             // 1. Calcula el tiempo laboral total desde el inicio de la estación hasta ahora
             const totalSpanSeconds = this.calculateBusinessSeconds(startedAt, this.now);
@@ -1034,10 +1200,10 @@ export default {
         livePausedTime(production) {
             const record = this.currentStationRecord(production);
             if (this.currentStationStatus(production) !== 'En pausa' || !record.pauses.length) return 0;
-            
+
             const lastPause = record.pauses[record.pauses.length - 1];
             if (!lastPause.resumed_at) {
-                 // Calcula la duración de la pausa actual (desde que inició hasta ahora) en horario laboral
+                // Calcula la duración de la pausa actual (desde que inició hasta ahora) en horario laboral
                 return this.calculateBusinessSeconds(parseISO(lastPause.paused_at), this.now);
             }
             return 0;
@@ -1051,14 +1217,14 @@ export default {
         openMoveModal(mode, production) {
             this.moveModalMode = mode;
             this.moveModalProduction = production; // Guardar qué producción se mueve
-            
+
             // Lógica para determinar la cantidad por defecto en el modal de movimiento
             if (production.station === 'Calidad') {
                 this.moveDefaultQty = production.close_quantity ?? 0;
             } else if (production.station === 'Inspección') {
-                 this.moveDefaultQty = production.quality_quantity ?? 0;
+                this.moveDefaultQty = production.quality_quantity ?? 0;
             } else {
-                 this.moveDefaultQty = production.quantity ?? 0;
+                this.moveDefaultQty = production.quantity ?? 0;
             }
 
             this.showMoveModal = true;
@@ -1079,15 +1245,15 @@ export default {
                 remainingQty = (production.packing_received_quantity ?? 0) - delivered;
             }
             this.deliveryDefaultQty = remainingQty > 0 ? remainingQty : 0;
-            
-            this.showDeliveryModal = true; 
+
+            this.showDeliveryModal = true;
         },
         handlePauseSubmit(reason) {
             // Enviar el ID de la producción pausada
-            this.$emit('pause-process', { 
-                reason: reason.reason, 
+            this.$emit('pause-process', {
+                reason: reason.reason,
                 notes: reason.notes,
-                productionId: this.pauseModalProduction.id 
+                productionId: this.pauseModalProduction.id
             });
             this.showPauseModal = false;
             this.pauseModalProduction = null;
@@ -1097,10 +1263,16 @@ export default {
             const eventPayload = {
                 ...payload,
                 productionId: this.moveModalProduction.id,
-                productionObject: this.moveModalProduction 
+                productionObject: this.moveModalProduction
             };
-            if (this.moveModalMode === 'skip') this.$emit('skip-move-process', eventPayload);
+
+            // --- INICIO: MODIFICACIÓN ---
+            // Emitir el evento correcto según el modo
+            if (this.moveModalMode === 'return') this.$emit('return-process', eventPayload); // Asumiendo que crearás este evento
+            else if (this.moveModalMode === 'skip') this.$emit('skip-move-process', eventPayload);
             else this.$emit('finish-move-process', eventPayload);
+            // --- FIN: MODIFICACIÓN ---
+
             this.showMoveModal = false;
             this.moveModalProduction = null;
         },
@@ -1110,7 +1282,7 @@ export default {
                 form: form,
                 context: this.deliveryContext,
                 isPartial: this.isDeliveryPartial,
-                productionId: this.deliveryProduction.id 
+                productionId: this.deliveryProduction.id
             });
             this.showDeliveryModal = false;
             this.deliveryProduction = null;
@@ -1136,7 +1308,7 @@ export default {
             if (!dateString) return '-';
             // Asegurarse de que parseISO maneje la fecha simple correctamente (puede necesitar 'T00:00:00')
             if (dateString && dateString.length === 10) {
-                 return format(parseISO(dateString + 'T00:00:00'), 'dd MMMM yyyy', { locale: es });
+                return format(parseISO(dateString + 'T00:00:00'), 'dd MMMM yyyy', { locale: es });
             }
             return format(parseISO(dateString), 'dd MMMM yyyy', { locale: es });
         },

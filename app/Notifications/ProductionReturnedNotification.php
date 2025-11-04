@@ -6,8 +6,10 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Production; // Asegúrate de importar tu modelo Production
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Log;
 
-class ProductionReturnedNotification extends Notification
+class ProductionReturnedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -20,15 +22,18 @@ class ProductionReturnedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        if (app()->environment() == 'production') {
+        if (app()->environment() == 'production' || true) {
+            Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
             return ['mail'];
         } else {
+            Log::info("Entorno no es 'production', no se envía 'mail'. " . app()->environment()); // Log de depuración
             return [];
         }
     }
 
     public function toMail(object $notifiable): MailMessage
     {
+        Log::info("Notificación enviada para producción {$this->production->id} en '{$this->returnedToStation}'.");
         return (new MailMessage)
             ->subject("Regreso de Producción: Folio {$this->production->folio}")
             ->greeting("¡Hola!")

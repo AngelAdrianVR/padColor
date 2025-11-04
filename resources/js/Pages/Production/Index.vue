@@ -32,6 +32,7 @@
             @resume-process="resumeProcess" 
             @finish-move-process="finishAndMoveProcess"
             @skip-move-process="skipAndMoveProcess" 
+            @return-process="returnProcess"
             @register-delivery="handleRegisterDelivery"
          />
 
@@ -391,30 +392,28 @@ export default {
                 preserveScroll: true,
             });
         },
-        finishAndMoveProcess(payload) { // Modificado
-            const id = payload.productionId || this.selectedProduction.id; // Modificado
-            const production = payload.productionObject || this.selectedProduction; // Modificado
-
-            const isReturn = (payload.next_station === 'X Reproceso' && production.station === 'Calidad') ||
-                             (payload.next_station === 'Calidad' && production.station === 'Inspección');
-
-            if (isReturn) {
-                 this.$inertia.post(route('productions.return-station', id), payload, { // Modificado
-                    onSuccess: () => this.updateDetails(id, true), // Modificado
-                    onError: () => this.$notify({ title: "Error", message: "No se pudo regresar la orden", type: "error" }),
-                 });
-            } else {
-                 this.$inertia.post(route('productions.station-process.finishAndMove', id), payload, { // Modificado
-                    onSuccess: () => this.updateDetails(id, true), // Modificado
-                    onError: (e) => this.$notify({ title: "Error", message: "No se pudo finalizar y mover la orden", type: "error" }),
-                 });
-            }
+        // --- MÉTODO ACTUALIZADO ---
+        finishAndMoveProcess(payload) { 
+            const id = payload.productionId || this.selectedProduction.id;
+            // Este método ahora solo mueve hacia adelante.
+            this.$inertia.post(route('productions.station-process.finishAndMove', id), payload, { 
+                onSuccess: () => this.updateDetails(id, true), 
+                onError: (e) => this.$notify({ title: "Error", message: "No se pudo finalizar y mover la orden", type: "error" }),
+            });
         },
         skipAndMoveProcess(payload) { // Modificado
             const id = payload.productionId || this.selectedProduction.id; // Modificado
             this.$inertia.post(route('productions.station-process.skipAndMove', id), payload, { // Modificado
                  onSuccess: () => this.updateDetails(id, true), // Modificado
                  onError: () => this.$notify({ title: "Error", message: "No se pudo mover la estación", type: "error" }),
+            });
+        },
+        // --- NUEVO MÉTODO ---
+        returnProcess(payload) {
+            const id = payload.productionId || this.selectedProduction.id;
+            this.$inertia.post(route('productions.return-station', id), payload, {
+                onSuccess: () => this.updateDetails(id, true),
+                onError: () => this.$notify({ title: "Error", message: "No se pudo regresar la orden", type: "error" }),
             });
         },
         handleRegisterDelivery(payload) { // Modificado
@@ -498,3 +497,4 @@ export default {
     }
 }
 </script>
+
