@@ -178,6 +178,7 @@ export default {
             return this.form.next_station === 'Calidad' && this.currentStation === 'Inspección';
         },
         showReturnFields() {
+            return this.processType == 'skip';
             return this.isReturnToReprocess || this.isReturnToQuality;
         },
         // --- Form validation ---

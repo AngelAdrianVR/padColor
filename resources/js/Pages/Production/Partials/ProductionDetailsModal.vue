@@ -214,10 +214,13 @@
                                                 </div>
                                             </div>
                                             <div class="flex justify-center items-center space-x-3 mt-3">
+                                                 <PrimaryButton @click="openMoveModal('skip', selectedProduction)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                    <ArrowLeftIcon class="size-5 mr-2" /> Mover a anterior
+                                                </PrimaryButton>
                                                 <PrimaryButton @click="$emit('start-process', { productionId: selectedProduction.id })" class="!bg-[#1FAE07] hover:bg-green-600 flex items-center !rounded-lg">
                                                     <PlayIcon class="size-5 mr-2" /> Iniciar
                                                 </PrimaryButton>
-                                                <PrimaryButton @click="openMoveModal('skip', selectedProduction)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
+                                                <PrimaryButton @click="openMoveModal('finish', selectedProduction)" class="!bg-[#D9D9D9] !text-[#373737] flex items-center !rounded-lg">
                                                     Mover a siguiente <ArrowRightIcon class="size-5 ml-2" />
                                                 </PrimaryButton>
                                             </div>
@@ -721,7 +724,7 @@ import MoveStationModal from './MoveStationModal.vue';
 import RegisterDeliveryModal from './RegisterDeliveryModal.vue';
 import { format, parseISO, differenceInSeconds } from 'date-fns';
 import es from 'date-fns/locale/es';
-import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon, QuestionMarkCircleIcon, RectangleStackIcon } from '@heroicons/vue/24/solid';
+import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ArrowLeftIcon, ClockIcon, QuestionMarkCircleIcon, RectangleStackIcon } from '@heroicons/vue/24/solid';
 import axios from 'axios';
 
 // --- INICIO: NUEVAS CONSTANTES DE HORARIO LABORAL ---
@@ -735,7 +738,7 @@ export default {
     components: {
         DialogModal, Loading, PrimaryButton, StationTimeHistory,
         PauseStationModal, MoveStationModal, RegisterDeliveryModal,
-        CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ClockIcon,
+        CheckCircleIcon, PlayIcon, PauseIcon, ArrowRightIcon, ArrowLeftIcon, ClockIcon,
         QuestionMarkCircleIcon, RectangleStackIcon,
     },
     props: {
