@@ -21,7 +21,7 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
 
     public function via(object $notifiable): array
     {
-        if (app()->environment() == 'production' || true) {
+        if (app()->environment() == 'production') {
             Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
             return ['mail'];
         } else {
@@ -32,14 +32,14 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
 
     public function toMail(object $notifiable): MailMessage
     {
-        // Log::info("Iniciando toMail para producción {$this->production->id}..."); // Log de depuración
+        // Log::info("Iniciando toMail para producción {$this->production->folio}..."); // Log de depuración
 
         // Stations that require the number of units transferred to be displayed
         $stationsWithUnits = ['X Reproceso', 'Inspección', 'Calidad', 'Empaques'];
 
         // Special case for 'Material pendiente'
         if ($this->nextStation == 'Material pendiente') {
-            Log::info("Notificación enviada para producción {$this->production->id} en 'Material pendiente'.");
+            Log::info("Notificación enviada para producción {$this->production->folio} en 'Material pendiente'.");
             return (new MailMessage)
                 ->subject("Avance de Producción: Folio {$this->production->folio}")
                 ->greeting("¡Hola!")
@@ -48,7 +48,7 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
         } 
         // Case for stations that show units
         elseif (in_array($this->nextStation, $stationsWithUnits)) {
-            Log::info("Notificación enviada para producción {$this->production->id} en '{$this->nextStation}' con {$this->unitsPassed} unidades.");
+            Log::info("Notificación enviada para producción {$this->production->folio} en '{$this->nextStation}' con {$this->unitsPassed} unidades.");
             return (new MailMessage)
                 ->subject("Avance de Producción: Folio {$this->production->folio}")
                 ->greeting("¡Hola!")
@@ -58,7 +58,7 @@ class ProductionForwardedNotification extends Notification implements ShouldQueu
         } 
         // Case for all other stations (without units)
         else {
-            Log::info("Notificación enviada para producción {$this->production->id} en '{$this->nextStation}'.");
+            Log::info("Notificación enviada para producción {$this->production->folio} en '{$this->nextStation}'.");
             return (new MailMessage)
                 ->subject("Avance de Producción: Folio {$this->production->folio}")
                 ->greeting("¡Hola!")
