@@ -577,6 +577,16 @@ class ProductionController extends Controller
             return $newParent;
         });
 
+        // Notificar si va a 'Material pendiente'
+        if ($newProduction->id) {
+            $notificationInstance = new ProductionForwardedNotification(
+                $newProduction,
+                'Material pendiente',
+                $newProduction->quantity,
+                $newProduction->folio
+            );
+            $this->sendNotification('production.forwarded.pendent_material', $notificationInstance);
+        }
 
         return to_route('productions.edit', ['production' => $newProduction->id]);
     }
@@ -1051,9 +1061,8 @@ class ProductionController extends Controller
 
             // Ajuste final: si estaba en espera, el tiempo efectivo debe ser 0.
             if ($current_record['started_at'] === null) {
-                 $current_record['times']['effective_seconds'] = 0;
+                $current_record['times']['effective_seconds'] = 0;
             }
-
         } else { // 'finish' - Movido desde 'En proceso' o 'En pausa'
             if (!empty($current_record['started_at'])) {
                 $current_record['times']['waiting_seconds'] = $this->calculateBusinessSeconds(Carbon::parse($current_record['entered_at']), Carbon::parse($current_record['started_at']));
@@ -1202,4 +1211,3 @@ class ProductionController extends Controller
     }
     // --- FIN: NUEVO HELPER DE HORARIO LABORAL ---
 }
-

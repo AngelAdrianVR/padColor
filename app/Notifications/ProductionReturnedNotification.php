@@ -22,7 +22,7 @@ class ProductionReturnedNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        if (app()->environment() == 'production' || true) {
+        if (app()->environment() == 'production') {
             Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
             return ['mail'];
         } else {
@@ -33,7 +33,7 @@ class ProductionReturnedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        Log::info("Notificación enviada para producción {$this->production->id} en '{$this->returnedToStation}'.");
+        Log::info("Notificación enviada para producción {$this->production->folio} en '{$this->returnedToStation}'.");
         return (new MailMessage)
             ->subject("Regreso de Producción: Folio {$this->production->folio}")
             ->greeting("¡Hola!")
