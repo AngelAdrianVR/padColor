@@ -154,6 +154,8 @@ class ImportController extends Controller
             'documents' => 'nullable|array',
             'documents.*.file' => 'required|file|max:10240', // max 10MB
             'documents.*.classification' => 'required|string',
+        ], [
+            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
 
         // 2. Usamos una transacción para asegurar la integridad de los datos
@@ -258,6 +260,8 @@ class ImportController extends Controller
             'new_documents.*.classification' => 'required|string',
             'documents_to_delete' => 'nullable|array',
             'documents_to_delete.*' => 'integer|exists:media,id',
+        ], [
+            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
 
         DB::transaction(function () use ($validatedData, $request, $import) {
