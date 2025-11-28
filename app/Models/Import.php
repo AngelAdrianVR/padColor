@@ -34,6 +34,7 @@ class Import extends Model implements HasMedia
         'warehouse_delivery_date',
         'notes',
         'currency',
+        'purchase_order',
     ];
 
     protected $casts = [

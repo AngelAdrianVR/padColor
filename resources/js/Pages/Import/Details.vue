@@ -64,6 +64,10 @@
                 <el-tab-pane label="Información general" name="general">
                     <div class="divide-y divide-gray-200">
                         <div class="py-2 flex justify-between text-sm">
+                            <span class="text-gray3F">Orden de compra</span>
+                            <span>{{ importData.purchase_order }}</span>
+                        </div>
+                        <div class="py-2 flex justify-between text-sm">
                             <span class="text-gray3F">Creado por</span>
                             <span>{{ importData.user?.name }}</span>
                         </div>

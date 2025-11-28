@@ -148,6 +148,7 @@ class ImportController extends Controller
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'products' => 'required|array|min:1',
+            'purchase_order' => 'nullable|max:255',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_cost' => 'required|numeric|min:0.01',
@@ -178,6 +179,7 @@ class ImportController extends Controller
                 'status' => 'Con proveedor', // Estado inicial del Kanban
                 // Generar un folio único. Puedes personalizar esta lógica.
                 'folio' => 'IMP-' . (Import::latest('id')->first()?->id + 1),
+                'purchase_order' => $validatedData['purchase_order'] ?? null,
             ]);
 
             // 4. Adjuntar los productos a la importación (tabla pivote) y documentos
@@ -251,6 +253,7 @@ class ImportController extends Controller
             'estimated_arrival_date' => 'nullable|date',
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
+            'purchase_order' => 'nullable|max:255',
             'products' => 'required|array|min:1',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
