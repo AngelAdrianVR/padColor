@@ -21,8 +21,8 @@
             </div>
             <div class="flex items-center justify-end space-x-4 mx-2 md:mx-6 lg:mx-10 mt-4">
                 <div>
-                    <InputLabel value="Folio" />
-                    <el-input v-model="localFilters.search" placeholder="Buscar por folio" class="lg:!w-60" clearable />
+                    <InputLabel value="Folio / OC" />
+                    <el-input v-model="localFilters.search" placeholder="Buscar por folio o por OC" class="lg:!w-60" clearable />
                 </div>
                 <div>
                     <InputLabel value="Proveedor" />
@@ -95,7 +95,7 @@
                                         </div>
                                         <div class="flex items-center justify-between">
                                             <p class="text-gray3F font-semibold">
-                                                Agente: {{ element.customs_agent?.name }}
+                                                OC: {{ element.purchase_order ?? 'NO REGISTRADO' }}
                                             </p>
                                             <span class="text-gray3F font-semibold border-l border-grayD9 pl-1">
                                                 {{ element.incoterm.substring(0, 3) }}
