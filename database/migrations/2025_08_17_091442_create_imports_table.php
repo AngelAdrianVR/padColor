@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('cedis')->nullable();
             $table->string('arrival_port')->nullable();
             $table->string('warehouse')->nullable();
+            $table->string('purchase_order')->nullable();
             
             $table->foreignId('supplier_id')->constrained('suppliers');
             $table->foreignId('customs_agent_id')->constrained('customs_agents');

@@ -110,6 +110,11 @@
                             <el-option label="MXN" value="MXN" />
                         </el-select>
                     </div>
+                    <div>
+                        <InputLabel value="Orden de compra" />
+                        <el-input v-model="form.purchase_order" />
+                        <InputError :message="form.errors.purchase_order" />
+                    </div>
                     <div class="col-span-full">
                         <InputLabel value="Notas" />
                         <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
@@ -330,6 +335,7 @@ export default {
             estimated_payment_date: this.import.estimated_payment_date,
             notes: this.import.notes,
             currency: this.import.currency,
+            purchase_order: this.import.purchase_order,
             products: this.import.products || [],
             documents: this.import.documents || [], // Documentos existentes
             new_documents: [], // Nuevos documentos a subir
