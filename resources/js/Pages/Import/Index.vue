@@ -21,8 +21,8 @@
             </div>
             <div class="flex items-center justify-end space-x-4 mx-2 md:mx-6 lg:mx-10 mt-4">
                 <div>
-                    <InputLabel value="Folio" />
-                    <el-input v-model="localFilters.search" placeholder="Buscar por folio" class="lg:!w-60" clearable />
+                    <InputLabel value="Folio / OC" />
+                    <el-input v-model="localFilters.search" placeholder="Buscar por folio o por OC" class="lg:!w-60" clearable />
                 </div>
                 <div>
                     <InputLabel value="Proveedor" />

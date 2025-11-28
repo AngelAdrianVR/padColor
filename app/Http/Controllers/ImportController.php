@@ -38,7 +38,8 @@ class ImportController extends Controller
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
-            $query->where('id', 'like', '%' . $request->search . '%');
+            $query->where('id', 'like', '%' . $request->search . '%')
+                ->orWhere('purchase_order', 'like', '%' . $request->search . '%');
         });
 
         $importsQuery->when($request->filled('supplier'), function ($query) use ($request) {
@@ -50,7 +51,7 @@ class ImportController extends Controller
             $endDate = $request->dates[1] . ' 23:59:59';
             $query->whereBetween('created_at', [$startDate, $endDate]);
         });
-        
+
         // --- MODIFICACIÓN AQUÍ ---
         // Ordenamos las importaciones por fecha de creación para mostrar las más recientes primero.
         $importsQuery->latest();
@@ -336,7 +337,7 @@ class ImportController extends Controller
         DB::transaction(function () use ($import) {
             // 1. Desvincular materias primas
             $import->rawMaterials()->detach();
-    
+
             // 2. Eliminar costos y pagos asociados
             foreach ($import->costs as $cost) {
                 foreach ($cost->payments as $payment) {
@@ -348,14 +349,14 @@ class ImportController extends Controller
             }
             // Eliminar costos de la importación
             $import->costs()->delete();
-    
+
             // 3. Limpiar media de la importación
             $import->clearMediaCollection();
-    
+
             // 4. Finalmente, eliminar la importación
             $import->delete();
         });
-    
+
         return redirect()->route('imports.index')->with('success', 'Importación eliminada correctamente.');
     }
 
