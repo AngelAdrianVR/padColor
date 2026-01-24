@@ -71,6 +71,8 @@ Route::get('tickets-get-by-page/{currentPage}', [TicketController::class, 'getIt
 Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
 Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
 
+// RUTA DE MANTENIMIENTO PARA IMÁGENES
+Route::get('tickets-maintenance/migrate-images', [TicketController::class, 'migrateImages'])->name('tickets.maintenance.migrate')->middleware('auth');
 
 //Tickets-solutions routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------

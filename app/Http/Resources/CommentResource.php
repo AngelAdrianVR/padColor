@@ -18,6 +18,8 @@ class CommentResource extends JsonResource
             'id' => $this->id,
             'body' => $this->body,
             'user' => $this->whenLoaded('user'),
+            // Agregamos la relación media para que se envíen los adjuntos
+            'media' => $this->getMedia()->all(),
             'created_at' => $this->created_at?->isoFormat('DD MMM YYYY, h:mm a'),
             'updated_at' => $this->updated_at?->isoFormat('DD MMM YYYY, h:mm a'),
         ];

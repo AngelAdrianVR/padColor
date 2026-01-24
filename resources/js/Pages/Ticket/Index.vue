@@ -5,15 +5,22 @@
                 {{ $page.props.auth.user.permissions.includes('Ver todos los tickets') ? 'Todos los tickets' : 'Todos mis tickets' }}
             </h1>
             <div class="flex items-center space-x-2">
-                <PrimaryButton v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
-                    @click="$inertia.get(route('tickets.create'))">Crear ticket</PrimaryButton>
+                <el-button 
+                    v-if="$page.props.auth.user.permissions.includes('Crear tickets')"
+                    type="primary" 
+                    @click="$inertia.get(route('tickets.create'))">
+                    Crear ticket
+                </el-button>
+                
                 <el-popconfirm
                     v-if="(selectAllTickets || selectedTicketsId.length) && $page.props.auth.user.permissions.includes('Eliminar tickets')"
-                    confirm-button-text="Si" cancel-button-text="No" icon-color="#D72C8A"
+                    confirm-button-text="Si" 
+                    cancel-button-text="No" 
+                    icon-color="#D72C8A"
                     :title="'¿Desea eliminar los elementos seleccionados (' + selectedTicketsId.length + ')?'"
                     @confirm="massiveDelete">
                     <template #reference>
-                        <button class="bg-redpad text-white rounded-full px-3 py-2 text-xs tracking-widest">Eliminar</button>
+                        <el-button type="danger" plain round size="small" class="mb-1">Eliminar</el-button>
                     </template>
                 </el-popconfirm>
             </div>
@@ -22,16 +29,31 @@
         <!-- Buscador y filtros -->
         <div class="flex flex-col lg:flex-row justify-between space-y-3 space-x-3 lg:items-center mt-4 mx-2 lg:mx-10">
             <div class="lg:w-1/4 relative lg:mr-12">
-                <input v-model="searchTemp" @keyup.enter="handleSearch" class="input w-full pl-9"
-                    placeholder="Buscar tickets" type="search">
-                <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
+                <el-input 
+                    v-model="searchTemp" 
+                    @keyup.enter="handleSearch" 
+                    placeholder="Buscar tickets" 
+                    clearable
+                    @clear="handleTagClose">
+                    <template #prefix>
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </template>
+                </el-input>
             </div>
+            
             <el-tag v-if="search" size="large" closable @close="handleTagClose">
                 Estas buscando: <b>{{ search }}</b>
             </el-tag>
+
             <div v-if="$page.props.auth.user.permissions.includes('Ver todos los tickets')" class="flex items-center space-x-3 lg:w-1/5">
-                <el-cascader class="w-full" v-model="filter" :options="options" @change="handleChangeFilter" clearable
-                    placeholder="Filtrar" />
+                <el-cascader 
+                    class="w-full" 
+                    v-model="filter" 
+                    :options="options" 
+                    @change="handleChangeFilter" 
+                    clearable
+                    placeholder="Filtrar" 
+                />
             </div>
         </div>
 
@@ -41,21 +63,40 @@
         </div>
         <div v-else class="mt-7">
             <div v-if="localTickets.length" class="flex items-center space-x-9 border-b border-grayD9 pb-2">
-                <label class="flex items-center ml-2 lg:ml-24">
-                    <Checkbox v-model:checked="selectAllTickets" name="remember" />
-                    <span class="ms-2 text-sm font-bold">Todos los tickets</span>
-                </label>
-                <p class="text-gray66 text-right text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos
-                </p>
+                <div class="ml-2 lg:ml-24">
+                    <el-checkbox 
+                        v-model="selectAllTickets" 
+                        label="Todos los tickets" 
+                        class="!font-bold"
+                    />
+                </div>
+                <p class="text-gray66 text-right text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
             </div>
-            <TicketRow v-for="ticket in localTickets" :key="ticket" :ticket="ticket" :selectTicket="selectAllTickets"
-                @selected="selectedTicket" @unselected="unselectedTicket" />
+            
+            <TicketRow 
+                v-for="ticket in localTickets" 
+                :key="ticket.id" 
+                :ticket="ticket" 
+                :selectTicket="selectAllTickets"
+                @selected="selectedTicket" 
+                @unselected="unselectedTicket" 
+            />
+            
             <p class="text-gray66 text-left ml-8 mt-2 text-[11px]">{{ localTickets.length }} de {{ total_tickets }} elementos</p>
-            <p v-if="loadingItems" class="text-xs my-4 text-center">
-                Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-secondary"></i>
-            </p>
-            <button v-else-if="localTickets.length && !search && !filtered && (total_tickets > 15 && localTickets.length < total_tickets)" @click="fetchItemsByPage"
-                class="w-full text-secondary my-4 text-xs mx-auto underline ml-6">Cargar más elementos</button>
+            
+            <div class="flex justify-center my-4">
+                <p v-if="loadingItems" class="text-xs text-center">
+                    Cargando <i class="fa-sharp fa-solid fa-circle-notch fa-spin ml-2 text-secondary"></i>
+                </p>
+                <el-button 
+                    v-else-if="localTickets.length && !search && !filtered && (total_tickets > 15 && localTickets.length < total_tickets)" 
+                    @click="fetchItemsByPage"
+                    link 
+                    type="primary">
+                    Cargar más elementos
+                </el-button>
+            </div>
+            
             <el-empty v-if="!localTickets.length" description="No hay tickets para mostrar" />
         </div>
     </AppLayout>
@@ -63,11 +104,8 @@
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import DangerButton from "@/Components/DangerButton.vue";
 import TicketRow from "@/Components/MyComponents/Ticket/TicketRow.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
-import Checkbox from '@/Components/Checkbox.vue';
 import axios from 'axios';
 
 export default {
@@ -86,108 +124,45 @@ export default {
                     label: "Por estado",
                     value: "status",
                     children: [
-                        {
-                            label: 'Abierto',
-                            value: 'Abierto',
-                        },
-                        {
-                            label: 'En espera',
-                            value: 'En espera',
-                        },
-                        {
-                            label: 'En espera de 3ro',
-                            value: 'En espera de 3ro',
-                        },
-                        {
-                            label: 'Completado',
-                            value: 'Completado',
-                        },
-                        {
-                            label: 'Re-abierto',
-                            value: 'Re-abierto',
-                        },
-                        {
-                            label: 'En proceso',
-                            value: 'En proceso',
-                        },
+                        { label: 'Abierto', value: 'Abierto' },
+                        { label: 'En espera', value: 'En espera' },
+                        { label: 'En espera de 3ro', value: 'En espera de 3ro' },
+                        { label: 'Completado', value: 'Completado' },
+                        { label: 'Re-abierto', value: 'Re-abierto' },
+                        { label: 'En proceso', value: 'En proceso' },
                     ],
                 },
                 {
                     label: "Por prioridad",
                     value: "priority",
                     children: [
-                        {
-                            label: 'Baja',
-                            value: 'Baja',
-                        },
-                        {
-                            label: 'Media',
-                            value: 'Media',
-                        },
-                        {
-                            label: 'Alta',
-                            value: 'Alta',
-                        },
+                        { label: 'Baja', value: 'Baja' },
+                        { label: 'Media', value: 'Media' },
+                        { label: 'Alta', value: 'Alta' },
                     ],
                 },
                 {
                     label: "Por fecha de creación",
                     value: "created_at",
                     children: [
-                        {
-                            label: 'Hoy',
-                            value: 'Hoy',
-                        },
-                        {
-                            label: 'Esta semana ',
-                            value: 'Esta semana ',
-                        },
-                        {
-                            label: 'Este mes',
-                            value: 'Este mes',
-                        },
-                        {
-                            label: 'Mes pasado',
-                            value: 'Mes pasado',
-                        },
-                        {
-                            label: 'Este año',
-                            value: 'Este año',
-                        },
-                        {
-                            label: 'Año pasado',
-                            value: 'Año pasado',
-                        },
+                        { label: 'Hoy', value: 'Hoy' },
+                        { label: 'Esta semana', value: 'Esta semana' }, // Nota: 'Esta semana ' tenía un espacio en tu código original, verifica si el backend lo espera así
+                        { label: 'Este mes', value: 'Este mes' },
+                        { label: 'Mes pasado', value: 'Mes pasado' },
+                        { label: 'Este año', value: 'Este año' },
+                        { label: 'Año pasado', value: 'Año pasado' },
                     ],
                 },
                 {
                     label: "Por fecha de expiración",
                     value: "expired_date",
                     children: [
-                        {
-                            label: 'Hoy',
-                            value: 'Hoy',
-                        },
-                        {
-                            label: 'Esta semana ',
-                            value: 'Esta semana ',
-                        },
-                        {
-                            label: 'Este mes',
-                            value: 'Este mes',
-                        },
-                        {
-                            label: 'Mes pasado',
-                            value: 'Mes pasado',
-                        },
-                        {
-                            label: 'Este año',
-                            value: 'Este año',
-                        },
-                        {
-                            label: 'Año pasado',
-                            value: 'Año pasado',
-                        },
+                        { label: 'Hoy', value: 'Hoy' },
+                        { label: 'Esta semana', value: 'Esta semana' },
+                        { label: 'Este mes', value: 'Este mes' },
+                        { label: 'Mes pasado', value: 'Mes pasado' },
+                        { label: 'Este año', value: 'Este año' },
+                        { label: 'Año pasado', value: 'Año pasado' },
                     ],
                 },
                 {
@@ -199,58 +174,19 @@ export default {
                     label: "Por sucursal",
                     value: "branch",
                     children: [
-                        {
-                            label: 'Alfajayucan',
-                            value: 'Alfajayucan',
-                        },
-                        {
-                            label: 'Morelia ',
-                            value: 'Morelia ',
-                        },
-                        {
-                            label: 'San Luis Potosí',
-                            value: 'San Luis Potosí',
-                        },
-                        {
-                            label: 'Acapulco',
-                            value: 'Acapulco',
-                        },
-                        {
-                            label: 'Av. del Tigre',
-                            value: 'Av. del Tigre',
-                        },
-                        {
-                            label: 'Calle C',
-                            value: 'Calle C',
-                        },
-                        {
-                            label: 'Calle 2',
-                            value: 'Calle 2',
-                        },
-                        {
-                            label: 'Veracruz',
-                            value: 'Veracruz',
-                        },
-                        {
-                            label: 'León',
-                            value: 'León',
-                        },
-                        {
-                            label: 'Juárez',
-                            value: 'Juárez',
-                        },
-                        {
-                            label: 'Puebla',
-                            value: 'Puebla',
-                        },
-                        {
-                            label: 'Monterrey',
-                            value: 'Monterrey',
-                        },
-                        {
-                            label: 'Federalismo',
-                            value: 'Federalismo',
-                        },
+                        { label: 'Alfajayucan', value: 'Alfajayucan' },
+                        { label: 'Morelia', value: 'Morelia' },
+                        { label: 'San Luis Potosí', value: 'San Luis Potosí' },
+                        { label: 'Acapulco', value: 'Acapulco' },
+                        { label: 'Av. del Tigre', value: 'Av. del Tigre' },
+                        { label: 'Calle C', value: 'Calle C' },
+                        { label: 'Calle 2', value: 'Calle 2' },
+                        { label: 'Veracruz', value: 'Veracruz' },
+                        { label: 'León', value: 'León' },
+                        { label: 'Juárez', value: 'Juárez' },
+                        { label: 'Puebla', value: 'Puebla' },
+                        { label: 'Monterrey', value: 'Monterrey' },
+                        { label: 'Federalismo', value: 'Federalismo' },
                     ],
                 },
             ],
@@ -262,11 +198,8 @@ export default {
     },
     components: {
         AppLayout,
-        PrimaryButton,
-        DangerButton,
         TicketRow,
         Loading,
-        Checkbox
     },
     props: {
         tickets: Object,
@@ -286,6 +219,7 @@ export default {
         },
         handleTagClose() {
             this.search = null;
+            this.searchTemp = null; // Limpiar también el temporal al cerrar
             this.showAllTickets();
         },
         selectedTicket(ticket_id) {

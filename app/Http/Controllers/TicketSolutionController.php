@@ -8,6 +8,7 @@ use App\Models\TicketSolution;
 use App\Models\User;
 use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TicketSolutionController extends Controller
 {
@@ -26,6 +27,13 @@ class TicketSolutionController extends Controller
 
     public function store(Request $request)
     {
+        // Validación personalizada para evitar imágenes en base64
+        if (preg_match('/data:image\/[^;]+;base64/', $request->description)) {
+            throw ValidationException::withMessages([
+                'description' => 'No se permite pegar imágenes directamente en el texto. Por favor, usa el botón de "Adjuntar archivos" para subir tus imágenes.'
+            ]);
+        }
+
         $ticket_solution = TicketSolution::create([
             'description' => $request->description,
             'ticket_id' => $request->ticketId,
