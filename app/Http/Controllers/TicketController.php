@@ -9,23 +9,49 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
+use App\Models\TicketSolution;
 use App\Models\User;
 use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
+    // Campos ligeros para evitar cargar la descripción pesada en listas
+    private $selectFields = [
+        'id',
+        'title',
+        'status',
+        'priority',
+        'ticket_type',
+        'user_id',
+        'responsible_id',
+        'category_id',
+        'created_at',
+        'expired_date',
+        'branch',
+        'opened_at',
+        'paused_at',
+        'closed_at',
+        'solution_minutes'
+    ];
+
     public function index()
     {
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+
         if ($userCanSeeAllTickets) {
-            $tickets = TicketResource::collection(Ticket::latest('id')
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->latest('id')
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path,phone')
                 ->take(20)
                 ->get());
             $total_tickets = Ticket::all()->count();
         } else {
-            $tickets = TicketResource::collection(Ticket::latest('id')
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->latest('id')
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path,phone')
                 ->where('user_id', auth()->id())
                 ->take(20)
@@ -59,7 +85,15 @@ class TicketController extends Controller
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/data:image\/[^;]+;base64/', $value)) {
+                        $fail('No se permite pegar imágenes directamente. Usa la sección de archivos.');
+                    }
+                },
+            ],
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
@@ -93,6 +127,7 @@ class TicketController extends Controller
 
     public function show($ticket_id)
     {
+        // En SHOW sí necesitamos todo, incluido description
         $ticket = TicketResource::make(Ticket::withCount('ticketSolutions')->with('responsible:id,name,profile_photo_path', 'user:id,name,email,profile_photo_path,phone', 'category:id,name')->find($ticket_id));
 
         return inertia('Ticket/Show', compact('ticket'));
@@ -121,7 +156,15 @@ class TicketController extends Controller
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/data:image\/[^;]+;base64/', $value)) {
+                        $fail('No se permite pegar imágenes directamente. Usa la sección de archivos.');
+                    }
+                },
+            ],
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
@@ -178,7 +221,15 @@ class TicketController extends Controller
             'responsible_id' => 'nullable',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/data:image\/[^;]+;base64/', $value)) {
+                        $fail('No se permite pegar imágenes directamente. Usa la sección de archivos.');
+                    }
+                },
+            ],
             'status' => 'required|string',
             'branch' => 'required|string',
             'priority' => 'required|string',
@@ -300,6 +351,13 @@ class TicketController extends Controller
 
     public function comment(Request $request, Ticket $ticket)
     {
+        // 1. Validar que no haya imágenes en base64 en el cuerpo del comentario
+        if (preg_match('/data:image\/[^;]+;base64/', $request->comment)) {
+            throw ValidationException::withMessages([
+                'comment' => 'No se permite pegar imágenes directamente en el texto. Por favor, usa el botón de "Adjuntar archivos".'
+            ]);
+        }
+
         $comment = new Comment([
             'body' => $request->comment,
             'user_id' => auth()->id(),
@@ -307,7 +365,19 @@ class TicketController extends Controller
 
         $ticket->comments()->save($comment);
 
-        $mentions = $request->mentions;
+        // 2. Guardar archivos adjuntos (MediaLibrary)
+        // addAllMediaFromRequest busca automáticamente archivos en la request
+        $comment->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
+
+        // 3. Procesar menciones
+        // Como enviamos FormData, 'mentions' podría llegar como string JSON
+        $mentionsInput = $request->mentions;
+        if (is_string($mentionsInput)) {
+            $mentions = json_decode($mentionsInput, true) ?? [];
+        } else {
+            $mentions = $mentionsInput ?? [];
+        }
+
         foreach ($mentions as $mention) {
             $user = User::find($mention['id']);
             $owner = auth()->user();
@@ -329,7 +399,11 @@ class TicketController extends Controller
 
     public function fetchConversation($ticket)
     {
-        $conversation = CommentResource::collection(Comment::where('commentable_type', 'App\Models\Ticket')->where('commentable_id', $ticket)->with('user:id,name,profile_photo_path')->get());
+        // Se agrega 'media' al with() para cargar los archivos adjuntos
+        $conversation = CommentResource::collection(Comment::where('commentable_type', 'App\Models\Ticket')
+            ->where('commentable_id', $ticket)
+            ->with(['user:id,name,profile_photo_path', 'media'])
+            ->get());
 
 
         return response()->json(['items' => $conversation]);
@@ -347,17 +421,23 @@ class TicketController extends Controller
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
 
         if ($userCanSeeAllTickets) {
-            $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-                ->where('id', 'LIKE', "%$query%")
-                ->orWhere('title', 'LIKE', "%$query%")
-                ->orWhere('description', 'LIKE', "%$query%")
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+                ->where(function ($q) use ($query) {
+                    $q->where('id', 'LIKE', "%$query%")
+                        ->orWhere('title', 'LIKE', "%$query%")
+                        ->orWhere('description', 'LIKE', "%$query%"); // Puedes filtrar por descripción, pero no seleccionarla
+                })
                 ->get());
         } else {
-            $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
                 ->where('user_id', auth()->id())
-                ->where('id', 'LIKE', "%$query%")
-                ->orWhere('title', 'LIKE', "%$query%")
-                ->orWhere('description', 'LIKE', "%$query%")
+                ->where(function ($q) use ($query) {
+                    $q->where('id', 'LIKE', "%$query%")
+                        ->orWhere('title', 'LIKE', "%$query%")
+                        ->orWhere('description', 'LIKE', "%$query%");
+                })
                 ->get());
         }
 
@@ -369,7 +449,9 @@ class TicketController extends Controller
         if ($prop === 'created_at' || $prop === 'expired_date') {
             $tickets = TicketResource::collection($this->getTicketsByDate($prop, $value));
         } else {
-            $tickets = TicketResource::collection(Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
+            // Se usa select para evitar cargar description
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
                 ->where($prop, $value)
                 ->get());
         }
@@ -383,13 +465,15 @@ class TicketController extends Controller
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
 
         if ($userCanSeeAllTickets) {
-            $tickets = TicketResource::collection(Ticket::latest('id')
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->latest('id')
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
                 ->skip($offset)
                 ->take(20)
                 ->get());
         } else {
-            $tickets = TicketResource::collection(Ticket::latest('id')
+            $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
+                ->latest('id')
                 ->where('user_id', auth()->id())
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
                 ->skip($offset)
@@ -402,38 +486,145 @@ class TicketController extends Controller
 
     private function getTicketsByDate($prop, $value)
     {
+        // Base de la consulta con select optimizado
+        $query = Ticket::select($this->selectFields) // Optimización
+            ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path');
+
         if ($value === 'Hoy') {
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereDate($prop, now())->get();
+            $tickets = $query->whereDate($prop, now())->get();
         } else if ($value === 'Esta semana') {
-            $start = now()->startOfWeek(); // Obtener el inicio de la semana actual
-            $end = now()->endOfWeek(); // Obtener el final de la semana actual
-
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+            $start = now()->startOfWeek();
+            $end = now()->endOfWeek();
+            $tickets = $query->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Este mes') {
-            $start = now()->startOfMonth(); // Obtener el inicio del mes actual
-            $end = now()->endOfMonth(); // Obtener el final del mes actual
-
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+            $start = now()->startOfMonth();
+            $end = now()->endOfMonth();
+            $tickets = $query->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Mes pasado') {
             $start = now()->subMonth()->startOfMonth();
             $end = now()->subMonth()->endOfMonth();
-
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+            $tickets = $query->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Este año') {
             $start = now()->startOfYear();
             $end = now()->endOfYear();
-
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+            $tickets = $query->whereBetween($prop, [$start, $end])->get();
         } else if ($value === 'Año pasado') {
             $start = now()->subYear()->startOfYear();
             $end = now()->subYear()->endOfYear();
-
-            $tickets = Ticket::with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')->whereBetween($prop, [$start, $end])->get();
+            $tickets = $query->whereBetween($prop, [$start, $end])->get();
         } else {
-            // Si el valor no coincide con ninguna de las opciones predefinidas, se devuelve un array vacío
             $tickets = collect([]);
         }
 
         return $tickets;
+    }
+
+    // --------------------------------------------------------
+    // MANTENIMIENTO: Migración de imágenes Base64 a Archivos
+    // --------------------------------------------------------
+    public function migrateImages()
+    {
+        $processed = 0;
+        
+        // 1. Procesar Tickets (5 registros a la vez)
+        $tickets = Ticket::where('description', 'LIKE', '%src="data:image/%')
+            ->take(100)
+            ->get();
+
+        foreach ($tickets as $ticket) {
+            $count = $this->extractAndUploadImages($ticket, 'description');
+            if ($count > 0) $processed++;
+        }
+
+        // 2. Procesar Soluciones (5 registros a la vez)
+        $solutions = TicketSolution::where('description', 'LIKE', '%src="data:image/%')
+            ->take(100)
+            ->get();
+
+        foreach ($solutions as $solution) {
+            $count = $this->extractAndUploadImages($solution, 'description');
+            if ($count > 0) $processed++;
+        }
+
+        // 3. Procesar Comentarios (5 registros a la vez)
+        $comments = Comment::where('body', 'LIKE', '%src="data:image/%')
+            ->take(100)
+            ->get();
+
+        foreach ($comments as $comment) {
+            $count = $this->extractAndUploadImages($comment, 'body');
+            if ($count > 0) $processed++;
+        }
+
+        return response()->json([
+            'message' => 'Proceso ejecutado',
+            'processed_records' => $processed,
+            'remaining_tickets' => Ticket::where('description', 'LIKE', '%src="data:image/%')->count(),
+            'remaining_solutions' => TicketSolution::where('description', 'LIKE', '%src="data:image/%')->count(),
+            'remaining_comments' => Comment::where('body', 'LIKE', '%src="data:image/%')->count(),
+        ]);
+    }
+
+    /**
+     * Extrae imágenes base64, las sube a MediaLibrary y limpia el texto.
+     */
+    private function extractAndUploadImages($model, $field)
+    {
+        $text = $model->$field;
+        // Expresión regular para encontrar etiquetas img con src en base64
+        // Captura: grupo 1 (extensión), grupo 2 (datos base64)
+        $pattern = '/<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/i';
+        
+        $count = 0;
+
+        if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $fullTag = $match[0];
+                $extension = $match[1]; // png, jpeg, etc.
+                $base64Data = $match[2];
+
+                // Decodificar imagen
+                $image = base64_decode($base64Data);
+                
+                if ($image === false) continue; // Si falla la decodificación, saltar
+
+                // Crear nombre de archivo temporal único
+                $fileName = 'migrated_' . Str::random(10) . '.' . $extension;
+                $tempPath = sys_get_temp_dir() . '/' . $fileName;
+
+                // Guardar en temporal
+                file_put_contents($tempPath, $image);
+
+                try {
+                    // Subir usando Spatie MediaLibrary
+                    // Se usa la colección predeterminada o una específica 'default'
+                    $model->addMedia($tempPath)
+                          ->usingFileName($fileName)
+                          ->toMediaCollection(); 
+                    
+                    // Limpiar el texto: Reemplazar toda la etiqueta <img> por nada
+                    // (Opcional: podrías poner un texto como [Imagen adjunta])
+                    $text = str_replace($fullTag, '', $text);
+                    $count++;
+
+                } catch (\Exception $e) {
+                    // Si falla la subida, no modificamos el texto para no perder la imagen original
+                    Log::error("Error migrando imagen en Ticket/Solution ID {$model->id}: " . $e->getMessage());
+                }
+
+                // Eliminar archivo temporal
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
+            }
+
+            // Guardar el modelo con el texto limpio solo si hubo cambios
+            if ($count > 0) {
+                $model->$field = $text;
+                $model->saveQuietly(); // saveQuietly evita disparar eventos de update (notificaciones, updated_at, etc.)
+            }
+        }
+
+        return $count;
     }
 }
