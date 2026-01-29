@@ -30,6 +30,7 @@ class TicketController extends Controller
         'responsible_id',
         'category_id',
         'created_at',
+        'updated_at',
         'expired_date',
         'branch',
         'opened_at',

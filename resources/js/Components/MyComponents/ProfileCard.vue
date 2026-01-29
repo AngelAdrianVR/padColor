@@ -1,52 +1,65 @@
 <template>
-    <div class="z-50 h-72 w-56 bg-white shadow-md border border-grayD9 absolute rounded-[10px]">
-        <div class="h-[40%] bg-gradient-to-r from-gray-200 from-5% via-gray99 via-50% to-gray-200 to-95% rounded-t-[10px]">
-            <button @click="$emit('close')" class="absolute top-1 right-2 text-xs text-black">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <Link :href="route('profile.show')">
-            <button
-                class="absolute flex items-center justify-center size-5 rounded-[5px] top-1 left-2 text-[11px] text-primary bg-primarylight">
-                <i class="fa-solid fa-pen"></i>
-            </button>
-            </Link>
+    <div class="bg-white overflow-hidden w-full font-sans">
+        <!-- Encabezado con degradado sutil -->
+        <div class="h-20 bg-gradient-to-br from-gray-50 to-gray-200 relative">
+             <div class="absolute top-2 right-2">
+                 <Link :href="route('profile.show')" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/50 hover:bg-white text-primary transition-all shadow-sm" title="Editar Perfil">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                 </Link>
+             </div>
         </div>
-        <figure class="size-28 rounded-[5px] bg-gray-500 absolute top-6 left-[calc(50%-3.5rem)]">
-            <img :src="$page.props.auth.user.profile_photo_url" class="size-28 object-cover rounded-[5px]">
-        </figure>
-        <div class="flex flex-col text-black text-left mt-11 mx-7">
-            <span class="text-sm">{{ $page.props.auth.user.name }}</span>
-            <span class="text-[10px] text-gray66">{{ $page.props.auth.user.employee_properties.job_position
-            }}</span>
-            <p class="mt-3 flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="size-3 text-gray66">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                </svg>
-                <span class="text-[10px]">{{ $page.props.auth.user.email ?? '-' }}</span>
-            </p>
-            <p class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="size-3 text-gray66">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                </svg>
-                <span class="text-[10px]">{{ $page.props.auth.user.phone }}</span>
-            </p>
+
+        <!-- Contenido Principal -->
+        <div class="px-5 pb-5 relative">
+            <!-- Avatar Superpuesto -->
+            <div class="-mt-10 mb-3 flex justify-between items-end">
+                 <img :src="$page.props.auth.user.profile_photo_url" 
+                      class="w-20 h-20 rounded-full border-4 border-white shadow-md object-cover bg-white">
+                 
+                 <!-- Badge o Estado (Opcional) -->
+                 <span class="mb-1 text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium border border-green-200">
+                    Activo
+                 </span>
+            </div>
+
+            <!-- Información del Usuario -->
+            <div class="text-left">
+                <h3 class="text-lg font-bold text-gray-800 leading-tight truncate">
+                    {{ $page.props.auth.user.name }}
+                </h3>
+                <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">
+                    {{ $page.props.auth.user.employee_properties?.job_position || 'Colaborador' }}
+                </p>
+
+                <div class="mt-4 space-y-2.5">
+                    <div class="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <i class="fa-regular fa-envelope text-gray-400"></i>
+                        <span class="truncate text-xs">{{ $page.props.auth.user.email }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-600 px-2">
+                        <i class="fa-solid fa-phone text-gray-400"></i>
+                        <span class="text-xs">{{ $page.props.auth.user.phone || 'Sin teléfono' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Cerrar Sesión -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <form @submit.prevent="logout" class="w-full">
+                    <button type="submit" class="w-full group flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-200 border border-transparent hover:shadow-md">
+                        <i class="fa-solid fa-arrow-right-from-bracket transition-transform group-hover:-translate-x-1"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
+            </div>
         </div>
-        <form method="POST" @submit.prevent="logout" class="absolute bottom-2 right-1 flex mr-3 mt-2 justify-end text-redpad text-xs text-right hover:text-red-500">
-            <button>
-                Cerrar sesión
-            </button>
-        </form>
     </div>
 </template>
+
 <script>
 import { Link } from "@inertiajs/vue3"
 
 export default {
-    emits: ['close'],
     components: {
         Link,
     },
