@@ -146,7 +146,7 @@ export default {
                     value: "created_at",
                     children: [
                         { label: 'Hoy', value: 'Hoy' },
-                        { label: 'Esta semana', value: 'Esta semana' }, // Nota: 'Esta semana ' tenía un espacio en tu código original, verifica si el backend lo espera así
+                        { label: 'Esta semana', value: 'Esta semana' }, 
                         { label: 'Este mes', value: 'Este mes' },
                         { label: 'Mes pasado', value: 'Mes pasado' },
                         { label: 'Este año', value: 'Este año' },
@@ -163,6 +163,27 @@ export default {
                         { label: 'Mes pasado', value: 'Mes pasado' },
                         { label: 'Este año', value: 'Este año' },
                         { label: 'Año pasado', value: 'Año pasado' },
+                    ],
+                },
+                {
+                    label: "Por departamento",
+                    value: "department",
+                    children: [
+                        { label: 'Administración', value: 'Administración' },
+                        { label: 'Almacén', value: 'Almacén' },
+                        { label: 'Comercial', value: 'Comercial' },
+                        { label: 'Compras', value: 'Compras' },
+                        { label: 'Contabilidad', value: 'Contabilidad' },
+                        { label: 'Contraloría', value: 'Contraloría' },
+                        { label: 'Crédito y cobranza', value: 'Crédito y cobranza' },
+                        { label: 'Dirección', value: 'Dirección' },
+                        { label: 'Empaques', value: 'Empaques' },
+                        { label: 'Inspección', value: 'Inspección' },
+                        { label: 'Mantenimiento', value: 'Mantenimiento' },
+                        { label: 'Producción', value: 'Producción' },
+                        { label: 'Recursos Humanos', value: 'Recursos Humanos' },
+                        { label: 'Sistemas', value: 'Sistemas' },
+                        { label: 'Tesorería', value: 'Tesorería' },
                     ],
                 },
                 {
@@ -219,7 +240,7 @@ export default {
         },
         handleTagClose() {
             this.search = null;
-            this.searchTemp = null; // Limpiar también el temporal al cerrar
+            this.searchTemp = null; 
             this.showAllTickets();
         },
         selectedTicket(ticket_id) {
@@ -228,7 +249,6 @@ export default {
         unselectedTicket(ticket_id) {
             const index = this.selectedTicketsId.findIndex(id => id === ticket_id);
 
-            //Elimina del arreglo el elemento si encuentra el id
             if (index != -1) {
                 this.selectedTicketsId.splice(index, 1);
             }
@@ -240,7 +260,6 @@ export default {
             }
         },
         showAllTickets() {
-            // solo si hay items en el buffer, para no dejar vacio el arreglo principal
             if (this.ticketsBuffer.length) {
                 this.localTickets = this.ticketsBuffer;
                 this.ticketsBuffer = [];
@@ -285,7 +304,6 @@ export default {
                 const response = await axios.get(route('tickets.get-filters', { prop: this.filter[0], value: this.filter[1] }));
 
                 if (response.status === 200) {
-                    // si el bufer no tiene nada aun, guardar los tickets
                     if (!this.ticketsBuffer.length) {
                         this.ticketsBuffer = this.localTickets;
                     }
@@ -321,10 +339,9 @@ export default {
         }
     },
     mounted() {
-        // agregar las categorias en las opciones de filtro
         this.categories.forEach(element => {
             const ops = { label: element.name, value: element.id }
-            this.options[4].children.push(ops);
+            this.options[5].children.push(ops);
         });
     },
 }
