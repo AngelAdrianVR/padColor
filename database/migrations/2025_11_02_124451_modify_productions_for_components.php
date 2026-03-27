@@ -26,7 +26,7 @@ return new class extends Migration
             // El nombre 'productions_folio_unique' es el que Laravel genera por defecto.
             try {
                  // Intentar eliminar la restricción unique por su nombre por defecto
-                $table->dropUnique('productions_folio_unique');
+                // $table->dropUnique('productions_folio_unique');
             } catch (\Exception $e) {
                 // Si falla (ej. el nombre es diferente), loggear o ignorar.
                 // Para una migración real, deberías verificar el nombre exacto en tu DBM.
