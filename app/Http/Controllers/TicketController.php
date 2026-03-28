@@ -15,6 +15,7 @@ use App\Notifications\BasicNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class TicketController extends Controller
@@ -28,6 +29,7 @@ class TicketController extends Controller
         'ticket_type',
         'user_id',
         'responsible_id',
+        'department', // CAMPO AGREGADO
         'category_id',
         'created_at',
         'updated_at',
@@ -42,6 +44,7 @@ class TicketController extends Controller
     public function index()
     {
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+        $userDepartment = auth()->user()->employee_properties['department'] ?? null;
 
         if ($userCanSeeAllTickets) {
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
@@ -54,10 +57,16 @@ class TicketController extends Controller
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
                 ->latest('id')
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path,phone')
-                ->where('user_id', auth()->id())
+                ->where(function($query) use ($userDepartment) {
+                    $query->where('user_id', auth()->id())
+                          ->orWhere('department', $userDepartment);
+                })
                 ->take(20)
                 ->get());
-            $total_tickets = Ticket::where('user_id', auth()->id())->get()->count();
+            $total_tickets = Ticket::where(function($query) use ($userDepartment) {
+                    $query->where('user_id', auth()->id())
+                          ->orWhere('department', $userDepartment);
+                })->count();
         }
 
         $categories = Category::all();
@@ -69,11 +78,9 @@ class TicketController extends Controller
     public function create()
     {
         $categories = Category::all();
-        $permissionName = 'Responsable de ticket';
-
-        $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
-            return $user->hasPermissionTo($permissionName) && $user->id !== 1;
-        })->values();
+        
+        // Se traen todos los usuarios (excepto el id 1) con sus propiedades para agruparlos
+        $users = User::where('id', '!=', 1)->get(['id', 'name', 'profile_photo_path', 'employee_properties']);
 
         return inertia('Ticket/Create', compact('categories', 'users'));
     }
@@ -83,7 +90,8 @@ class TicketController extends Controller
     {
         $validated = $request->validate([
             'category_id' => 'required',
-            'responsible_id' => 'nullable',
+            'responsible_id' => 'nullable|exists:users,id',
+            'department' => 'nullable|string|max:255',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
             'description' => [
@@ -107,19 +115,26 @@ class TicketController extends Controller
         $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
 
         //Crear registro de actividad
+        $assignedTo = $ticket->responsible_id ? 'un usuario' : ($ticket->department ? 'un departamento' : 'sin asignar');
         TicketHistory::create([
             'description' =>  'creó el ticket #' . $ticket->id . ' "' . $ticket->title . '".',
             'user_id' =>  auth()->id(),
             'ticket_id' =>  $ticket->id,
         ]);
 
-        // notificar a responsable si lo hay y si no es el creador del ticket
+        // NOTIFICACIONES
+        $owner = auth()->user();
+        $subject = "Nuevo ticket";
+        $description = "ha creado un nuevo ticket (#$ticket->id). Resolver lo antes posible.";
+        $url = route('tickets.show', $ticket->id);
+
         if ($request->responsible_id && $request->responsible_id != auth()->id()) {
             $user = User::find($request->responsible_id);
-            $owner = auth()->user();
-            $subject = "Nuevo ticket";
-            $description = "ha creado un nuevo ticket (#$ticket->id)";
-            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, $url));
+        } elseif ($request->department) {
+            // Filtrando usando JSON
+            $departmentUsers = User::where('employee_properties->department', $request->department)->where('id', '!=', auth()->id())->get();
+            Notification::send($departmentUsers, new BasicNotification($subject, "ha creado un nuevo ticket asignado a tu departamento (#$ticket->id). Resolver lo antes posible.", $owner->name, $owner->profile_photo_url, $url));
         }
 
         return to_route('tickets.index');
@@ -138,11 +153,9 @@ class TicketController extends Controller
     public function edit(Ticket $ticket)
     {
         $categories = Category::all();
-        $permissionName = 'Responsable de ticket';
-
-        $users = User::all(['id', 'name', 'profile_photo_path'])->filter(function ($user) use ($permissionName) {
-            return $user->hasPermissionTo($permissionName) && $user->id !== 1;
-        })->values();
+        
+        // Se traen todos los usuarios (excepto el id 1) con sus propiedades para agruparlos
+        $users = User::where('id', '!=', 1)->get(['id', 'name', 'profile_photo_path', 'employee_properties']);
 
         $media = $ticket->getMedia()->all();
 
@@ -154,7 +167,8 @@ class TicketController extends Controller
     {
         $request->validate([
             'category_id' => 'required',
-            'responsible_id' => 'nullable',
+            'responsible_id' => 'nullable|exists:users,id',
+            'department' => 'nullable|string|max:255',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
             'description' => [
@@ -174,41 +188,59 @@ class TicketController extends Controller
 
         //guarda al responsable antes de edición
         $current_responsible_id = $ticket->responsible_id;
+        $current_department = $ticket->department;
 
         $ticket->update($request->all());
 
-        //Crear registro de actividad si se cambio al responsable
-        if ($current_responsible_id != $request->responsible_id) {
-            $new_responsible = User::find($request->responsible_id);
-            $description = $request->responsible_id
-                ? "asignó a *$new_responsible->name* como responsable del ticket."
-                : "removió al responsable del ticket.";
+        // Manejo de historial y notificaciones si cambió la asignación
+        if ($current_responsible_id != $request->responsible_id || $current_department != $request->department) {
+            
+            $descriptionHistory = "removió la asignación del ticket.";
+            if ($request->responsible_id) {
+                $new_responsible = User::find($request->responsible_id);
+                $descriptionHistory = "asignó a *$new_responsible->name* como responsable del ticket.";
+            } elseif ($request->department) {
+                $descriptionHistory = "asignó el ticket al departamento de *$request->department*.";
+            }
+
             TicketHistory::create([
-                'description' =>  $description,
+                'description' =>  $descriptionHistory,
                 'user_id' =>  auth()->id(),
                 'ticket_id' =>  $ticket->id,
             ]);
-            // notificar a nuevo responsable
-            $user = User::find($request->responsible_id);
+
             $owner = auth()->user();
-            $subject = "Ticket asignado";
-            $description = "te ha asignado como responsable del ticket #$ticket->id";
-            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
-            if ($current_responsible_id) {
-                // notificar a antiguo responsable si lo habia
-                $user = User::find($current_responsible_id);
-                $owner = auth()->user();
-                $subject = "Ticket removido";
-                $description = "te ha removido como responsable del ticket #$ticket->id";
-                $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $url = route('tickets.show', $ticket->id);
+
+            // Notificar a NUEVOS responsables
+            if ($request->responsible_id && $request->responsible_id != $current_responsible_id) {
+                $user = User::find($request->responsible_id);
+                $user->notify(new BasicNotification("Ticket asignado", "te ha asignado como responsable del ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($request->department && $request->department != $current_department) {
+                $departmentUsers = User::where('employee_properties->department', $request->department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket asignado a tu departamento", "asignó el ticket #$ticket->id a tu departamento", $owner->name, $owner->profile_photo_url, $url));
             }
-        } else if ($current_responsible_id) {
-            // notificar a responsable si lo hay de que se editó
-            $user = User::find($current_responsible_id);
+
+            // Notificar a ANTIGUOS responsables (si fueron removidos)
+            if ($current_responsible_id && $current_responsible_id != $request->responsible_id) {
+                $user = User::find($current_responsible_id);
+                $user->notify(new BasicNotification("Ticket removido", "te ha removido como responsable del ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($current_department && $current_department != $request->department) {
+                $departmentUsers = User::where('employee_properties->department', $current_department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket removido", "removió el ticket #$ticket->id de tu departamento", $owner->name, $owner->profile_photo_url, $url));
+            }
+
+        } else if ($current_responsible_id || $current_department) {
+            // Notificar que hubo una edición general
             $owner = auth()->user();
-            $subject = "Ticket editado";
-            $description = "ha editado el ticket #$ticket->id";
-            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $url = route('tickets.show', $ticket->id);
+            if ($current_responsible_id) {
+                $user = User::find($current_responsible_id);
+                $user->notify(new BasicNotification("Ticket editado", "ha editado el ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($current_department) {
+                $departmentUsers = User::where('employee_properties->department', $current_department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket editado", "ha editado el ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            }
         }
 
         return to_route('tickets.show', $ticket->id);
@@ -219,7 +251,8 @@ class TicketController extends Controller
     {
         $request->validate([
             'category_id' => 'required',
-            'responsible_id' => 'nullable',
+            'responsible_id' => 'nullable|exists:users,id',
+            'department' => 'nullable|string|max:255',
             'title' => 'required|string|max:100',
             'ticket_type' => 'required|string|max:255',
             'description' => [
@@ -239,44 +272,62 @@ class TicketController extends Controller
 
         //guarda al responsable antes de edición
         $current_responsible_id = $ticket->responsible_id;
+        $current_department = $ticket->department;
 
         $ticket->update($request->all());
 
         // Guardar media
         $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
 
-        //Crear registro de actividad si se cambio al responsable
-        if ($current_responsible_id != $request->responsible_id) {
-            $new_responsible = User::find($request->responsible_id);
-            $description = $request->responsible_id
-                ? "asignó a *$new_responsible->name* como responsable del ticket."
-                : "removió al responsable del ticket.";
+        // Manejo de historial y notificaciones si cambió la asignación
+        if ($current_responsible_id != $request->responsible_id || $current_department != $request->department) {
+            
+            $descriptionHistory = "removió la asignación del ticket.";
+            if ($request->responsible_id) {
+                $new_responsible = User::find($request->responsible_id);
+                $descriptionHistory = "asignó a *$new_responsible->name* como responsable del ticket.";
+            } elseif ($request->department) {
+                $descriptionHistory = "asignó el ticket al departamento de *$request->department*.";
+            }
+
             TicketHistory::create([
-                'description' =>  $description,
+                'description' =>  $descriptionHistory,
                 'user_id' =>  auth()->id(),
                 'ticket_id' =>  $ticket->id,
             ]);
-            // notificar a nuevo responsable
-            $user = User::find($request->responsible_id);
+
             $owner = auth()->user();
-            $subject = "Ticket asignado";
-            $description = "te ha asignado como responsable del ticket #$ticket->id";
-            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
-            if ($current_responsible_id) {
-                // notificar a antiguo responsable si lo habia
-                $user = User::find($current_responsible_id);
-                $owner = auth()->user();
-                $subject = "Ticket removido";
-                $description = "te ha removido de responsable del ticket #$ticket->id";
-                $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $url = route('tickets.show', $ticket->id);
+
+            // Notificar a NUEVOS responsables
+            if ($request->responsible_id && $request->responsible_id != $current_responsible_id) {
+                $user = User::find($request->responsible_id);
+                $user->notify(new BasicNotification("Ticket asignado", "te ha asignado como responsable del ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($request->department && $request->department != $current_department) {
+                $departmentUsers = User::where('employee_properties->department', $request->department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket asignado a tu departamento", "asignó el ticket #$ticket->id a tu departamento", $owner->name, $owner->profile_photo_url, $url));
             }
-        } else if ($current_responsible_id) {
-            // notificar a responsable si lo hay de que se editó
-            $user = User::find($current_responsible_id);
+
+            // Notificar a ANTIGUOS responsables (si fueron removidos)
+            if ($current_responsible_id && $current_responsible_id != $request->responsible_id) {
+                $user = User::find($current_responsible_id);
+                $user->notify(new BasicNotification("Ticket removido", "te ha removido de responsable del ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($current_department && $current_department != $request->department) {
+                $departmentUsers = User::where('employee_properties->department', $current_department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket removido", "removió el ticket #$ticket->id de tu departamento", $owner->name, $owner->profile_photo_url, $url));
+            }
+
+        } else if ($current_responsible_id || $current_department) {
+            // Notificar a responsable si lo hay de que se editó
             $owner = auth()->user();
-            $subject = "Ticket editado";
-            $description = "ha editado el ticket #$ticket->id";
-            $user->notify(new BasicNotification($subject, $description, $owner->name, $owner->profile_photo_url, route('tickets.show', $ticket->id)));
+            $url = route('tickets.show', $ticket->id);
+            if ($current_responsible_id) {
+                $user = User::find($current_responsible_id);
+                $user->notify(new BasicNotification("Ticket editado", "ha editado el ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            } elseif ($current_department) {
+                $departmentUsers = User::where('employee_properties->department', $current_department)->where('id', '!=', auth()->id())->get();
+                Notification::send($departmentUsers, new BasicNotification("Ticket editado", "ha editado el ticket #$ticket->id", $owner->name, $owner->profile_photo_url, $url));
+            }
         }
 
         return to_route('tickets.show', $ticket->id);
@@ -420,6 +471,7 @@ class TicketController extends Controller
     public function getMatches($query)
     {
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+        $userDepartment = auth()->user()->employee_properties['department'] ?? null;
 
         if ($userCanSeeAllTickets) {
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
@@ -433,7 +485,10 @@ class TicketController extends Controller
         } else {
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
-                ->where('user_id', auth()->id())
+                ->where(function($q) use ($userDepartment) {
+                    $q->where('user_id', auth()->id())
+                      ->orWhere('department', $userDepartment);
+                })
                 ->where(function ($q) use ($query) {
                     $q->where('id', 'LIKE', "%$query%")
                         ->orWhere('title', 'LIKE', "%$query%")
@@ -464,6 +519,7 @@ class TicketController extends Controller
     {
         $offset = $currentPage * 20;
         $userCanSeeAllTickets = auth()->user()->can('Ver todos los tickets');
+        $userDepartment = auth()->user()->employee_properties['department'] ?? null;
 
         if ($userCanSeeAllTickets) {
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
@@ -475,7 +531,10 @@ class TicketController extends Controller
         } else {
             $tickets = TicketResource::collection(Ticket::select($this->selectFields) // Optimización
                 ->latest('id')
-                ->where('user_id', auth()->id())
+                ->where(function($q) use ($userDepartment) {
+                    $q->where('user_id', auth()->id())
+                      ->orWhere('department', $userDepartment);
+                })
                 ->with('category:id,name', 'responsible:id,name,profile_photo_path', 'user:id,name,profile_photo_path')
                 ->skip($offset)
                 ->take(20)

@@ -48,14 +48,26 @@
                     </el-option>
                 </el-select>
             </div>
+            
+            <!-- CONTENEDOR DEL RESPONSABLE ACTUALIZADO (Usuario / Departamento / Sin asignar) -->
             <el-tooltip
-                :content="ticket.responsible?.name ? 'Responsable: ' + ticket.responsible?.name : 'Responsable: Sin asignar'"
+                :content="getAssigneeTooltip(ticket)"
                 placement="top">
+                
+                <!-- Si el ticket tiene a un usuario responsable -->
                 <figure v-if="ticket.responsible"
                     class="flex justify-center items-center space-x-2 text-sm rounded-full">
                     <img class="size-10 lg:size-14 rounded-full object-cover"
                         :src="ticket.responsible?.profile_photo_url" :alt="ticket.responsible?.name">
                 </figure>
+                
+                <!-- Si el ticket está asignado a un departamento -->
+                <div v-else-if="ticket.department"
+                    class="rounded-full bg-gray-100 border border-grayD9 size-10 lg:size-14 flex items-center justify-center text-gray66">
+                    <i class="fa-solid fa-users text-lg lg:text-xl"></i>
+                </div>
+                
+                <!-- Si el ticket no tiene ninguna asignación -->
                 <div @click.stop="$inertia.get(route('tickets.edit', ticket.id))" v-else
                     class="rounded-full border size-14 flex items-center justify-center px-4 cursor-pointer hover:border-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -128,6 +140,14 @@ export default {
     },
     emits: ['selected', 'unselected'],
     methods: {
+        getAssigneeTooltip(ticket) {
+            if (ticket.responsible) {
+                return 'Responsable: ' + ticket.responsible.name;
+            } else if (ticket.department) {
+                return 'Departamento: ' + ticket.department;
+            }
+            return 'Responsable: Sin asignar';
+        },
         setShowPropStatuses() {
             this.statuses[0].show = ['Abierto'].includes(this.ticket.status);
             this.statuses[1].show = ['En proceso', 'En espera', 'En espera de 3ro', 'Abierto', 'Re-abierto'].includes(this.ticket.status);

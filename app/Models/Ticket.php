@@ -23,6 +23,7 @@ class Ticket extends Model implements HasMedia
         'expired_date',
         'user_id',
         'responsible_id',
+        'department', // CAMPO ACTUALIZADO A STRING DIRECTO
         'category_id',
         'branch',
         'solution_minutes',
@@ -34,7 +35,7 @@ class Ticket extends Model implements HasMedia
     protected $casts = [
         'expired_date' => 'date',
         'opened_at' => 'datetime',
-        'closeed_at' => 'datetime',
+        'closeed_at' => 'datetime', // Asegúrate de corregir este typo si lo deseas (closed_at)
         'paused_at' => 'datetime',
     ];
 
@@ -53,6 +54,9 @@ class Ticket extends Model implements HasMedia
     {
         return $this->belongsTo(User::class);
     }
+
+    // ELIMINADA LA RELACIÓN `department()` PORQUE YA NO HAY TABLA, 
+    // AHORA SOLO ES UNA PROPIEDAD STRING MÁS DEL TICKET.
 
     public function comments(): MorphMany
     {
