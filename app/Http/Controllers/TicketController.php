@@ -8,6 +8,7 @@ use App\Http\Resources\TicketResource;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Models\TicketAssignmentRule;
 use App\Models\TicketHistory;
 use App\Models\TicketSolution;
 use App\Models\User;
@@ -82,7 +83,12 @@ class TicketController extends Controller
         // Se traen todos los usuarios (excepto el id 1) con sus propiedades para agruparlos
         $users = User::where('id', '!=', 1)->get(['id', 'name', 'profile_photo_path', 'employee_properties']);
 
-        return inertia('Ticket/Create', compact('categories', 'users'));
+        // REGLAS DE ASIGNACIÓN
+        $userDept = auth()->user()->employee_properties['department'] ?? 'Sin departamento';
+        $rule = TicketAssignmentRule::where('department', $userDept)->first();
+        $allowedDepartments = $rule ? $rule->allowed_departments : null; // null = sin restricciones
+
+        return inertia('Ticket/Create', compact('categories', 'users', 'userDept', 'allowedDepartments'));
     }
 
 
@@ -154,12 +160,16 @@ class TicketController extends Controller
     {
         $categories = Category::all();
         
-        // Se traen todos los usuarios (excepto el id 1) con sus propiedades para agruparlos
         $users = User::where('id', '!=', 1)->get(['id', 'name', 'profile_photo_path', 'employee_properties']);
+
+        // REGLAS DE ASIGNACIÓN
+        $userDept = auth()->user()->employee_properties['department'] ?? 'Sin departamento';
+        $rule = TicketAssignmentRule::where('department', $userDept)->first();
+        $allowedDepartments = $rule ? $rule->allowed_departments : null; // null = sin restricciones
 
         $media = $ticket->getMedia()->all();
 
-        return inertia('Ticket/Edit', compact('ticket', 'categories', 'users', 'media'));
+        return inertia('Ticket/Edit', compact('ticket', 'categories', 'users', 'media', 'userDept', 'allowedDepartments'));
     }
 
 

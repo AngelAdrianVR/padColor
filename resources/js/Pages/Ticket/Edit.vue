@@ -8,6 +8,8 @@
                 :categories="categories" 
                 :users="users" 
                 :media="media"
+                :userDept="userDept"
+                :allowedDepartments="allowedDepartments"
                 is-edit
             />
 
@@ -31,6 +33,8 @@ export default {
         categories: Array,
         users: Array,
         media: Array,
+        userDept: String,
+        allowedDepartments: Array,
     },
 }
 </script>

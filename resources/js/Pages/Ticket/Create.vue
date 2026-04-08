@@ -6,6 +6,8 @@
             <TicketForm 
                 :categories="categories" 
                 :users="users" 
+                :userDept="userDept"
+                :allowedDepartments="allowedDepartments"
             />
 
         </div>
@@ -26,6 +28,8 @@ export default {
     props: {
         categories: Array,
         users: Array,
+        userDept: String,
+        allowedDepartments: Array,
     },
 }
 </script>
