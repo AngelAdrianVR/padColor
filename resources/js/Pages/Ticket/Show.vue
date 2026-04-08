@@ -66,6 +66,8 @@
                         <p class="text-gray66 "><span v-html="getIcon()"></span>{{ this.ticket.data.status + ' el'
                             }}: <span class="text-black ml-1">{{ ticket.data.updated_at }}</span></p>
                         <span class="text-gray66 hidden lg:block">•</span>
+                        
+                        <!-- CONTENEDOR DEL RESPONSABLE (Usuario / Departamento / Sin asignar) -->
                         <div class="flex items-center space-x-3" v-if="ticket.data.responsible">
                             <p class="text-gray66 ">Responsable: </p>
                             <div class="flex rounded-full w-10">
@@ -75,9 +77,18 @@
                             </div>
                             <p>{{ ticket.data.responsible.name }}</p>
                         </div>
-                        <div v-else>
-                            <p class="text-gray66 ">Sin responsable</p>
+                        <div class="flex items-center space-x-3" v-else-if="ticket.data.department">
+                            <p class="text-gray66 ">Departamento: </p>
+                            <div class="rounded-full bg-gray-100 border border-grayD9 size-9 flex items-center justify-center text-gray66">
+                                <i class="fa-solid fa-users text-sm"></i>
+                            </div>
+                            <p>{{ ticket.data.department }}</p>
                         </div>
+                        <div v-else>
+                            <p class="text-gray66 ">Sin asignación</p>
+                        </div>
+                        <!-- FIN CONTENEDOR RESPONSABLE -->
+
                         <span class="text-gray66 hidden lg:block">•</span>
                         <p class="text-gray66">
                             Tiempo de solución:
@@ -103,7 +114,7 @@
                             <span>Resoluciones ({{ ticket.data.solutions_count }})</span>
                         </div>
                     </template>
-                    <Solutions :ticketId="this.ticket.data.id" :ticketStatus="this.ticket.data.status"
+                    <Solutions :ticketId="this.ticket.data.id" :ticketStatus="this.ticket.data.status" :ticket="ticket.data"
                         @updateCountSolutions="ticket.data.solutions_count++"
                         @decrementCountSolutions="ticket.data.solutions_count--" />
                 </el-tab-pane>

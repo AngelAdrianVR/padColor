@@ -114,6 +114,11 @@ Route::post('role-permission/permissions-massive-delete', [SettingController::cl
 Route::post('categories/massive-delete', [SettingController::class, 'categoriesMassiveDelete'])->name('settings.categories.massive-delete');
 Route::get('categories/get-all', [SettingController::class, 'getAllCategories'])->middleware('auth')->name('settings.categories.get-all');
 Route::post('categories/store', [SettingController::class, 'storeCategory'])->middleware('auth')->name('settings.categories.store');
+Route::put('categories/update/{category}', [SettingController::class, 'updateCategory'])->middleware('auth')->name('settings.categories.update');
+
+// Rutas para reglas de asignación de tickets
+Route::get('ticket-assignment-rules', [SettingController::class, 'getTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.get');
+Route::post('ticket-assignment-rules', [SettingController::class, 'updateTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.update');
 
 
 //categories routes---------------------------------------------------------------------------

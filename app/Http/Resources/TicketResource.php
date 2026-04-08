@@ -24,6 +24,7 @@ class TicketResource extends JsonResource
             'expired_date' => $this->expired_date?->isoFormat('DD MMM YYYY'),
             'user' => $this->whenLoaded('user'),
             'responsible' => $this->whenLoaded('responsible'),
+            'department' => $this->department, // NUEVO CAMPO EXPUESTO
             'category' => $this->whenLoaded('category'),
             'branch' => $this->branch,
             'solutions_count' => $this->whenCounted('ticketSolutions'),

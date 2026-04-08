@@ -13,8 +13,8 @@
                 Para poder agregar más soluciones es necesario marcar como "Re-abierto" este ticket
             </el-alert>
 
-            <!-- Área de escritura de solución -->
-            <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones') && ticketStatus != 'Completado'" class="mt-5">
+            <!-- Área de escritura de solución (Solo si tiene permisos/asignación) -->
+            <div v-if="canAddSolution && ticketStatus != 'Completado'" class="mt-5">
                 <!-- Alerta de advertencia de imágenes -->
                 <el-alert
                     type="warning"
@@ -39,6 +39,20 @@
                     />
                 </div>
             </div>
+
+            <!-- Mensaje informativo cuando NO tiene permisos -->
+            <el-alert
+                v-else-if="!canAddSolution && ticketStatus != 'Completado'"
+                title="Acceso de solo lectura"
+                type="info"
+                show-icon
+                :closable="false"
+                class="mt-5 mb-5"
+            >
+                <template #default>
+                    No puedes agregar resoluciones a este ticket. Esta acción está reservada para el <b>responsable asignado</b>, miembros del <b>departamento asignado</b>, o usuarios con el permiso especial de resoluciones.
+                </template>
+            </el-alert>
 
             <SolutionGlove 
                 v-for="(solution, index) in solutions" 
@@ -73,8 +87,36 @@ export default {
         Loading,
     },
     props: {
-        ticketId: [String, Number], // Ajusté a String o Number por seguridad
+        ticketId: [String, Number],
         ticketStatus: String,
+        ticket: {
+            type: Object,
+            default: () => ({})
+        }
+    },
+    computed: {
+        canAddSolution() {
+            const user = this.$page.props.auth.user;
+            
+            // 1. Si el usuario tiene el permiso explícito de rol
+            if (user.permissions.includes('Crear resoluciones')) {
+                return true;
+            }
+            
+            // 2. Si el usuario es el responsable directo del ticket
+            if (this.ticket?.responsible?.id === user.id) {
+                return true;
+            }
+            
+            // 3. Si el usuario pertenece al departamento asignado al ticket
+            const userDepartment = user.employee_properties?.department;
+            if (this.ticket?.department && userDepartment && this.ticket.department === userDepartment) {
+                return true;
+            }
+            
+            // Si no cumple ninguna, no puede ver el cuadro para agregar soluciones
+            return false;
+        }
     },
     methods: {
         solutionDeleted(solutionId) {
@@ -107,12 +149,10 @@ export default {
                         type: "success",
                     });
                     this.description = null;
-                    // Limpiar el editor si tiene un método para ello, o resetear la key
                     this.$emit('updateCountSolutions');
                 }
             } catch (error) {
                 console.log(error);
-                // Manejo de errores de validación (422) específico para la imagen pegada
                 if (error.response && error.response.status === 422) {
                     const errors = error.response.data.errors;
                     let msg = "Error de validación";

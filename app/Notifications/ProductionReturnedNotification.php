@@ -23,10 +23,10 @@ class ProductionReturnedNotification extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         if (app()->environment() == 'production') {
-            Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
+            // Log::info("Canal 'mail' seleccionado para " . $notifiable->email . app()->environment()); // Log de depuración
             return ['mail'];
         } else {
-            Log::info("Entorno no es 'production', no se envía 'mail'. " . app()->environment()); // Log de depuración
+            // Log::info("Entorno no es 'production', no se envía 'mail'. " . app()->environment()); // Log de depuración
             return [];
         }
     }
