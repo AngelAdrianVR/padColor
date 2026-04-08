@@ -4,15 +4,31 @@
             class="rounded-lg border border-grayD9 lg:p-5 p-3 lg:w-1/2 mx-auto mt-7 lg:grid grid-cols-2 gap-x-3">
             <h1 class="font-bold ml-2 col-span-2">{{ isEdit ? 'Editar ticket' : 'Crear ticket' }}</h1>
             
-            <div class="relative mt-5 col-span-2">
+            <!-- Mensaje informativo de reglas de asignación -->
+            <div class="col-span-2 mt-5 mb-2" v-if="allowedDepartments !== null">
+                <el-alert
+                    type="info"
+                    show-icon
+                    :closable="false"
+                >
+                    <template #title>
+                        Perteneces al departamento de <b>{{ userDept }}</b>.
+                        Puedes asignar a: <b>{{ allowedDepartments.length ? allowedDepartments.join(', ') : 'Ninguno' }}</b>.
+                    </template>
+                </el-alert>
+            </div>
+
+            <div class="relative mt-3 col-span-2">
                 <InputLabel value="Categoría*" class="ml-3 mb-1" />
-                <p @click="showCategoryModal = true"
-                    v-if="$page.props.auth.user.permissions.includes('Crear categoria')"
-                    class="text-secondary text-xs cursor-pointer absolute md:right-2 right-0 top-[2px]">Agregar
-                    categoría</p>
+                <!-- Botón de Gestor de Categorías Integrado -->
+                <p @click="showCategoryManager = true"
+                    v-if="$page.props.auth.user.permissions.includes('Crear categorias')"
+                    class="text-secondary text-xs cursor-pointer absolute md:right-2 right-0 top-[2px] hover:underline">
+                    Gestionar categorías
+                </p>
                 <el-select class="w-full" v-model="form.category_id" clearable placeholder="Seleccione"
                     no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                    <el-option v-for="item in categories" :key="item.id" :label="item.name" :value="item.id" />
+                    <el-option v-for="item in localCategories" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
                 <InputError :message="form.errors.category_id" />
             </div>
@@ -30,7 +46,7 @@
             <div class="mt-3 col-span-2" v-if="assignmentType === 'user'">
                 <InputLabel value="Responsable del Ticket (Usuario)" class="ml-3 mb-1" />
                 <el-select class="w-full" v-model="form.responsible_id" clearable filterable placeholder="Seleccione un usuario"
-                    no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
+                    no-data-text="No hay usuarios en los departamentos permitidos" no-match-text="No se encontraron coincidencias">
                     <el-option-group
                         v-for="group in groupedUsers"
                         :key="group.label"
@@ -55,8 +71,8 @@
             <div class="mt-3 col-span-2" v-if="assignmentType === 'department'">
                 <InputLabel value="Departamento asignado" class="ml-3 mb-1" />
                 <el-select class="w-full" v-model="form.department" clearable filterable placeholder="Seleccione un departamento"
-                    no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                    <el-option v-for="dept in departments" :key="dept" :label="dept" :value="dept">
+                    no-data-text="No tienes departamentos permitidos" no-match-text="No se encontraron coincidencias">
+                    <el-option v-for="dept in availableDepartments" :key="dept" :label="dept" :value="dept">
                     </el-option>
                 </el-select>
                 <InputError :message="form.errors.department" />
@@ -104,7 +120,6 @@
                     <InputLabel value="Estatus" class="" />
                     <i v-if="form.status" :class="getStatusColor()" class="fa-solid fa-circle text-[8px]"></i>
                 </div>
-                <!-- El status se bloquea si se está creando, o si se edita pero no tiene permiso -->
                 <el-select v-model="form.status" placeholder="Seleccione"
                     :disabled="!isEdit || !$page.props.auth.user.permissions.includes('Editar status de tickets')"
                     no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
@@ -164,29 +179,13 @@
             </div>
         </form>
 
-        <!-- agregar categoria modal -->
-        <Modal :show="showCategoryModal" @close="showCategoryModal = false">
-            <div class="mx-5 my-4 space-y-4 relative">
-                <div @click="showCategoryModal = false"
-                    class="cursor-pointer w-5 h-5 rounded-full border-2 border-black flex items-center justify-center absolute top-0 -right-2">
-                    <i class="fa-solid fa-xmark"></i>
-                </div>
-
-                <h1 class="font-bold">Agregar nueva categoría</h1>
-
-                <div class="mt-3 col-span-2">
-                    <InputLabel value="Nombre de la categoría*" class="ml-3 mb-1" />
-                    <el-input v-model="categoryForm.name" placeholder="Escribe el nombre de la categoría"
-                        :maxlength="100" clearable />
-                    <InputError :message="categoryForm.errors.name" />
-                </div>
-
-                <div class="flex justify-end space-x-1 pt-5 pb-1">
-                    <CancelButton @click="categoryForm.reset(); showCategoryModal = false">Cancelar</CancelButton>
-                    <PrimaryButton :disabled="categoryForm.processing" @click="storeCategory">Guardar</PrimaryButton>
-                </div>
-            </div>
-        </Modal>
+        <!-- Gestor de Categorías Modal -->
+        <CategoryManager 
+            :show="showCategoryManager" 
+            @close="showCategoryManager = false" 
+            @categories-updated="updateCategoriesList" 
+        />
+        
     </div>
 </template>
 
@@ -196,14 +195,14 @@ import CancelButton from "@/Components/MyComponents/CancelButton.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import InputError from "@/Components/InputError.vue";
 import FileUploader from "@/Components/MyComponents/FileUploader.vue";
-import Modal from "@/Components/Modal.vue";
+import CategoryManager from "./CategoryManager.vue";
 import { addDays, format, isWeekend } from 'date-fns';
 import { useForm } from "@inertiajs/vue3";
 
 export default {
     components: {
         PrimaryButton, CancelButton, FileUploader,
-        InputLabel, InputError, Modal
+        InputLabel, InputError, CategoryManager
     },
     props: {
         ticket: {
@@ -220,6 +219,14 @@ export default {
             type: Array,
             default: () => [],
         },
+        userDept: {
+            type: String,
+            default: 'Sin departamento'
+        },
+        allowedDepartments: {
+            type: Array,
+            default: null // null indica que no hay regla creada para ese departamento
+        }
     },
     data() {
         const form = useForm({
@@ -236,11 +243,6 @@ export default {
             media: null
         });
 
-        const categoryForm = useForm({
-            name: null,
-        });
-
-        // Determinar el tipo de asignación según los datos existentes
         let initialAssignmentType = 'user';
         if (this.ticket?.department) {
             initialAssignmentType = 'department';
@@ -248,9 +250,9 @@ export default {
 
         return {
             form,
-            categoryForm,
+            localCategories: [...this.categories], // Sincronizado localmente para actualizarlo tras crear una
             assignmentType: initialAssignmentType, 
-            showCategoryModal: false,
+            showCategoryManager: false,
             departments: [
                 'Administración', 'Almacén', 'Comercial', 'Compras', 'Contabilidad', 
                 'Contraloría', 'Crédito y cobranza', 'Dirección', 'Empaques', 
@@ -277,12 +279,30 @@ export default {
         }
     },
     computed: {
+        availableDepartments() {
+            let base = this.departments;
+            
+            if (this.allowedDepartments !== null) {
+                base = this.departments.filter(d => this.allowedDepartments.includes(d));
+            }
+
+            if (this.isEdit && this.ticket?.department && !base.includes(this.ticket.department)) {
+                base.push(this.ticket.department);
+            }
+
+            return base;
+        },
         groupedUsers() {
             const groups = {};
             this.users.forEach(user => {
                 const dept = user.employee_properties?.department || 'Sin departamento asignado';
-                if (!groups[dept]) groups[dept] = [];
-                groups[dept].push(user);
+                const isAllowed = this.allowedDepartments === null || this.allowedDepartments.includes(dept);
+                const isCurrentlyAssigned = this.isEdit && this.ticket?.responsible_id === user.id;
+
+                if (isAllowed || isCurrentlyAssigned) {
+                    if (!groups[dept]) groups[dept] = [];
+                    groups[dept].push(user);
+                }
             });
 
             const sortedKeys = Object.keys(groups).sort((a, b) => {
@@ -297,7 +317,21 @@ export default {
             }));
         }
     },
+    watch: {
+        categories(newVal) {
+            this.localCategories = [...newVal];
+        }
+    },
     methods: {
+        // Se ejecuta cuando el CategoryManager emite una actualización
+        updateCategoriesList(newCategories) {
+            this.localCategories = newCategories;
+            
+            // Si la categoría actualmente seleccionada fue eliminada, limpiamos el select
+            if (this.form.category_id && !this.localCategories.find(c => c.id === this.form.category_id)) {
+                this.form.category_id = null;
+            }
+        },
         handleAssignmentChange(value) {
             if (value === 'user') {
                 this.form.department = null;
@@ -339,15 +373,6 @@ export default {
                     },
                 });
             }
-        },
-        storeCategory() {
-            this.categoryForm.post(route("categories.store"), {
-                onSuccess: () => {
-                    this.$notify({ title: "Correcto", message: "Se ha agregado una nueva categoría", type: "success" });
-                    this.showCategoryModal = false;
-                    this.categoryForm.reset();
-                },
-            });
         },
         getStatusColor() {
             const currentObj = this.statuses.find(item => item.label === this.form.status);
