@@ -33,7 +33,7 @@
                 </label>
             </div>
             <CategoryRow :ref="'category' + category.id" v-for="(category, index) in categories" :key="category.id"
-                @open="editCategory(category, index)" @checked="handleCheckedItem" :item="category" />
+                @open="editcategory(category, index)" @checked="handleCheckedItem" :item="category" />
             <el-empty v-if="!categories.length" description="No hay categorías para mostrar" />
         </div>
 
@@ -45,12 +45,39 @@
             <template #content>
                 <div>
                     <form @submit.prevent="editFlag ? updateCategory() : storeCategory()" ref="myform"
-                        class="grid grid-cols-3">
-                        <div class="col-span-full mb-4">
+                        class="flex flex-col space-y-4">
+                        
+                        <div>
                             <InputLabel value="Nombre de categoría *" class="ml-2" />
-                            <input v-model="form.name" class="input" type="text">
+                            <el-input v-model="form.name" placeholder="Escribe el nombre de la categoría" clearable />
                             <InputError :message="form.errors.name" />
                         </div>
+
+                        <!-- NUEVA SECCIÓN DE REGLAS DE CATEGORÍA -->
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <InputLabel value="Visibilidad por departamento" class="font-bold mb-2 text-primary" />
+                            
+                            <label class="flex items-center text-sm cursor-pointer mb-3">
+                                <el-switch v-model="form.is_all_departments" active-color="#13ce66" />
+                                <span class="ml-2 font-medium text-gray-700">Categoría visible para todos los departamentos</span>
+                            </label>
+
+                            <div v-if="!form.is_all_departments" class="mt-2">
+                                <InputLabel value="Selecciona los departamentos que podrán ver esta categoría al crear un ticket:" class="text-xs text-gray-500 mb-1" />
+                                <el-select
+                                    v-model="form.allowed_departments"
+                                    multiple
+                                    clearable
+                                    collapse-tags
+                                    collapse-tags-tooltip
+                                    placeholder="Selecciona departamentos..."
+                                    class="w-full"
+                                    no-data-text="No hay departamentos registrados">
+                                    <el-option v-for="opt in departmentsList" :key="opt" :label="opt" :value="opt" />
+                                </el-select>
+                            </div>
+                        </div>
+
                     </form>
                 </div>
             </template>
@@ -81,6 +108,8 @@ export default {
     data() {
         const form = useForm({
             name: null,
+            allowed_departments: [],
+            is_all_departments: true, // Propiedad local del front para el switch
         });
 
         return {
@@ -92,6 +121,12 @@ export default {
             showCategoryModal: false,
             indexCategoryEdit: null,
             editFlag: false,
+            departmentsList: [
+                'Administración', 'Almacén', 'Comercial', 'Compras', 'Contabilidad', 
+                'Contraloría', 'Crédito y cobranza', 'Dirección', 'Empaques', 
+                'Inspección', 'Mantenimiento', 'Producción', 'Recursos Humanos', 
+                'Sistemas', 'Tesorería',
+            ],
         };
     },
     components: {
@@ -139,26 +174,38 @@ export default {
             });
         },
         editcategory(category, index) {
-            // if (this.$page.props.auth.user.permissions.includes('Editar categorias')) {
             this.currentCategory = category;
             this.editFlag = true;
             this.indexCategoryEdit = index;
-            this.showCategoryModal = true;
-
+            
+            // Cargar datos al formulario
             this.form.name = category.name;
-            // }
+            if (category.allowed_departments && category.allowed_departments.length > 0) {
+                this.form.is_all_departments = false;
+                this.form.allowed_departments = category.allowed_departments;
+            } else {
+                this.form.is_all_departments = true;
+                this.form.allowed_departments = [];
+            }
+
+            this.showCategoryModal = true;
         },
         createCategory() {
             this.currentCategory = null;
-            this.showCategoryModal = true;
             this.editFlag = false;
             this.form.reset();
+            this.form.is_all_departments = true;
+            this.form.allowed_departments = [];
+            this.showCategoryModal = true;
         },
         async updateCategory() {
             try {
-                const response = await axios.put(route('settings.categories.update', this.currentCategory), {
+                const payload = {
                     name: this.form.name,
-                });
+                    allowed_departments: this.form.is_all_departments ? null : this.form.allowed_departments,
+                };
+
+                const response = await axios.put(route('settings.categories.update', this.currentCategory), payload);
 
                 if (response.status === 200) {
                     this.$notify({
@@ -173,16 +220,19 @@ export default {
             } catch (error) {
                 this.$notify({
                     title: 'Error',
-                    message: error.message,
+                    message: error.response?.data?.message || error.message,
                     type: 'error'
                 });
             }
         },
         async storeCategory() {
             try {
-                const response = await axios.post(route('settings.categories.store'), {
+                const payload = {
                     name: this.form.name,
-                });
+                    allowed_departments: this.form.is_all_departments ? null : this.form.allowed_departments,
+                };
+
+                const response = await axios.post(route('settings.categories.store'), payload);
 
                 if (response.status === 200) {
                     this.$notify({
@@ -197,7 +247,7 @@ export default {
             } catch (error) {
                 this.$notify({
                     title: 'Error',
-                    message: error.message,
+                    message: error.response?.data?.message || error.message,
                     type: 'error'
                 });
             }
@@ -215,7 +265,6 @@ export default {
                         type: 'success'
                     });
 
-                    // Filtrar el arreglo 'categories' excluyendo los elementos con IDs en 'selectedItems'
                     this.categories = this.categories.filter(category => !this.selectedItems.includes(category.id));
                 }
             } catch (err) {

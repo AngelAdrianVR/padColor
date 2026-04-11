@@ -14,27 +14,55 @@
                         <i class="fa-solid fa-plus mr-2" v-else></i>
                         {{ editingCategory ? 'Editar categoría' : 'Nueva categoría' }}
                     </h3>
-                    <div class="flex items-start space-x-3">
-                        <div class="flex-1">
+                    <div class="flex flex-col space-y-4">
+                        <div>
+                            <InputLabel value="Nombre de la categoría *" class="mb-1" />
                             <el-input 
                                 v-model="form.name" 
                                 placeholder="Nombre de la categoría" 
-                                @keyup.enter="editingCategory ? updateCategory() : storeCategory()" 
                                 clearable
                             />
                             <InputError :message="formErrors.name" class="mt-1" />
                         </div>
-                        <PrimaryButton @click="editingCategory ? updateCategory() : storeCategory()" :disabled="processing">
-                            {{ editingCategory ? 'Actualizar' : 'Agregar' }}
-                        </PrimaryButton>
-                        <CancelButton v-if="editingCategory" @click="cancelEdit" :disabled="processing">
-                            Cancelar
-                        </CancelButton>
+
+                        <!-- REGLAS DE VISIBILIDAD POR DEPARTAMENTO -->
+                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            <InputLabel value="Visibilidad por departamento" class="font-bold mb-2 text-primary" />
+                            
+                            <label class="flex items-center text-sm cursor-pointer mb-3">
+                                <el-switch v-model="form.is_all_departments" active-color="#13ce66" />
+                                <span class="ml-2 font-medium text-gray-700">Categoría visible para todos los departamentos</span>
+                            </label>
+
+                            <div v-if="!form.is_all_departments" class="mt-2">
+                                <InputLabel value="Selecciona los departamentos que podrán ver esta categoría al crear un ticket:" class="text-xs text-gray-500 mb-1" />
+                                <el-select
+                                    v-model="form.allowed_departments"
+                                    multiple
+                                    clearable
+                                    collapse-tags
+                                    collapse-tags-tooltip
+                                    placeholder="Selecciona departamentos..."
+                                    class="w-full"
+                                    no-data-text="No hay departamentos registrados">
+                                    <el-option v-for="opt in departmentsList" :key="opt" :label="opt" :value="opt" />
+                                </el-select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-2 pt-2">
+                            <CancelButton v-if="editingCategory" @click="cancelEdit" :disabled="processing">
+                                Cancelar
+                            </CancelButton>
+                            <PrimaryButton @click="editingCategory ? updateCategory() : storeCategory()" :disabled="processing">
+                                {{ editingCategory ? 'Actualizar' : 'Agregar' }}
+                            </PrimaryButton>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Lista de categorías registradas -->
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <div class="border border-gray-200 rounded-lg overflow-hidden mt-4">
                     <div v-if="loading" class="p-6 text-center text-gray-500">
                         <i class="fa-solid fa-circle-notch fa-spin text-xl text-primary mb-2"></i>
                         <p class="text-sm">Cargando categorías...</p>
@@ -50,16 +78,20 @@
                         <tbody>
                             <tr v-for="category in localCategories" :key="category.id" 
                                 class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 font-medium text-gray-800">{{ category.name }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-800">
+                                    {{ category.name }}
+                                    <p class="text-[10px] text-gray-400 mt-1">
+                                        <i class="fa-solid fa-eye mr-1"></i>
+                                        {{ (!category.allowed_departments || category.allowed_departments.length === 0) ? 'Todos los departamentos' : category.allowed_departments.length + ' departamentos permitidos' }}
+                                    </p>
+                                </td>
                                 <td class="px-4 py-3 text-right space-x-3" v-if="canEdit || canDelete">
                                     
-                                    <!-- Botón Editar -->
                                     <button v-if="canEdit" @click="editCategory(category)" 
                                             class="text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
 
-                                    <!-- Botón Eliminar -->
                                     <el-popconfirm v-if="canDelete" 
                                         confirm-button-text="Sí" 
                                         cancel-button-text="No" 
@@ -96,6 +128,7 @@
 import DialogModal from "@/Components/DialogModal.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import CancelButton from "@/Components/MyComponents/CancelButton.vue";
+import InputLabel from "@/Components/InputLabel.vue";
 import InputError from "@/Components/InputError.vue";
 import axios from 'axios';
 
@@ -104,6 +137,7 @@ export default {
         DialogModal,
         PrimaryButton,
         CancelButton,
+        InputLabel,
         InputError,
     },
     props: {
@@ -120,9 +154,17 @@ export default {
             processing: false,
             editingCategory: null,
             form: {
-                name: ''
+                name: '',
+                allowed_departments: [],
+                is_all_departments: true,
             },
-            formErrors: {}
+            formErrors: {},
+            departmentsList: [
+                'Administración', 'Almacén', 'Comercial', 'Compras', 'Contabilidad', 
+                'Contraloría', 'Crédito y cobranza', 'Dirección', 'Empaques', 
+                'Inspección', 'Mantenimiento', 'Producción', 'Recursos Humanos', 
+                'Sistemas', 'Tesorería',
+            ],
         }
     },
     computed: {
@@ -137,7 +179,6 @@ export default {
         }
     },
     watch: {
-        // Cargar las categorías frescas cada vez que se abre el modal
         show(newVal) {
             if (newVal) {
                 this.fetchCategories();
@@ -153,11 +194,20 @@ export default {
         cancelEdit() {
             this.editingCategory = null;
             this.form.name = '';
+            this.form.allowed_departments = [];
+            this.form.is_all_departments = true;
             this.formErrors = {};
         },
         editCategory(category) {
             this.editingCategory = category;
             this.form.name = category.name;
+            if (category.allowed_departments && category.allowed_departments.length > 0) {
+                this.form.is_all_departments = false;
+                this.form.allowed_departments = category.allowed_departments;
+            } else {
+                this.form.is_all_departments = true;
+                this.form.allowed_departments = [];
+            }
             this.formErrors = {};
         },
         async fetchCategories() {
@@ -176,10 +226,14 @@ export default {
             this.processing = true;
             this.formErrors = {};
             try {
-                const response = await axios.post(route('settings.categories.store'), { name: this.form.name });
+                const payload = {
+                    name: this.form.name,
+                    allowed_departments: this.form.is_all_departments ? null : this.form.allowed_departments,
+                };
+                const response = await axios.post(route('settings.categories.store'), payload);
                 this.$notify({ title: 'Éxito', message: 'Categoría creada', type: 'success' });
-                this.form.name = '';
-                await this.fetchCategories(); // Refrescar lista
+                this.cancelEdit();
+                await this.fetchCategories(); 
             } catch (error) {
                 if (error.response?.data?.errors) {
                     this.formErrors = error.response.data.errors;
@@ -194,11 +248,14 @@ export default {
             this.processing = true;
             this.formErrors = {};
             try {
-                // RUTA ACTUALIZADA AL SETTING CONTROLLER PARA ASEGURARNOS DE QUE SE GUARDE
-                const response = await axios.put(route('settings.categories.update', this.editingCategory.id), { name: this.form.name });
+                const payload = {
+                    name: this.form.name,
+                    allowed_departments: this.form.is_all_departments ? null : this.form.allowed_departments,
+                };
+                const response = await axios.put(route('settings.categories.update', this.editingCategory.id), payload);
                 this.$notify({ title: 'Éxito', message: 'Categoría actualizada', type: 'success' });
                 this.cancelEdit();
-                await this.fetchCategories(); // Refrescar lista
+                await this.fetchCategories(); 
             } catch (error) {
                 if (error.response?.data?.errors) {
                     this.formErrors = error.response.data.errors;
@@ -213,7 +270,7 @@ export default {
             try {
                 const response = await axios.post(route('settings.categories.massive-delete'), { items_ids: [id] });
                 this.$notify({ title: 'Éxito', message: 'Categoría eliminada', type: 'success' });
-                await this.fetchCategories(); // Refrescar lista
+                await this.fetchCategories(); 
             } catch (error) {
                 this.$notify({ title: 'Error', message: 'No se pudo eliminar la categoría', type: 'error' });
                 console.error(error);
