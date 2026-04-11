@@ -169,7 +169,8 @@ class SettingController extends Controller
     public function storeCategory(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'allowed_departments' => 'nullable|array' // VALIDACIÓN NUEVO CAMPO
         ]);
 
         $category = Category::create($validated);
@@ -180,7 +181,8 @@ class SettingController extends Controller
     public function updateCategory(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'allowed_departments' => 'nullable|array' // VALIDACIÓN NUEVO CAMPO
         ]);
 
         $category->update($validated);
