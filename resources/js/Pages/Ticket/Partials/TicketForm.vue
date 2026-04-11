@@ -20,17 +20,20 @@
 
             <div class="relative mt-3 col-span-2">
                 <InputLabel value="Categoría*" class="ml-3 mb-1" />
-                <!-- Botón de Gestor de Categorías Integrado -->
                 <p @click="showCategoryManager = true"
                     v-if="$page.props.auth.user.permissions.includes('Crear categorias')"
                     class="text-secondary text-xs cursor-pointer absolute md:right-2 right-0 top-[2px] hover:underline">
                     Gestionar categorías
                 </p>
                 <el-select class="w-full" v-model="form.category_id" clearable placeholder="Seleccione"
-                    no-data-text="No hay opciones registradas" no-match-text="No se encontraron coincidencias">
-                    <el-option v-for="item in localCategories" :key="item.id" :label="item.name" :value="item.id" />
+                    no-data-text="No hay categorías disponibles para tu departamento" no-match-text="No se encontraron coincidencias">
+                    <el-option v-for="item in availableCategories" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
                 <InputError :message="form.errors.category_id" />
+                <p class="text-xs text-gray-500 mt-2 ml-3" v-if="localCategories.length !== availableCategories.length">
+                    <i class="fa-solid fa-filter text-secondary mr-1"></i> 
+                    Se muestran solo las categorías permitidas para <b>{{ userDept }}</b>
+                </p>
             </div>
 
             <!-- TIPO DE ASIGNACIÓN -->
@@ -250,7 +253,7 @@ export default {
 
         return {
             form,
-            localCategories: [...this.categories], // Sincronizado localmente para actualizarlo tras crear una
+            localCategories: [...this.categories],
             assignmentType: initialAssignmentType, 
             showCategoryManager: false,
             departments: [
@@ -279,6 +282,27 @@ export default {
         }
     },
     computed: {
+        // Categorías que puede ver este usuario según su departamento
+        availableCategories() {
+            let base = this.localCategories.filter(category => {
+                // Si es nulo o arreglo vacío, es visible para todos
+                if (!category.allowed_departments || category.allowed_departments.length === 0) {
+                    return true;
+                }
+                // Si el departamento del usuario está en los permitidos de esta categoría
+                return category.allowed_departments.includes(this.userDept);
+            });
+
+            // Mantener la categoría actual en caso de edición si se le retiraron los permisos recientemente
+            if (this.isEdit && this.ticket?.category_id && !base.find(c => c.id === this.ticket.category_id)) {
+                const currentCat = this.localCategories.find(c => c.id === this.ticket.category_id);
+                if (currentCat) {
+                    base.push(currentCat);
+                }
+            }
+
+            return base;
+        },
         availableDepartments() {
             let base = this.departments;
             
@@ -323,11 +347,9 @@ export default {
         }
     },
     methods: {
-        // Se ejecuta cuando el CategoryManager emite una actualización
         updateCategoriesList(newCategories) {
             this.localCategories = newCategories;
             
-            // Si la categoría actualmente seleccionada fue eliminada, limpiamos el select
             if (this.form.category_id && !this.localCategories.find(c => c.id === this.form.category_id)) {
                 this.form.category_id = null;
             }
