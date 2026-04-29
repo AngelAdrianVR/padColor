@@ -11,7 +11,12 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name'
+        'name',
+        'allowed_departments', // NUEVO CAMPO
+    ];
+
+    protected $casts = [
+        'allowed_departments' => 'array', // CASTEAR A ARREGLO
     ];
 
     //relationships

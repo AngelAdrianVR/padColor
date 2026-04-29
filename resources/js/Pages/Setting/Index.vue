@@ -47,6 +47,15 @@
                         <NotificationManager :notificationEvents="notificationEvents" :users="users"
                             :initialSubscriptions="initialSubscriptions" :filters="filters" />
                     </el-tab-pane>
+                    <el-tab-pane name="5">
+                        <template #label>
+                            <div class="flex items-center">
+                                <i class="fa-solid fa-network-wired mr-1"></i>
+                                <span>Asignación de Tickets</span>
+                            </div>
+                        </template>
+                        <TicketAssignments />
+                    </el-tab-pane>
                 </el-tabs>
             </main>
         </AppLayout>
@@ -59,6 +68,7 @@ import Roles from './Tabs/Roles.vue';
 import Permissions from './Tabs/Permissions.vue';
 import Categories from './Tabs/Categories.vue';
 import NotificationManager from './Tabs/NotificationManager.vue';
+import TicketAssignments from './Tabs/TicketAssignments.vue';
 
 export default {
     data() {
@@ -72,6 +82,7 @@ export default {
         Permissions,
         Categories,
         NotificationManager,
+        TicketAssignments,
     },
     props: {
         roles: Object,

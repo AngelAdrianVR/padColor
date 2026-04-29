@@ -169,11 +169,48 @@ class SettingController extends Controller
     public function storeCategory(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'allowed_departments' => 'nullable|array' // VALIDACIÓN NUEVO CAMPO
         ]);
 
         $category = Category::create($validated);
 
         return response()->json(['item' => $category]);
+    }
+
+    public function updateCategory(Request $request, Category $category)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'allowed_departments' => 'nullable|array' // VALIDACIÓN NUEVO CAMPO
+        ]);
+
+        $category->update($validated);
+
+        return response()->json(['item' => $category]);
+    }
+
+    // Obtener las reglas actuales
+    public function getTicketAssignmentRules()
+    {
+        $rules = \App\Models\TicketAssignmentRule::all();
+        return response()->json(['items' => $rules]);
+    }
+
+    // Guardar las reglas
+    public function updateTicketAssignmentRules(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'rules' => 'required|array'
+        ]);
+
+        foreach ($request->rules as $department => $allowed) {
+            \App\Models\TicketAssignmentRule::updateOrCreate(
+                ['department' => $department],
+                ['allowed_departments' => $allowed]
+            );
+        }
+
+        return response()->json(['message' => 'Reglas de asignación guardadas correctamente']);
     }
 }

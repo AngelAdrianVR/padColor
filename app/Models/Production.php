@@ -10,11 +10,14 @@ class Production extends Model
     use HasFactory;
 
     protected $fillable = [
+        'parent_id', // Añadido
+        'component_name', // Añadido
         'folio',
         'type',
         'client',
         'season',
         'station',
+        'station_times',
         'materials',
         'material',
         'width',
@@ -59,6 +62,15 @@ class Production extends Model
         'quality_notes',
         'inspection_notes',
         
+        'packing_close_type',
+        'packing_notes',
+        'packing_scrap',
+        'packing_shortage',
+        'packing_partials',
+        'packing_received_quantity',
+        'packing_received_date',
+        'packing_finished_date',
+        
         'ha',
         'pf',
         'ts',
@@ -74,15 +86,38 @@ class Production extends Model
         'materials' => 'array',
         'partials' => 'array',
         'returns' => 'array',
+        'packing_partials' => 'array',
+        'station_times' => 'array',
         'estimated_date' => 'date',
         'estimated_package_date' => 'date',
         'start_date' => 'date',
         'finish_date' => 'datetime',
         'close_production_date' => 'datetime',
         'quality_released_date' => 'datetime',
+        'packing_received_date' => 'datetime',
+        'packing_finished_date' => 'datetime',
     ];
 
-    //realciones
+    // --- NUEVAS RELACIONES ---
+
+    /**
+     * Obtiene la orden padre (si esta es un componente).
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Production::class, 'parent_id');
+    }
+
+    /**
+     * Obtiene los componentes hijos (si esta es una orden padre).
+     */
+    public function children()
+    {
+        return $this->hasMany(Production::class, 'parent_id');
+    }
+
+    // --- Relaciones existentes ---
+    
     public function user()
     {
         return $this->belongsTo(User::class);

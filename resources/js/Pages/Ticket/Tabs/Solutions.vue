@@ -2,22 +2,74 @@
     <div class="mt-8 min-h-28">
         <Loading v-if="loading" class="mt-10" />
         <div v-else>
-            <p v-if="ticketStatus == 'Completado'" class="text-center text-red-600 text-xs">
-                <span class="bg-red-100 px-5 py-1 rounded-md">Para poder agregar más soluciones es necesario marcar como "Re-abierto" este ticket</span>
-            </p>
-            <div v-if="$page.props.auth.user.permissions.includes('Crear resoluciones') && ticketStatus != 'Completado'" class="flex space-x-3 mt-5">
-                <RichText @submitComment="storeSolution" @content="updateDescription($event)" ref="mySolution"
-                    class="flex-1" hasMedia :userList="users" :disabled="loading || !description" />
+            <!-- Alerta de Ticket Cerrado -->
+            <el-alert 
+                v-if="ticketStatus == 'Completado'" 
+                title="Ticket Completado"
+                type="error" 
+                show-icon 
+                :closable="false"
+                class="mb-4">
+                Para poder agregar más soluciones es necesario marcar como "Re-abierto" este ticket
+            </el-alert>
+
+            <!-- Área de escritura de solución (Solo si tiene permisos/asignación) -->
+            <div v-if="canAddSolution && ticketStatus != 'Completado'" class="mt-5">
+                <!-- Alerta de advertencia de imágenes -->
+                <el-alert
+                    type="warning"
+                    show-icon
+                    :closable="false"
+                    class="mb-2"
+                >
+                    <template #title>
+                        Por favor, <b>no pegues imágenes</b> directamente en el cuadro de texto. Usa el botón de clip adjunto para subir imágenes.
+                    </template>
+                </el-alert>
+
+                <div class="flex space-x-3">
+                    <RichText 
+                        @submitComment="storeSolution" 
+                        @content="updateDescription($event)" 
+                        ref="mySolution"
+                        class="flex-1" 
+                        hasMedia 
+                        :userList="users" 
+                        :disabled="loading || !description" 
+                    />
+                </div>
             </div>
-            <SolutionGlove v-for="(solution, index) in solutions" :key="solution" :solution="solution" :index="index"
-                @solution-deleted="solutionDeleted" />
+
+            <!-- Mensaje informativo cuando NO tiene permisos -->
+            <el-alert
+                v-else-if="!canAddSolution && ticketStatus != 'Completado'"
+                title="Acceso de solo lectura"
+                type="info"
+                show-icon
+                :closable="false"
+                class="mt-5 mb-5"
+            >
+                <template #default>
+                    No puedes agregar resoluciones a este ticket. Esta acción está reservada para el <b>responsable asignado</b>, miembros del <b>departamento asignado</b>, o usuarios con el permiso especial de resoluciones.
+                </template>
+            </el-alert>
+
+            <SolutionGlove 
+                v-for="(solution, index) in solutions" 
+                :key="solution.id" 
+                :solution="solution" 
+                :index="index"
+                @solution-deleted="solutionDeleted" 
+            />
         </div>
     </div>
 </template>
+
 <script>
 import SolutionGlove from "@/Components/MyComponents/TicketSolution/SolutionGlove.vue";
 import RichText from "@/Components/MyComponents/RichText.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
+import axios from 'axios';
 
 export default {
     data() {
@@ -35,8 +87,36 @@ export default {
         Loading,
     },
     props: {
-        ticketId: String,
+        ticketId: [String, Number],
         ticketStatus: String,
+        ticket: {
+            type: Object,
+            default: () => ({})
+        }
+    },
+    computed: {
+        canAddSolution() {
+            const user = this.$page.props.auth.user;
+            
+            // 1. Si el usuario tiene el permiso explícito de rol
+            if (user.permissions.includes('Crear resoluciones')) {
+                return true;
+            }
+            
+            // 2. Si el usuario es el responsable directo del ticket
+            if (this.ticket?.responsible?.id === user.id) {
+                return true;
+            }
+            
+            // 3. Si el usuario pertenece al departamento asignado al ticket
+            const userDepartment = user.employee_properties?.department;
+            if (this.ticket?.department && userDepartment && this.ticket.department === userDepartment) {
+                return true;
+            }
+            
+            // Si no cumple ninguna, no puede ver el cuadro para agregar soluciones
+            return false;
+        }
     },
     methods: {
         solutionDeleted(solutionId) {
@@ -73,11 +153,23 @@ export default {
                 }
             } catch (error) {
                 console.log(error);
-                this.$notify({
-                    title: "Error de servidor",
-                    message: "Hubo un problema al publicar tu solución. Inténta más tarde",
-                    type: "error",
-                });
+                if (error.response && error.response.status === 422) {
+                    const errors = error.response.data.errors;
+                    let msg = "Error de validación";
+                    if(errors.description) msg = errors.description[0];
+                    
+                    this.$notify({
+                        title: "No se pudo guardar",
+                        message: msg,
+                        type: "error",
+                    });
+                } else {
+                    this.$notify({
+                        title: "Error de servidor",
+                        message: "Hubo un problema al publicar tu solución. Inténta más tarde",
+                        type: "error",
+                    });
+                }
 
             } finally {
                 this.loading = false;

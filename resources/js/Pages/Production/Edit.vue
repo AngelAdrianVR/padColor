@@ -33,10 +33,9 @@
                 <div>
                     <InputLabel value="Cliente*" />
                     <div class="flex items-center">
-                        <i v-if="fetchingClients" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingClients" class="text-[10px]">Cargando clientes</span>
-                        <el-select v-model="form.client" placeholder="" class="!w-full" filterable
-                            :disabled="fetchingClients">
+                        <el-select v-model="form.client" placeholder="Escribe para buscar..." class="!w-full"
+                            filterable remote reserve-keyword :remote-method="fetchClientsMatch"
+                            :loading="fetchingClients" no-match-text="No hay clientes coincidentes">
                             <el-option v-for="item in clients" :key="item.id" :label="item.name" :value="item.name" />
                         </el-select>
                     </div>
@@ -71,37 +70,113 @@
                     </el-select>
                     <InputError :message="form.errors.materials" />
                 </div>
-                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Procesos de producción</h2>
-                <div>
-                    <InputLabel>
-                        <div class="flex items-center space-x-3">
-                            <span>Progreso*</span>
-                            <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
-                                :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }">
-                                <component :is="stations.find(s => s.name === form.station)?.icon" class="size-4" />
-                            </div>
-                        </div>
+
+                <!-- Checkbox de componentes (deshabilitado) -->
+                <div class="col-span-full mt-3">
+                    <InputLabel class="flex items-center">
+                        <input type="checkbox" v-model="form.has_components" disabled
+                            class="rounded text-primary shadow-sm focus:ring-primary bg-gray-200 border-gray-400" />
+                        <span class="ml-2 text-sm">El producto consta de componentes</span>
                     </InputLabel>
-                    <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual"
-                        class="!w-full">
-                        <el-option v-for="station in stations" :key="station.name" :label="station.name"
-                            :value="station.name" />
-                    </el-select>
-                    <InputError :message="form.errors.station" />
+                    <p v-if="form.has_components" class="text-xs text-gray-500 ml-6">La división en componentes no se puede modificar después de la creación.</p>
                 </div>
-                <div class="mt-1">
-                    <InputLabel value="Máquina" />
-                    <div class="flex items-center">
-                        <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
-                        <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
-                        <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina"
-                            class="!w-full" :disabled="fetchingMachines">
-                            <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
-                                :value="machine.id" />
+
+
+                <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Procesos de producción</h2>
+
+                <!-- INICIO: UI para Producción Simple -->
+                <div v-if="!form.has_components" class="col-span-full md:grid grid-cols-2 gap-x-3 gap-y-2">
+                    <div>
+                        <InputLabel>
+                            <div class="flex items-center space-x-3">
+                                <span>Progreso*</span>
+                                <div v-if="form.station" class="rounded-full size-6 flex items-center justify-center"
+                                    :style="{ backgroundColor: stations.find(s => s.name === form.station)?.light, color: stations.find(s => s.name === form.station)?.dark }">
+                                    <component :is="stations.find(s => s.name === form.station)?.icon" class="size-4" />
+                                </div>
+                            </div>
+                        </InputLabel>
+                        <el-select v-model="form.station" filterable placeholder="Selecciona el progreso actual"
+                            class="!w-full">
+                            <el-option v-for="station in stations.filter(s => s.name !== 'Producción dividida')" :key="station.name" :label="station.name"
+                                :value="station.name" />
                         </el-select>
+                        <InputError :message="form.errors.station" />
                     </div>
-                    <InputError :message="form.errors.machine_id" />
+                    <div class="mt-1">
+                        <InputLabel value="Máquina" />
+                        <div class="flex items-center">
+                            <i v-if="fetchingMachines" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                            <span v-if="fetchingMachines" class="text-[10px]">Cargando máquinas</span>
+                            <el-select v-model="form.machine_id" filterable placeholder="Selecciona la máquina"
+                                class="!w-full" :disabled="fetchingMachines">
+                                <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                                    :value="machine.id" />
+                            </el-select>
+                        </div>
+                        <InputError :message="form.errors.machine_id" />
+                    </div>
                 </div>
+                <!-- FIN: UI para Producción Simple -->
+                
+                <!-- INICIO: UI para Producción con Componentes -->
+                <div v-else class="col-span-full space-y-4">
+                    <h3 class="text-gray-500 font-semibold ml-2 col-span-full -mb-2">Componentes de la orden</h3>
+                    <!-- Component Loop -->
+                    <div v-for="(component, index) in form.components" :key="index" class="grid grid-cols-1 md:grid-cols-10 gap-x-3 gap-y-2 border rounded-lg p-4 relative">
+                        <!-- ID oculto para el update -->
+                        <input type="hidden" v-model="component.id" />
+                        
+                        <!-- Nombre Componente -->
+                        <div class="md:col-span-3">
+                            <InputLabel :value="`Componente ${index + 1}*`" />
+                            <el-input v-model="component.name" placeholder="Ej. Tapa" />
+                            <InputError :message="form.errors[`components.${index}.name`]" />
+                        </div>
+                        <!-- Cantidad Componente -->
+                        <div class="md:col-span-2">
+                            <InputLabel value="Cantidad*" />
+                            <el-input-number v-model="component.quantity" class="!w-full" :min="0.01" :step="0.01" />
+                            <InputError :message="form.errors[`components.${index}.quantity`]" />
+                        </div>
+                        <!-- Estación Componente -->
+                        <div class="md:col-span-2">
+                            <InputLabel value="Progreso*" />
+                            <el-select v-model="component.station" filterable placeholder="Progreso actual"
+                                class="!w-full">
+                                <el-option v-for="station in stations.filter(s => s.name !== 'Producción dividida')" :key="station.name" :label="station.name"
+                                    :value="station.name" />
+                            </el-select>
+                            <InputError :message="form.errors[`components.${index}.station`]" />
+                        </div>
+                        <!-- Máquina Componente -->
+                        <div class="md:col-span-2">
+                            <InputLabel value="Máquina*" />
+                            <el-select v-model="component.machine_id" filterable placeholder="Selecciona"
+                                class="!w-full" :disabled="fetchingMachines">
+                                <el-option v-for="machine in machines" :key="machine.id" :label="machine.name"
+                                    :value="machine.id" />
+                            </el-select>
+                            <InputError :message="form.errors[`components.${index}.machine_id`]" />
+                        </div>
+                        <!-- Botón Eliminar Componente -->
+                        <div class="md:col-span-1 flex items-end justify-end">
+                            <button @click="removeComponent(index)" type="button" class="text-red-500 hover:text-red-700 size-8 rounded-full hover:bg-red-100 flex items-center justify-center transition-all">
+                                <TrashIcon class="size-5" />
+                            </button>
+                        </div>
+                    </div>
+                     <!-- Botón Añadir Componente -->
+                    <div class="col-span-full text-right">
+                        <PrimaryButton @click="addComponent" type="button" class="flex !bg-gray-200 !text-gray-700 hover:!bg-gray-300">
+                            <PlusIcon class="size-4 mr-2" />
+                            Agregar componente
+                        </PrimaryButton>
+                    </div>
+                </div>
+                <!-- FIN: UI para Producción con Componentes -->
+
+                <!-- Notas del Padre (siempre visible) -->
                 <div class="col-span-full">
                     <InputLabel value="Notas" />
                     <el-input v-model="form.notes" :autosize="{ minRows: 3, maxRows: 5 }" type="textarea"
@@ -109,6 +184,8 @@
                         show-word-limit clearable />
                     <InputError :message="form.errors.notes" />
                 </div>
+
+
                 <h2 class="text-gray-500 font-semibold ml-2 col-span-full my-3">Materiales y medidas</h2>
                 <div>
                     <InputLabel value="Material" />
@@ -226,7 +303,7 @@
                     <el-input v-model="form.tps" placeholder="Total de tamaños de impresión" disabled />
                 </div>
                 <div class="col-span-2 text-right mt-4 space-x-2">
-                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index', { currentTab: 2 }))"
+                    <PrimaryButton type="button" @click="$inertia.visit(route('productions.index'))"
                         :disabled="form.processing" class="!bg-[#CFCFCF] !text-[#6E6E6E]">
                         Cancelar
                     </PrimaryButton>
@@ -249,10 +326,23 @@ import { useForm } from '@inertiajs/vue3';
 import { stations } from '@/Data/stations';
 import axios from 'axios';
 import Back from '@/Components/MyComponents/Back.vue';
+import { PlusIcon, TrashIcon } from '@heroicons/vue/24/solid'; // Importar iconos
 
 export default {
     name: 'EditeProduction',
     data() {
+        // Determinar si la producción tiene componentes
+        const hasComponents = this.production.station === 'Producción dividida';
+        
+        // Mapear los hijos (children) al formato que espera form.components
+        const components = (this.production.children || []).map(child => ({
+            id: child.id, // Importante para el update
+            name: child.component_name,
+            quantity: child.quantity,
+            station: child.station,
+            machine_id: child.machine_id,
+        }));
+
         const form = useForm({
             folio: this.production.folio,
             type: this.production.type,
@@ -284,13 +374,18 @@ export default {
             varnish_type: this.production.varnish_type,
             start_date: this.production.start_date,
             estimated_date: this.production.estimated_date,
+            
+            // --- INICIO: NUEVOS CAMPOS ---
+            has_components: hasComponents,
+            components: components,
+            // --- FIN: NUEVOS CAMPOS ---
         });
 
         return {
             form,
             products: [this.product],
             machines: [],
-            clients: [],
+            clients: this.production.client ? [{ id: this.production.client, name: this.production.client }] : [],
             fetchingProducts: false,
             fetchingMachines: false,
             fetchingClients: false,
@@ -325,13 +420,46 @@ export default {
         InputError,
         PrimaryButton,
         Back,
+        PlusIcon, // Añadir icono
+        TrashIcon, // Añadir icono
     },
     props: {
-        production: Object,
+        production: Object, // production ahora incluye 'children'
         product: Object,
     },
+    // watch: {
+    //     // Observador para actualizar la cantidad total del padre
+    //     // si las cantidades de los hijos cambian
+    //     'form.components': {
+    //         handler() {
+    //             if (this.form.has_components) {
+    //                 this.form.quantity = this.form.components.reduce((acc, comp) => {
+    //                     return acc + (parseFloat(comp.quantity) || 0);
+    //                 }, 0);
+    //             }
+    //         },
+    //         deep: true,
+    //     }
+    // },
     methods: {
+        // --- INICIO: NUEVOS MÉTODOS ---
+        addComponent() {
+            this.form.components.push({
+                id: null, // Es un componente nuevo
+                name: '',
+                quantity: 1,
+                station: 'Material pendiente', // Estación por defecto
+                machine_id: null,
+            });
+        },
+        removeComponent(index) {
+            this.form.components.splice(index, 1);
+        },
+        // --- FIN: NUEVOS MÉTODOS ---
+
         update() {
+            // El 'form' ya contiene 'has_components' y 'components'
+            // El controlador (que actualizaremos después) sabrá qué hacer
             this.form.put(route('productions.update', this.production.id), {
                 onSuccess: () => {
                     this.$notify({
@@ -371,6 +499,16 @@ export default {
             }
         },
         handleSheet() {
+            // No ejecutar esta lógica si es un padre con componentes
+            if (this.form.has_components) {
+                this.form.sheets = null;
+                this.form.ha = null;
+                this.form.ts = null;
+                this.form.ps = null;
+                this.form.tps = null;
+                return;
+            };
+
             if (this.form.quantity && this.form.pps > 0) {
                 this.form.sheets = Math.ceil(this.form.quantity / this.form.pps);
             } else {
@@ -398,6 +536,9 @@ export default {
             }
         },
         handleHa() {
+            // No ejecutar esta lógica si es un padre con componentes
+            if (this.form.has_components) return;
+
             if (this.form.adjust && this.form.pf) {
                 this.form.ha = Math.ceil(this.form.adjust / this.form.pf);
             } else {
@@ -425,7 +566,8 @@ export default {
         },
         async fetchProductsMatch(query) {
             if (!query) {
-                this.products = [];
+                // No limpiar 'products' para que la opción actual siga seleccionada
+                // this.products = []; 
                 return;
             }
 
@@ -434,7 +576,13 @@ export default {
                 const response = await axios.get(route('products.get-match', { query }));
 
                 if (response.status === 200) {
-                    this.products = response.data.items;
+                    // Mantenemos el producto actual en la lista si no está en los resultados
+                    const currentProduct = this.product;
+                    if (currentProduct && !response.data.items.some(p => p.id === currentProduct.id)) {
+                        this.products = [currentProduct, ...response.data.items];
+                    } else {
+                        this.products = response.data.items;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching products:', error);
@@ -456,13 +604,24 @@ export default {
                 this.fetchingMachines = false;
             }
         },
-        async fetchClients() {
+        async fetchClientsMatch(query) {
+            if (!query) {
+                // No limpiar 'clients' para que la opción actual siga seleccionada
+                return;
+            }
+
             this.fetchingClients = true;
             try {
-                const response = await axios.get(route('clients.get-all'));
+                const response = await axios.get(route('clients.get-match', { query }));
 
                 if (response.status === 200) {
-                    this.clients = response.data.items;
+                    // Mantenemos el cliente actual en la lista si no está en los resultados
+                    const currentClient = { id: this.form.client, name: this.form.client };
+                    if (currentClient.name && !response.data.items.some(c => c.name === currentClient.name)) {
+                        this.clients = [currentClient, ...response.data.items];
+                    } else {
+                        this.clients = response.data.items;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching clients:', error);
@@ -473,7 +632,8 @@ export default {
     },
     mounted() {
         this.fetchMachines();
-        this.fetchClients();
+        this.handleDfh(); // Ejecuta esto al montar para calcular el 'dfh' inicial
+        this.handleSheet(); // Ejecuta esto para calcular todo lo demás
     },
 }
 </script>

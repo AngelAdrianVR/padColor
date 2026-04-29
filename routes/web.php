@@ -11,6 +11,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductionReportController;
 use App\Http\Controllers\ProductSheetStructureController;
 use App\Http\Controllers\RawMaterialController;
 use App\Http\Controllers\SettingController;
@@ -35,6 +36,13 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 //     ]);
 // });
 Route::redirect('/', 'login');
+
+// ------------------------------------------------------------------------------------------
+// RUTA PÚBLICA PARA GENERADOR DE PEDIDOS (EXCEL)
+// ------------------------------------------------------------------------------------------
+Route::get('/generador-pedidos', function () {
+    return view('external.pedidos');
+})->name('generador.pedidos');
 
 Route::middleware([
     'auth:sanctum',
@@ -70,6 +78,8 @@ Route::get('tickets-get-by-page/{currentPage}', [TicketController::class, 'getIt
 Route::get('tickets-get-matches/{query}', [TicketController::class, 'getMatches'])->name('tickets.get-matches');
 Route::get('tickets-get-filters/{prop}/{value}', [TicketController::class, 'getFilters'])->name('tickets.get-filters');
 
+// RUTA DE MANTENIMIENTO PARA IMÁGENES
+Route::get('tickets-maintenance/migrate-images', [TicketController::class, 'migrateImages'])->name('tickets.maintenance.migrate')->middleware('auth');
 
 //Tickets-solutions routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
@@ -111,6 +121,11 @@ Route::post('role-permission/permissions-massive-delete', [SettingController::cl
 Route::post('categories/massive-delete', [SettingController::class, 'categoriesMassiveDelete'])->name('settings.categories.massive-delete');
 Route::get('categories/get-all', [SettingController::class, 'getAllCategories'])->middleware('auth')->name('settings.categories.get-all');
 Route::post('categories/store', [SettingController::class, 'storeCategory'])->middleware('auth')->name('settings.categories.store');
+Route::put('categories/update/{category}', [SettingController::class, 'updateCategory'])->middleware('auth')->name('settings.categories.update');
+
+// Rutas para reglas de asignación de tickets
+Route::get('ticket-assignment-rules', [SettingController::class, 'getTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.get');
+Route::post('ticket-assignment-rules', [SettingController::class, 'updateTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.update');
 
 
 //categories routes---------------------------------------------------------------------------
@@ -121,20 +136,36 @@ Route::resource('categories', CategoryController::class)->middleware('auth');
 //production routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('productions', ProductionController::class)->middleware('auth');
+Route::get('productions-dashboard', [ProductionController::class, 'dashboard'])->name('productions.dashboard')->middleware('auth');
+
+Route::prefix('productions-report')->name('productions.')->middleware('auth')->group(function () {
+    Route::get('/', [ProductionController::class, 'report'])->name('report');
+    Route::get('/get-data', [ProductionReportController::class, 'getReportData'])->name('get-report-data');
+    Route::get('/printable', [ProductionReportController::class, 'printableReport'])->name('report.printable');
+});
+
 Route::get('productions-get-by-page', [ProductionController::class, 'getByPage'])->name('productions.get-by-page')->middleware('auth');
 Route::get('productions-export-report-excel', [ProductionController::class, 'exportExcelReport'])->name('productions.export-report-excel')->middleware('auth');
 Route::get('productions-export-excel', [ProductionController::class, 'exportExcel'])->name('productions.export-excel')->middleware('auth');
 Route::post('productions-import-excel', [ProductionController::class, 'importExcel'])->name('productions.import-excel')->middleware('auth');
 Route::put('productions-update-machine/{production}', [ProductionController::class, 'updateMachine'])->name('productions.update-machine')->middleware('auth');
-Route::put('productions-update-station/{production}', [ProductionController::class, 'updateStation'])->name('productions.update-station')->middleware('auth');
 Route::post('productions-clone/{production}', [ProductionController::class, 'clone'])->name('productions.clone')->middleware('auth');
-Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
-Route::post('productions-production-release/{production}', [ProductionController::class, 'productionRelease'])->name('productions.production-release')->middleware('auth');
-Route::post('productions-quality-release/{production}', [ProductionController::class, 'qualityRelease'])->name('productions.quality-release')->middleware('auth');
-Route::post('productions-inspection-release/{production}', [ProductionController::class, 'inspectionRelease'])->name('productions.inspection-release')->middleware('auth');
-Route::post('productions-finish-production/{production}', [ProductionController::class, 'finishProduction'])->name('productions.finish-production')->middleware('auth');
-Route::post('productions-add-partial/{production}', [ProductionController::class, 'addPartial'])->name('productions.add-partial')->middleware('auth');
 Route::get('productions-hoja-viajera/{production}', [ProductionController::class, 'hojaViajera'])->name('productions.hoja-viajera')->middleware('auth');
+Route::get('productions-backfill', [ProductionController::class, 'backfillStationTimes'])->name('productions.backfill');
+
+// --- STATION TIME TRACKING ---
+Route::prefix('productions/{production}/station-process')->name('productions.station-process.')->middleware('auth')->group(function () {
+    Route::post('/start', [ProductionController::class, 'startStationProcess'])->name('start');
+    Route::post('/pause', [ProductionController::class, 'pauseStationProcess'])->name('pause');
+    Route::post('/resume', [ProductionController::class, 'resumeStationProcess'])->name('resume');
+    Route::post('/finish-and-move', [ProductionController::class, 'finishAndMoveStation'])->name('finishAndMove');
+    Route::post('/skip-and-move', [ProductionController::class, 'skipAndMoveStation'])->name('skipAndMove');
+    Route::post('/register-delivery', [ProductionController::class, 'registerDelivery'])->name('register-delivery');
+});
+Route::get('productions/{production}/get-children', [ProductionController::class, 'getChildren'])
+    ->name('productions.get-children')
+    ->middleware('auth');
+Route::post('productions-return-station/{production}', [ProductionController::class, 'returnStation'])->name('productions.return-station')->middleware('auth');
 
 
 
@@ -163,6 +194,7 @@ Route::post('machines/get-matches', [MachineController::class, 'getMatches'])->n
 //------------------------------------------------------------------------------------------
 Route::resource('clients', ClientController::class)->middleware('auth');
 Route::get('clients-get-all', [ClientController::class, 'getAll'])->name('clients.get-all')->middleware('auth');
+Route::get('clients/get-match/{query}', [ClientController::class, 'getMatch'])->name('clients.get-match')->middleware('auth');
 
 
 //comments routes---------------------------------------------------------------------------

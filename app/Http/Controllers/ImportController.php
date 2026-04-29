@@ -38,7 +38,8 @@ class ImportController extends Controller
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
-            $query->where('id', 'like', '%' . $request->search . '%');
+            $query->where('id', 'like', '%' . $request->search . '%')
+                ->orWhere('purchase_order', 'like', '%' . $request->search . '%');
         });
 
         $importsQuery->when($request->filled('supplier'), function ($query) use ($request) {
@@ -50,7 +51,7 @@ class ImportController extends Controller
             $endDate = $request->dates[1] . ' 23:59:59';
             $query->whereBetween('created_at', [$startDate, $endDate]);
         });
-        
+
         // --- MODIFICACIÓN AQUÍ ---
         // Ordenamos las importaciones por fecha de creación para mostrar las más recientes primero.
         $importsQuery->latest();
@@ -148,12 +149,15 @@ class ImportController extends Controller
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'products' => 'required|array|min:1',
+            'purchase_order' => 'nullable|max:255',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_cost' => 'required|numeric|min:0.01',
             'documents' => 'nullable|array',
             'documents.*.file' => 'required|file|max:10240', // max 10MB
             'documents.*.classification' => 'required|string',
+        ], [
+            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
 
         // 2. Usamos una transacción para asegurar la integridad de los datos
@@ -176,6 +180,7 @@ class ImportController extends Controller
                 'status' => 'Con proveedor', // Estado inicial del Kanban
                 // Generar un folio único. Puedes personalizar esta lógica.
                 'folio' => 'IMP-' . (Import::latest('id')->first()?->id + 1),
+                'purchase_order' => $validatedData['purchase_order'] ?? null,
             ]);
 
             // 4. Adjuntar los productos a la importación (tabla pivote) y documentos
@@ -249,6 +254,7 @@ class ImportController extends Controller
             'estimated_arrival_date' => 'nullable|date',
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
+            'purchase_order' => 'nullable|max:255',
             'products' => 'required|array|min:1',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
@@ -258,6 +264,8 @@ class ImportController extends Controller
             'new_documents.*.classification' => 'required|string',
             'documents_to_delete' => 'nullable|array',
             'documents_to_delete.*' => 'integer|exists:media,id',
+        ], [
+            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
 
         DB::transaction(function () use ($validatedData, $request, $import) {
@@ -323,7 +331,33 @@ class ImportController extends Controller
 
     public function destroy(Import $import)
     {
-        //
+        // Asegurarse de que el usuario tiene permisos
+        // $this->authorize('delete', $import);
+
+        DB::transaction(function () use ($import) {
+            // 1. Desvincular materias primas
+            $import->rawMaterials()->detach();
+
+            // 2. Eliminar costos y pagos asociados
+            foreach ($import->costs as $cost) {
+                foreach ($cost->payments as $payment) {
+                    // Limpiar media de pagos
+                    $payment->clearMediaCollection('payment_vouchers');
+                }
+                // Eliminar pagos del costo
+                $cost->payments()->delete();
+            }
+            // Eliminar costos de la importación
+            $import->costs()->delete();
+
+            // 3. Limpiar media de la importación
+            $import->clearMediaCollection();
+
+            // 4. Finalmente, eliminar la importación
+            $import->delete();
+        });
+
+        return redirect()->route('imports.index')->with('success', 'Importación eliminada correctamente.');
     }
 
     public function updateStatus(Request $request, Import $import)

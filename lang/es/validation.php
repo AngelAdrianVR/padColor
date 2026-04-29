@@ -194,5 +194,6 @@ return [
         'warehouse' => 'almacén',
         'supplier_id' => 'proveedor',
         'customs_agent_id' => 'agente aduanal',
+        'components' => 'componentes',
     ],
 ];

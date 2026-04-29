@@ -21,8 +21,8 @@
             </div>
             <div class="flex items-center justify-end space-x-4 mx-2 md:mx-6 lg:mx-10 mt-4">
                 <div>
-                    <InputLabel value="Folio" />
-                    <el-input v-model="localFilters.search" placeholder="Buscar por folio" class="lg:!w-60" clearable />
+                    <InputLabel value="Folio / OC" />
+                    <el-input v-model="localFilters.search" placeholder="Buscar por folio o por OC" class="lg:!w-60" clearable />
                 </div>
                 <div>
                     <InputLabel value="Proveedor" />
@@ -66,6 +66,11 @@
                                 <template #item="{ element }">
                                     <div @click="showDetails(element)"
                                         class="relative text-xs bg-white border border-grayD9 rounded-[14px] px-4 py-2 cursor-pointer hover:shadow-md transition">
+                                        
+                                        <!-- Client Color Indicator -->
+                                        <div v-if="element.client === 'PadColor Insumos graficos'" class="absolute top-3 right-0 h-20 w-1 bg-[#C6A317] rounded-l-full"></div>
+                                        <div v-if="element.client === 'Papel, diseño y color'" class="absolute top-3 right-0 h-20 w-1 bg-[#A21CAF] rounded-l-full"></div>
+
                                         <div class="w-1 h-12 rounded-full absolute -left-[2px] top-3"
                                             :style="{ backgroundColor: column.borderColor }"></div>
                                         <div class="flex justify-between items-start text-sm mb-2">
@@ -76,9 +81,6 @@
                                             </div>
                                         </div>
                                         <p class="font-semibold text-gray3F">{{ element.supplier?.name }}</p>
-                                        <!-- <p class="font-bold">
-                                            {{ formatCurrency(element.total_cost) }}
-                                        </p> -->
                                         <div class="text-sm text-gray-600 mt-2 h-10 overflow-hidden">
                                             <p v-if="element.raw_materials && element.raw_materials.length"
                                                 class="leading-tight text-xs">
@@ -93,7 +95,7 @@
                                         </div>
                                         <div class="flex items-center justify-between">
                                             <p class="text-gray3F font-semibold">
-                                                Agente: {{ element.customs_agent?.name }}
+                                                OC: {{ element.purchase_order ?? 'NO REGISTRADO' }}
                                             </p>
                                             <span class="text-gray3F font-semibold border-l border-grayD9 pl-1">
                                                 {{ element.incoterm.substring(0, 3) }}
@@ -120,7 +122,7 @@
         </AppLayout>
         <!-- Integración del Modal de Detalles -->
         <ImportDetails v-if="selectedImport" :show="showDetailsModal" :import-data="selectedImport"
-            @close="showDetailsModal = false" @reload="reloadData" />
+            @close="showDetailsModal = false" @reload="reloadData" @delete-import="handleDeleteImport" />
     </div>
 </template>
 
@@ -189,6 +191,20 @@ export default {
         };
     },
     methods: {
+        handleDeleteImport(importId) {
+            router.delete(route('imports.destroy', importId), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$notify({ title: 'Éxito', message: 'Importación eliminada correctamente', type: 'success' });
+                    this.showDetailsModal = false;
+                    // Forzamos la recarga de los datos para actualizar el kanban.
+                    router.get(route('imports.index'), this.localFilters, { preserveState: true, replace: true });
+                },
+                onError: () => {
+                    this.$notify({ title: 'Error', message: 'No se pudo eliminar la importación.', type: 'error' });
+                }
+            });
+        },
         handleCommand(command) {
             if (command === 'export') {
                 this.export();
