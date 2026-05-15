@@ -37,6 +37,18 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 // });
 Route::redirect('/', 'login');
 
+// ------------------------------------------------------------------------------------------
+// RUTA PÚBLICA PARA GENERADOR DE PEDIDOS (EXCEL)
+// ------------------------------------------------------------------------------------------
+Route::get('/generador-pedidos', function () {
+    return view('external.pedidos');
+})->name('generador.pedidos');
+Route::get('/tutorial-pedidos', function () {
+    return view('external.tutorial');
+})->name('tutorial.pedidos');
+
+
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
