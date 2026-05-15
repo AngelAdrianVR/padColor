@@ -43,6 +43,11 @@ Route::redirect('/', 'login');
 Route::get('/generador-pedidos', function () {
     return view('external.pedidos');
 })->name('generador.pedidos');
+Route::get('/tutorial-pedidos', function () {
+    return view('external.tutorial');
+})->name('tutorial.pedidos');
+
+
 
 Route::middleware([
     'auth:sanctum',
