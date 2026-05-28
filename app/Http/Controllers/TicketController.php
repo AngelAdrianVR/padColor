@@ -115,7 +115,12 @@ class TicketController extends Controller
             'expired_date' => 'required|date',
         ]);
 
-        $ticket = Ticket::create($validated + ['user_id' => auth()->id(), 'opened_at' => now()->toDateTimeString()]);
+        $user_id = auth()->id();
+        if (auth()->user()->can('Editar solicitante de ticket') && $request->filled('user_id')) {
+            $user_id = $request->user_id;
+        }
+
+        $ticket = Ticket::create($validated + ['user_id' => $user_id, 'opened_at' => now()->toDateTimeString()]);
 
         // Guardar media
         $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());
@@ -177,6 +182,7 @@ class TicketController extends Controller
     {
         $request->validate([
             'category_id' => 'required',
+            'user_id' => 'nullable|exists:users,id',
             'responsible_id' => 'nullable|exists:users,id',
             'department' => 'nullable|string|max:255',
             'title' => 'required|string|max:100',
@@ -200,7 +206,11 @@ class TicketController extends Controller
         $current_responsible_id = $ticket->responsible_id;
         $current_department = $ticket->department;
 
-        $ticket->update($request->all());
+        $updateData = $request->except('user_id');
+        if (auth()->user()->can('Editar solicitante de ticket') && $request->filled('user_id')) {
+            $updateData['user_id'] = $request->user_id;
+        }
+        $ticket->update($updateData);
 
         // Manejo de historial y notificaciones si cambió la asignación
         if ($current_responsible_id != $request->responsible_id || $current_department != $request->department) {
@@ -261,6 +271,7 @@ class TicketController extends Controller
     {
         $request->validate([
             'category_id' => 'required',
+            'user_id' => 'nullable|exists:users,id',
             'responsible_id' => 'nullable|exists:users,id',
             'department' => 'nullable|string|max:255',
             'title' => 'required|string|max:100',
@@ -284,7 +295,11 @@ class TicketController extends Controller
         $current_responsible_id = $ticket->responsible_id;
         $current_department = $ticket->department;
 
-        $ticket->update($request->all());
+        $updateData = $request->except('user_id');
+        if (auth()->user()->can('Editar solicitante de ticket') && $request->filled('user_id')) {
+            $updateData['user_id'] = $request->user_id;
+        }
+        $ticket->update($updateData);
 
         // Guardar media
         $ticket->addAllMediaFromRequest()->each(fn($file) => $file->toMediaCollection());

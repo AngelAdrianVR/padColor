@@ -241,6 +241,14 @@ export default {
                     show: this.$page.props.auth.user.permissions.includes('Ver productos'),
                 },
                 {
+                    label: 'Portal de Clientes',
+                    icon: '<i class="fa-solid fa-globe"></i>',
+                    route: route('customer-portal.index'),
+                    active: route().current('customer-portal.*'),
+                    options: [],
+                    show: this.$page.props.auth.user.permissions.includes('Subir archivos a servidor para portal de clientes'),
+                },
+                {
                     label: 'Configuraciones',
                     icon: '<i class="fa-solid fa-gear"></i>',
                     route: route('settings.index'),

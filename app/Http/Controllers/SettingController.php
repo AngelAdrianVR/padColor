@@ -213,4 +213,62 @@ class SettingController extends Controller
 
         return response()->json(['message' => 'Reglas de asignación guardadas correctamente']);
     }
+
+    /**
+     * Página del Portal de Clientes para subir archivos .blade.php.
+     */
+    public function customerPortal()
+    {
+        return inertia('CustomerPortal/Index');
+    }
+
+    /**
+     * Subir archivo .blade.php para el portal de clientes.
+     * Solo usuarios con permiso 'Subir archivos a servidor para portal de clientes'.
+     */
+    public function uploadPortalFile(Request $request)
+    {
+        if (!auth()->user()->can('Subir archivos a servidor para portal de clientes')) {
+            abort(403, 'No tienes permiso para subir archivos al portal.');
+        }
+
+        $request->validate([
+            'route_key' => 'required|string|in:pedidos,tutorial,catalogo,buscador,credito',
+            'file' => [
+                'required',
+                'file',
+                'max:15360',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if ($ext !== 'php') {
+                        $fail('El archivo debe ser de tipo .php (Laravel Blade).');
+                    }
+                },
+            ],
+        ], [
+            'route_key.required' => 'Debes seleccionar una ruta.',
+            'route_key.in' => 'La ruta seleccionada no es válida.',
+            'file.required' => 'Debes seleccionar un archivo.',
+            'file.max' => 'El archivo no debe superar los 15MB.',
+        ]);
+
+        // Mapeo de claves de ruta a nombres de archivo en el servidor
+        $fileMap = [
+            'pedidos' => 'pedidos.blade.php',
+            'tutorial' => 'tutorial.blade.php',
+            'catalogo' => 'catalogo.blade.php',
+            'buscador' => 'buscador.blade.php',
+            'credito' => 'credito.blade.php',
+        ];
+
+        $filename = $fileMap[$request->route_key];
+        $targetPath = resource_path('views/external');
+
+        // Subir y reemplazar el archivo
+        $request->file('file')->move($targetPath, $filename);
+
+        return response()->json([
+            'message' => "Archivo '$filename' actualizado correctamente en el servidor."
+        ]);
+    }
 }
