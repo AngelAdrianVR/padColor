@@ -36,6 +36,31 @@
                 </p>
             </div>
 
+            <!-- SOLICITANTE (Solo usuarios con permiso) -->
+            <div class="mt-3 col-span-2" v-if="$page.props.auth.user.permissions.includes('Editar solicitante de ticket')">
+                <InputLabel value="Solicitante" class="ml-3 mb-1" />
+                <el-select class="w-full" v-model="form.user_id" clearable filterable placeholder="Seleccione el usuario solicitante"
+                    no-data-text="No hay usuarios registrados" no-match-text="No se encontraron coincidencias">
+                    <el-option-group
+                        v-for="group in allGroupedUsers"
+                        :key="group.label"
+                        :label="group.label">
+                        <el-option v-for="user in group.options" :key="user.id" :label="user.name" :value="user.id">
+                            <figure style="float: left">
+                                <img class="object-cover bg-no-repeat size-7 rounded-full mt-1"
+                                    :src="user.profile_photo_url" alt="" />
+                            </figure>
+                            <span class="ml-2">{{ user.name }}</span>
+                        </el-option>
+                    </el-option-group>
+                </el-select>
+                <InputError :message="form.errors.user_id" />
+                <p class="text-xs text-gray-500 mt-2 ml-3">
+                    <i class="fa-solid fa-circle-info text-secondary mr-1"></i> 
+                    Permite cambiar el usuario que solicita el ticket.
+                </p>
+            </div>
+
             <!-- TIPO DE ASIGNACIÓN -->
             <div class="mt-5 col-span-2">
                 <InputLabel value="Tipo de Asignación" class="ml-3 mb-1" />
@@ -234,6 +259,7 @@ export default {
     data() {
         const form = useForm({
             category_id: this.ticket?.category_id || null,
+            user_id: this.ticket?.user_id || null,
             responsible_id: this.ticket?.responsible_id || null,
             department: this.ticket?.department || null,
             title: this.ticket?.title || null,
@@ -327,6 +353,25 @@ export default {
                     if (!groups[dept]) groups[dept] = [];
                     groups[dept].push(user);
                 }
+            });
+
+            const sortedKeys = Object.keys(groups).sort((a, b) => {
+                if (a === 'Sistemas') return -1;
+                if (b === 'Sistemas') return 1;
+                return a.localeCompare(b);
+            });
+
+            return sortedKeys.map(key => ({
+                label: key,
+                options: groups[key]
+            }));
+        },
+        allGroupedUsers() {
+            const groups = {};
+            this.users.forEach(user => {
+                const dept = user.employee_properties?.department || 'Sin departamento asignado';
+                if (!groups[dept]) groups[dept] = [];
+                groups[dept].push(user);
             });
 
             const sortedKeys = Object.keys(groups).sort((a, b) => {
