@@ -27,14 +27,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
 Route::redirect('/', 'login');
 
 // ------------------------------------------------------------------------------------------
@@ -46,6 +38,15 @@ Route::get('/generador-pedidos', function () {
 Route::get('/tutorial-pedidos', function () {
     return view('external.tutorial');
 })->name('tutorial.pedidos');
+Route::get('/catalogo-toda-ocasion-2026-san-felipe', function () {
+    return view('external.catalogo');
+})->name('catalog.2026');
+Route::get('/buscador-clientes', function () {
+    return view('external.buscador');
+})->name('search.customers');
+Route::get('/solicitud-credito', function () {
+    return view('external.credito');
+})->name('solicitud.credito');
 
 
 
@@ -114,6 +115,7 @@ Route::put('users-reset-password/{user}', [UserController::class, 'resetPassword
 //settings routes---------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 Route::resource('settings', SettingController::class)->middleware('auth');
+Route::get('customer-portal', [SettingController::class, 'customerPortal'])->middleware('auth')->name('customer-portal.index');
 Route::get('role-permission', [SettingController::class, 'index'])->middleware('auth')->name('settings.role-permission.index');
 Route::put('role-permission/{role}/edit-role', [SettingController::class, 'updateRole'])->middleware('auth')->name('settings.role-permission.update-role');
 Route::post('role-permission/store-role', [SettingController::class, 'storeRole'])->middleware('auth')->name('settings.role-permission.store-role');
@@ -131,6 +133,7 @@ Route::put('categories/update/{category}', [SettingController::class, 'updateCat
 // Rutas para reglas de asignación de tickets
 Route::get('ticket-assignment-rules', [SettingController::class, 'getTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.get');
 Route::post('ticket-assignment-rules', [SettingController::class, 'updateTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.update');
+Route::post('settings/upload-portal-file', [SettingController::class, 'uploadPortalFile'])->middleware('auth')->name('settings.upload-portal-file');
 
 
 //categories routes---------------------------------------------------------------------------

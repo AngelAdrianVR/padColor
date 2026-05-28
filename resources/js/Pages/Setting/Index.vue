@@ -56,6 +56,7 @@
                         </template>
                         <TicketAssignments />
                     </el-tab-pane>
+
                 </el-tabs>
             </main>
         </AppLayout>
