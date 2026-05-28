@@ -240,8 +240,8 @@ class SettingController extends Controller
                 'max:15360',
                 function ($attribute, $value, $fail) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    if ($ext !== 'php') {
-                        $fail('El archivo debe ser de tipo .php (Laravel Blade).');
+                    if ($ext !== 'php' && $ext !== 'html') {
+                        $fail('El archivo debe ser de tipo .php (Laravel Blade) o .html.');
                     }
                 },
             ],
