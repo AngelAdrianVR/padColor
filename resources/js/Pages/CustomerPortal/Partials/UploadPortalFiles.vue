@@ -5,7 +5,7 @@
         <!-- Informativo -->
         <el-alert type="info" show-icon :closable="false" class="mb-5">
             <template #title>
-                Los archivos deben estar en formato <b>.blade.php</b>. Al subir un archivo, se reemplazará el archivo existente en el servidor para la ruta seleccionada.
+                Los archivos deben estar en formato <b>.blade.php o .html</b>. Al subir un archivo, se reemplazará el archivo existente en el servidor para la ruta seleccionada.
             </template>
         </el-alert>
 
@@ -30,15 +30,15 @@
 
             <!-- Upload de archivo -->
             <div>
-                <InputLabel value="Archivo .blade.php *" class="ml-1 mb-1" />
+                <InputLabel value="Archivo .blade.php o .html *" class="ml-1 mb-1" />
                 <label
                     class="flex items-center justify-center w-full h-12 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
                     :class="{ 'border-green-400 bg-green-50': selectedFile, 'border-red-300': fileError }">
                     <input type="file" @change="handleFileChange" ref="fileInput"
-                        accept=".php"
+                        accept=".php,.html"
                         class="hidden" />
                     <div v-if="!selectedFile" class="text-gray-500 text-sm">
-                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Haz clic para seleccionar un archivo .blade.php
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Haz clic para seleccionar un archivo .blade.php o .html
                     </div>
                     <div v-else class="text-green-700 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-file-code text-green-600"></i>
@@ -49,7 +49,7 @@
                 </label>
                 <p class="text-xs text-gray-400 mt-1 ml-1">
                     <i class="fa-solid fa-circle-info mr-1"></i>
-                    Solo se permiten archivos <b>.blade.php</b> (extensión .php)
+                    Solo se permiten archivos <b>.blade.php o .html</b> (extensiones .php, .html)
                 </p>
                 <p v-if="fileError" class="text-xs text-red-500 mt-1 ml-1">
                     <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ fileError }}
@@ -191,10 +191,10 @@ export default {
                 return;
             }
 
-            // Validar que sea un archivo .php (blade usa extensión .php)
+            // Validar que sea un archivo .php o .html
             const extension = file.name.split('.').pop().toLowerCase();
-            if (extension !== 'php') {
-                this.fileError = 'Solo se permiten archivos .blade.php (extensión .php).';
+            if (extension !== 'php' && extension !== 'html') {
+                this.fileError = 'Solo se permiten archivos .blade.php o .html (extensiones .php, .html).';
                 this.selectedFile = null;
                 event.target.value = '';
                 return;
