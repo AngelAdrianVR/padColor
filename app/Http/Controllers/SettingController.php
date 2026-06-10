@@ -233,7 +233,7 @@ class SettingController extends Controller
         }
 
         $request->validate([
-            'route_key' => 'required|string|in:pedidos,tutorial,catalogo,buscador,credito',
+            'route_key' => 'required|string|in:pedidos,tutorial,catalogo,buscador,credito,guias',
             'file' => [
                 'required',
                 'file',
@@ -259,6 +259,7 @@ class SettingController extends Controller
             'catalogo' => 'catalogo.blade.php',
             'buscador' => 'buscador.blade.php',
             'credito' => 'credito.blade.php',
+            'guias' => 'guias.blade.php',
         ];
 
         $filename = $fileMap[$request->route_key];

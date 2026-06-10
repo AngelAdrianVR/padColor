@@ -165,6 +165,12 @@ export default {
                     url: '/solicitud-credito',
                     filename: 'credito.blade.php',
                 },
+                {
+                    key: 'guias',
+                    label: 'Buscador de Guías',
+                    url: '/buscador-guias',
+                    filename: 'guias.blade.php',
+                },
             ],
         }
     },

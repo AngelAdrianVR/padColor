@@ -47,6 +47,9 @@ Route::get('/buscador-clientes', function () {
 Route::get('/solicitud-credito', function () {
     return view('external.credito');
 })->name('solicitud.credito');
+Route::get('/buscador-guias', function () {
+    return view('external.guias');
+})->name('search.guis');
 
 
 
