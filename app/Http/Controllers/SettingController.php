@@ -219,7 +219,9 @@ class SettingController extends Controller
      */
     public function customerPortal()
     {
-        return inertia('CustomerPortal/Index');
+        return inertia('CustomerPortal/Index', [
+            'portalPages' => \App\Models\PortalPage::where('is_active', true)->orderBy('label')->get(),
+        ]);
     }
 
     /**
@@ -233,7 +235,7 @@ class SettingController extends Controller
         }
 
         $request->validate([
-            'route_key' => 'required|string|in:pedidos,tutorial,catalogo,buscador,credito',
+            'route_key' => ['required', 'string', 'exists:portal_pages,route_key'],
             'file' => [
                 'required',
                 'file',
@@ -247,28 +249,125 @@ class SettingController extends Controller
             ],
         ], [
             'route_key.required' => 'Debes seleccionar una ruta.',
-            'route_key.in' => 'La ruta seleccionada no es válida.',
+            'route_key.exists' => 'La ruta seleccionada no es válida.',
             'file.required' => 'Debes seleccionar un archivo.',
             'file.max' => 'El archivo no debe superar los 15MB.',
         ]);
 
-        // Mapeo de claves de ruta a nombres de archivo en el servidor
-        $fileMap = [
-            'pedidos' => 'pedidos.blade.php',
-            'tutorial' => 'tutorial.blade.php',
-            'catalogo' => 'catalogo.blade.php',
-            'buscador' => 'buscador.blade.php',
-            'credito' => 'credito.blade.php',
-        ];
-
-        $filename = $fileMap[$request->route_key];
+        $page = \App\Models\PortalPage::where('route_key', $request->route_key)->firstOrFail();
+        $filename = $page->filename;
         $targetPath = resource_path('views/external');
 
-        // Subir y reemplazar el archivo
         $request->file('file')->move($targetPath, $filename);
 
         return response()->json([
             'message' => "Archivo '$filename' actualizado correctamente en el servidor."
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    //  CRUD DE PÁGINAS DEL PORTAL (portal-pages)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Obtener todas las páginas del portal.
+     */
+    public function getPortalPages()
+    {
+        $pages = \App\Models\PortalPage::orderBy('label')->get();
+
+        return response()->json(['items' => $pages]);
+    }
+
+    /**
+     * Crear una nueva página del portal.
+     */
+    public function storePortalPage(Request $request)
+    {
+        $request->validate([
+            'route_key' => 'required|string|max:191|unique:portal_pages,route_key',
+            'label'     => 'required|string|max:255',
+            'url_path'  => 'required|string|max:255|unique:portal_pages,url_path',
+        ], [
+            'route_key.required'     => 'La clave de ruta es obligatoria.',
+            'route_key.unique'       => 'Ya existe una página con esa clave de ruta.',
+            'label.required'         => 'El nombre descriptivo es obligatorio.',
+            'url_path.required'      => 'La URL pública es obligatoria.',
+            'url_path.unique'        => 'Ya existe una página con esa URL.',
+        ]);
+
+        $filename = $request->route_key . '.blade.php';
+
+        $page = \App\Models\PortalPage::create([
+            'route_key' => $request->route_key,
+            'label'     => $request->label,
+            'url_path'  => $request->url_path,
+            'filename'  => $filename,
+            'is_active' => true,
+        ]);
+
+        // Crear archivo vacío en resources/views/external/ si no existe
+        $targetPath = resource_path('views/external');
+        $filePath = $targetPath . '/' . $filename;
+        if (!file_exists($filePath)) {
+            file_put_contents($filePath, '<!-- ' . $request->label . ' -->');
+        }
+
+        return response()->json([
+            'message' => "Página '{$page->label}' creada correctamente.",
+            'item'    => $page,
+        ]);
+    }
+
+    /**
+     * Actualizar una página del portal.
+     */
+    public function updatePortalPage(Request $request, \App\Models\PortalPage $portalPage)
+    {
+        $request->validate([
+            'route_key' => 'required|string|max:191|unique:portal_pages,route_key,' . $portalPage->id,
+            'label'     => 'required|string|max:255',
+            'url_path'  => 'required|string|max:255|unique:portal_pages,url_path,' . $portalPage->id,
+            'is_active' => 'boolean',
+        ]);
+
+        $oldFilename = $portalPage->filename;
+        $newFilename = $request->route_key . '.blade.php';
+
+        $portalPage->update([
+            'route_key' => $request->route_key,
+            'label'     => $request->label,
+            'url_path'  => $request->url_path,
+            'filename'  => $newFilename,
+            'is_active' => $request->boolean('is_active', $portalPage->is_active),
+        ]);
+
+        // Renombrar el archivo físico si cambió la clave
+        if ($oldFilename !== $newFilename) {
+            $targetPath = resource_path('views/external');
+            $oldPath = $targetPath . '/' . $oldFilename;
+            $newPath = $targetPath . '/' . $newFilename;
+            if (file_exists($oldPath)) {
+                rename($oldPath, $newPath);
+            }
+        }
+
+        return response()->json([
+            'message' => "Página '{$portalPage->label}' actualizada correctamente.",
+            'item'    => $portalPage->fresh(),
+        ]);
+    }
+
+    /**
+     * Eliminar una página del portal.
+     */
+    public function destroyPortalPage(\App\Models\PortalPage $portalPage)
+    {
+        $label = $portalPage->label;
+        $portalPage->delete();
+
+        return response()->json([
+            'message' => "Página '$label' eliminada correctamente.",
         ]);
     }
 }
