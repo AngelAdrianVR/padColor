@@ -29,30 +29,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 Route::redirect('/', 'login');
 
-// ------------------------------------------------------------------------------------------
-// RUTA PÚBLICA PARA GENERADOR DE PEDIDOS (EXCEL)
-// ------------------------------------------------------------------------------------------
-Route::get('/generador-pedidos', function () {
-    return view('external.pedidos');
-})->name('generador.pedidos');
-Route::get('/tutorial-pedidos', function () {
-    return view('external.tutorial');
-})->name('tutorial.pedidos');
-Route::get('/catalogo-toda-ocasion-2026-san-felipe', function () {
-    return view('external.catalogo');
-})->name('catalog.2026');
-Route::get('/buscador-clientes', function () {
-    return view('external.buscador');
-})->name('search.customers');
-Route::get('/solicitud-credito', function () {
-    return view('external.credito');
-})->name('solicitud.credito');
-Route::get('/buscador-guias', function () {
-    return view('external.guias');
-})->name('search.guis');
-
-
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -137,6 +113,12 @@ Route::put('categories/update/{category}', [SettingController::class, 'updateCat
 Route::get('ticket-assignment-rules', [SettingController::class, 'getTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.get');
 Route::post('ticket-assignment-rules', [SettingController::class, 'updateTicketAssignmentRules'])->middleware('auth')->name('settings.ticket-assignment-rules.update');
 Route::post('settings/upload-portal-file', [SettingController::class, 'uploadPortalFile'])->middleware('auth')->name('settings.upload-portal-file');
+
+// Portal pages CRUD
+Route::get('portal-pages', [SettingController::class, 'getPortalPages'])->middleware('auth')->name('settings.portal-pages.get');
+Route::post('portal-pages', [SettingController::class, 'storePortalPage'])->middleware('auth')->name('settings.portal-pages.store');
+Route::put('portal-pages/{portalPage}', [SettingController::class, 'updatePortalPage'])->middleware('auth')->name('settings.portal-pages.update');
+Route::delete('portal-pages/{portalPage}', [SettingController::class, 'destroyPortalPage'])->middleware('auth')->name('settings.portal-pages.destroy');
 
 
 //categories routes---------------------------------------------------------------------------
@@ -308,3 +290,29 @@ Route::middleware(['auth:sanctum', 'verified'])
         Route::put('/options/{option}', [ProductSheetStructureController::class, 'updateOption'])->name('options.update');
         Route::delete('/options/{option}', [ProductSheetStructureController::class, 'destroyOption'])->name('options.destroy');
     });
+
+// ------------------------------------------------------------------------------------------
+// RUTAS PÚBLICAS DEL PORTAL DE CLIENTES (dinámicas desde BD)
+// ÚLTIMA RUTA — solo se ejecuta si ninguna ruta anterior coincide
+// ------------------------------------------------------------------------------------------
+Route::fallback(function () {
+    $path = request()->path();
+
+    $page = \App\Models\PortalPage::where('url_path', $path)
+        ->where('is_active', true)
+        ->first();
+
+    if (!$page) {
+        abort(404);
+    }
+
+    // El archivo se almacena como "pedidos.blade.php" — se debe quitar la extensión .blade.php
+    // para que el nombre de la vista sea "external.pedidos"
+    $viewName = 'external.' . basename($page->filename, '.blade.php');
+
+    if (!view()->exists($viewName)) {
+        abort(404);
+    }
+
+    return view($viewName);
+});
