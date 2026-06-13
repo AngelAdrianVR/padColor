@@ -15,10 +15,10 @@
                 <InputLabel value="Ruta a actualizar *" class="ml-1 mb-1" />
                 <el-select v-model="selectedRoute" placeholder="Seleccione la ruta a actualizar" class="w-full"
                     no-data-text="No hay rutas disponibles">
-                    <el-option v-for="route in routes" :key="route.key" :label="route.label" :value="route.key">
+                    <el-option v-for="page in portalPages" :key="page.route_key" :label="page.label" :value="page.route_key">
                         <div class="flex flex-col">
-                            <span class="font-medium">{{ route.label }}</span>
-                            <span class="text-gray-400 text-xs">{{ route.url }}</span>
+                            <span class="font-medium">{{ page.label }}</span>
+                            <span class="text-gray-400 text-xs">/{{ page.url_path }}</span>
                         </div>
                     </el-option>
                 </el-select>
@@ -125,6 +125,12 @@ export default {
         InputLabel,
         PrimaryButton,
     },
+    props: {
+        portalPages: {
+            type: Array,
+            required: true,
+        },
+    },
     data() {
         return {
             selectedRoute: null,
@@ -134,38 +140,6 @@ export default {
             successMessage: null,
             errorMessage: null,
             uploadSuccess: false,
-            routes: [
-                {
-                    key: 'pedidos',
-                    label: 'Generador de Pedidos',
-                    url: '/generador-pedidos',
-                    filename: 'pedidos.blade.php',
-                },
-                {
-                    key: 'tutorial',
-                    label: 'Tutorial de Pedidos',
-                    url: '/tutorial-pedidos',
-                    filename: 'tutorial.blade.php',
-                },
-                {
-                    key: 'catalogo',
-                    label: 'Catálogo Toda Ocasión 2026',
-                    url: '/catalogo-toda-ocasion-2026-san-felipe',
-                    filename: 'catalogo.blade.php',
-                },
-                {
-                    key: 'buscador',
-                    label: 'Buscador de Clientes',
-                    url: '/buscador-clientes',
-                    filename: 'buscador.blade.php',
-                },
-                {
-                    key: 'credito',
-                    label: 'Solicitud de Crédito',
-                    url: '/solicitud-credito',
-                    filename: 'credito.blade.php',
-                },
-            ],
         }
     },
     computed: {
@@ -191,7 +165,6 @@ export default {
                 return;
             }
 
-            // Validar que sea un archivo .php o .html
             const extension = file.name.split('.').pop().toLowerCase();
             if (extension !== 'php' && extension !== 'html') {
                 this.fileError = 'Solo se permiten archivos .blade.php o .html (extensiones .php, .html).';
@@ -200,7 +173,6 @@ export default {
                 return;
             }
 
-            // Validar tamaño máximo 15MB
             if (file.size > 15 * 1024 * 1024) {
                 this.fileError = 'El archivo supera el tamaño máximo permitido de 15MB.';
                 this.selectedFile = null;
@@ -253,19 +225,22 @@ export default {
                 this.uploading = false;
             }
         },
+        getPage(routeKey) {
+            return this.portalPages.find(p => p.route_key === routeKey);
+        },
         getRouteUrl(routeKey) {
-            const route = this.routes.find(r => r.key === routeKey);
-            return route ? route.url : '';
+            const page = this.getPage(routeKey);
+            return page ? page.url_path : '';
         },
         openPortalLink() {
             const url = this.getRouteUrl(this.selectedRoute);
             if (url) {
-                window.open(url, '_blank');
+                window.open('/' + url, '_blank');
             }
         },
         getFileName(routeKey) {
-            const route = this.routes.find(r => r.key === routeKey);
-            return route ? route.filename : '';
+            const page = this.getPage(routeKey);
+            return page ? page.filename : '';
         },
         formatFileSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
