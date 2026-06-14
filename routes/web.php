@@ -306,13 +306,15 @@ Route::fallback(function () {
         abort(404);
     }
 
-    // El archivo se almacena como "pedidos.blade.php" — se debe quitar la extensión .blade.php
-    // para que el nombre de la vista sea "external.pedidos"
-    $viewName = 'external.' . basename($page->filename, '.blade.php');
+    $filePath = resource_path('views/external/' . $page->filename);
 
-    if (!view()->exists($viewName)) {
+    if (!file_exists($filePath)) {
         abort(404);
     }
 
-    return view($viewName);
+    // Servir el archivo como contenido plano para evitar que Blade compile
+    // etiquetas XML/HTML como <x:...> que pudiera contener el HTML del usuario
+    return response(file_get_contents($filePath), 200, [
+        'Content-Type' => 'text/html; charset=utf-8',
+    ]);
 });
