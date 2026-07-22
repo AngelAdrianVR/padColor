@@ -19,12 +19,14 @@
         "vue": "^3.2.31"
     },
     "dependencies": {
+        "@element-plus/icons-vue": "^2.3.2",
         "@heroicons/vue": "^2.2.0",
         "apexcharts": "^3.45.1",
         "chart.js": "^4.5.1",
         "date-fns": "^3.3.1",
         "element-plus": "^2.5.5",
         "laravel-echo": "^1.15.3",
+        "lodash": "^4.18.1",
         "pusher-js": "^8.4.0-rc2",
         "sortablejs": "^1.15.6",
         "unplugin-vue-components": "^0.26.0",

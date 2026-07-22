@@ -2,10 +2,32 @@
     <div>
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold">Gestionar rutas del portal</h2>
-            <el-button type="primary" size="default" @click="openCreateDialog">
+            <el-tooltip
+                v-if="limitReached"
+                content="Has alcanzado el límite de 15 rutas. Elimina alguna página antes de crear una nueva."
+                placement="top"
+                :show-after="300"
+            >
+                <el-button type="primary" size="default" disabled>
+                    <i class="fa-solid fa-plus mr-1"></i> Nueva ruta
+                </el-button>
+            </el-tooltip>
+            <el-button v-else type="primary" size="default" @click="openCreateDialog">
                 <i class="fa-solid fa-plus mr-1"></i> Nueva ruta
             </el-button>
         </div>
+
+        <el-alert
+            v-if="limitReached"
+            type="warning"
+            show-icon
+            :closable="false"
+            class="mb-5"
+        >
+            <template #title>
+                Has alcanzado el límite de <b>15 rutas</b>. Si deseas agregar más, elimina alguna de las rutas registradas.
+            </template>
+        </el-alert>
 
         <el-alert type="info" show-icon :closable="false" class="mb-5">
             <template #title>
@@ -112,6 +134,8 @@
 import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
 
+const MAX_PAGES = 15;
+
 export default {
     props: {
         portalPages: {
@@ -137,6 +161,11 @@ export default {
                 errors: {},
             },
         }
+    },
+    computed: {
+        limitReached() {
+            return this.portalPages.length >= MAX_PAGES;
+        },
     },
     methods: {
         resetForm() {
