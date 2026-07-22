@@ -220,7 +220,7 @@ class SettingController extends Controller
     public function customerPortal()
     {
         return inertia('CustomerPortal/Index', [
-            'portalPages' => \App\Models\PortalPage::where('is_active', true)->orderBy('label')->get(),
+            'portalPages' => \App\Models\PortalPage::orderBy('label')->get(),
         ]);
     }
 
@@ -284,6 +284,14 @@ class SettingController extends Controller
      */
     public function storePortalPage(Request $request)
     {
+        // Limitar a 15 páginas en total (activas + inactivas)
+        $totalPages = \App\Models\PortalPage::count();
+        if ($totalPages >= 15) {
+            return response()->json([
+                'message' => 'Se ha alcanzado el límite de 15 rutas. Elimina alguna página antes de crear una nueva.',
+            ], 422);
+        }
+
         $request->validate([
             'route_key' => 'required|string|max:191|unique:portal_pages,route_key',
             'label'     => 'required|string|max:255',
@@ -364,6 +372,13 @@ class SettingController extends Controller
     public function destroyPortalPage(\App\Models\PortalPage $portalPage)
     {
         $label = $portalPage->label;
+
+        // Eliminar el archivo físico del disco
+        $filePath = resource_path('views/external/' . $portalPage->filename);
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
         $portalPage->delete();
 
         return response()->json([
