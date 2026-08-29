@@ -42,7 +42,13 @@
             <!-- Contenedor principal del Kanban -->
             <div class="py-6">
                 <div class="max-w-full mx-auto sm:px-6 lg:px-8">
-                    <div class="grid grid-cols-5 gap-2">
+                    <!-- Paginación superior del Kanban -->
+                    <ImportPagination class="mb-4" :pagination="pagination" :page="localFilters.page"
+                        :per-page="localFilters.per_page"
+                        @update:page="onPageChange"
+                        @update:per-page="onPerPageChange" />
+
+                    <div class="grid grid-cols-6 gap-2">
                         <!-- Iteramos sobre las columnas definidas en 'data' -->
                         <div v-for="column in columns" :key="column.title"
                             class="rounded-[10px] p-2 transition-colors duration-300 border flex flex-col"
@@ -117,6 +123,18 @@
                             </draggable>
                         </div>
                     </div>
+
+                    <!-- Paginación inferior del Kanban -->
+                    <ImportPagination class="mt-6" :pagination="pagination" :page="localFilters.page"
+                        :per-page="localFilters.per_page"
+                        @update:page="onPageChange"
+                        @update:per-page="onPerPageChange" />
+
+                    <!-- Mensaje cuando no hay resultados -->
+                    <div v-if="!pagination || pagination.last_page === 0"
+                        class="mt-6 text-center text-sm text-gray-500 py-4">
+                        No se encontraron importaciones con los filtros aplicados.
+                    </div>
                 </div>
             </div>
         </AppLayout>
@@ -133,6 +151,7 @@ import draggable from 'vuedraggable';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import {
     ArchiveBoxIcon,
+    BanknotesIcon,
     CalendarIcon,
     ChatBubbleBottomCenterTextIcon,
     PlusIcon,
@@ -146,6 +165,7 @@ import BarcoIcon from '@/Components/MyComponents/Icons/BarcoIcon.vue';
 import throttle from 'lodash/throttle';
 import InputLabel from '@/Components/InputLabel.vue';
 import ImportDetails from './Details.vue'; // Importar el nuevo componente
+import ImportPagination from '@/Components/MyComponents/ImportPagination.vue';
 
 export default {
     components: {
@@ -153,6 +173,7 @@ export default {
         draggable,
         SearchIcon,
         ArchiveBoxIcon,
+        BanknotesIcon,
         CalendarIcon,
         ChatBubbleBottomCenterTextIcon,
         PlusIcon,
@@ -163,9 +184,11 @@ export default {
         BarcoIcon,
         InputLabel,
         ImportDetails,
+        ImportPagination,
     },
     props: {
         imports: Object,
+        pagination: Object,
         suppliers: Array,
         filters: Object, // Recibimos los filtros actuales desde el controlador
     },
@@ -179,11 +202,14 @@ export default {
                 search: this.filters.search || '',
                 supplier: this.filters.supplier || '',
                 dates: this.filters.dates || [],
+                page: this.filters.page || 1,
+                per_page: this.filters.per_page || 20,
             },
             columns: [
                 { title: 'Con proveedor', icon: markRaw(ArchiveBoxIcon), iconColor: 'text-gray3F', bgColor: '#EDEDED', borderColor: '#3f3f3f' },
                 { title: 'Puerto origen', icon: markRaw(AnclaIcon), iconColor: 'text-[#645E20]', bgColor: '#FCFFD8', borderColor: '#645E20' },
                 { title: 'En tránsito marítimo', icon: markRaw(BarcoIcon), iconColor: 'text-[#C06102]', bgColor: '#FFEFE2', borderColor: '#C06102' },
+                { title: 'Anticipo agente aduanal', icon: markRaw(BanknotesIcon), iconColor: 'text-[#6D28D9]', bgColor: '#F3ECFF', borderColor: '#6D28D9' },
                 { title: 'Puerto destino', icon: markRaw(MarkerIcon), iconColor: 'text-[#004C7B]', bgColor: '#E9F6FF', borderColor: '#004C7B' },
                 { title: 'Entregado', icon: markRaw(PalomitaIcon), iconColor: 'text-[#448734]', bgColor: '#E9FFDD', borderColor: '#448734' },
             ],
@@ -261,6 +287,13 @@ export default {
             this.selectedImport = importData;
             this.showDetailsModal = true;
         },
+        onPageChange(page) {
+            // El watcher de localFilters se encarga de hacer la petición al backend.
+            this.localFilters.page = page;
+        },
+        onPerPageChange(newSize) {
+            this.localFilters.per_page = newSize;
+        },
         handleDrop(event) {
             const newStatus = event.to.id;
             const importId = this.localImports[newStatus][event.newIndex].id;
@@ -325,6 +358,32 @@ export default {
                 this.initializeLocalImports();
             },
             deep: true,
+        },
+        // Si el backend regresa menos páginas de las que estábamos viendo
+        // (p. ej. tras eliminar el último registro de la última página), corregimos.
+        pagination: {
+            handler(pagination) {
+                if (pagination && pagination.last_page && this.localFilters.page > pagination.last_page) {
+                    this.localFilters.page = Math.max(1, pagination.last_page);
+                }
+            },
+            deep: true,
+        },
+        // Cuando cambian los filtros de búsqueda, regresamos a la primera página.
+        'localFilters.search'() {
+            if (this.localFilters.page !== 1) {
+                this.localFilters.page = 1;
+            }
+        },
+        'localFilters.supplier'() {
+            if (this.localFilters.page !== 1) {
+                this.localFilters.page = 1;
+            }
+        },
+        'localFilters.dates'() {
+            if (this.localFilters.page !== 1) {
+                this.localFilters.page = 1;
+            }
         },
         // Este watcher observa los cambios en los filtros y lanza la petición al backend.
         localFilters: {
