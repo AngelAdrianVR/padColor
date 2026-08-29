@@ -31,6 +31,8 @@ class ImportController extends Controller
             'supplier' => 'nullable|integer|exists:suppliers,id',
             'dates' => 'nullable|array|size:2',
             'dates.*' => 'nullable|date_format:Y-m-d',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|in:10,20,50,100',
         ]);
 
         // 2. Construimos la consulta, añadiendo 'media' para cargar los archivos
@@ -38,8 +40,10 @@ class ImportController extends Controller
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
-            $query->where('id', 'like', '%' . $request->search . '%')
-                ->orWhere('purchase_order', 'like', '%' . $request->search . '%');
+            $query->where(function ($subQuery) use ($request) {
+                $subQuery->where('id', 'like', '%' . $request->search . '%')
+                    ->orWhere('purchase_order', 'like', '%' . $request->search . '%');
+            });
         });
 
         $importsQuery->when($request->filled('supplier'), function ($query) use ($request) {
@@ -56,11 +60,12 @@ class ImportController extends Controller
         // Ordenamos las importaciones por fecha de creación para mostrar las más recientes primero.
         $importsQuery->latest();
 
-        // 4. Ejecutamos la consulta
-        $importsCollection = $importsQuery->get();
+        // 4. Paginamos la consulta por backend (20 registros por defecto) para optimizar la carga
+        $perPage = (int) $request->input('per_page', 20);
+        $importsPaginator = $importsQuery->paginate($perPage)->withQueryString();
 
-        // 5. Formateamos los documentos para cada importación
-        $importsCollection->each(function ($import) {
+        // 5. Formateamos los documentos para cada importación (solo la página actual)
+        $importsPaginator->getCollection()->each(function ($import) {
             $import->documents = $import->getMedia('*')->map(function ($media) {
                 return [
                     'id' => $media->id,
@@ -105,17 +110,22 @@ class ImportController extends Controller
             })->values();
         });
 
-        // 6. Agrupamos por estado para el Kanban
-        $imports = $importsCollection->groupBy('status');
+        // 6. Agrupamos por estado para el Kanban (solo la página actual)
+        $imports = $importsPaginator->getCollection()->groupBy('status');
 
-        // 7. Obtenemos los proveedores para el dropdown del filtro
+        // 7. Metadatos de paginación (sin 'data' para no duplicar el payload)
+        $pagination = $importsPaginator->toArray();
+        unset($pagination['data']);
+
+        // 8. Obtenemos los proveedores para el dropdown del filtro
         $suppliers = Supplier::all(['id', 'name']);
 
-        // 8. Renderizamos la vista de Inertia
+        // 9. Renderizamos la vista de Inertia
         return Inertia::render('Import/Index', [
             'imports' => $imports,
+            'pagination' => $pagination,
             'suppliers' => $suppliers,
-            'filters' => $request->only(['search', 'supplier', 'dates']),
+            'filters' => $request->only(['search', 'supplier', 'dates', 'page', 'per_page']),
         ]);
     }
 
@@ -365,7 +375,7 @@ class ImportController extends Controller
         // 1. Validación
         // Los valores deben coincidir con los IDs de las columnas en el frontend
         $validatedData = $request->validate([
-            'status' => 'required|in:Con proveedor,Puerto origen,En tránsito marítimo,Puerto destino,Entregado',
+            'status' => 'required|in:Con proveedor,Puerto origen,En tránsito marítimo,Anticipo agente aduanal,Puerto destino,Entregado',
         ]);
 
         $oldStatus = $import->status;

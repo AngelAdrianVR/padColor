@@ -424,7 +424,7 @@ import { markRaw } from 'vue';
 import DialogModal from '@/Components/DialogModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import {
-    ArchiveBoxIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, PencilSquareIcon, CheckCircleIcon, ChevronDownIcon
+    ArchiveBoxIcon, BanknotesIcon, PencilIcon, PhotoIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, PencilSquareIcon, CheckCircleIcon, ChevronDownIcon
 } from '@heroicons/vue/24/outline';
 import { router } from '@inertiajs/vue3';
 import AnclaIcon from '@/Components/MyComponents/Icons/AnclaIcon.vue';
@@ -443,6 +443,7 @@ export default {
         PrimaryButton,
         PencilIcon,
         ArchiveBoxIcon,
+        BanknotesIcon,
         PhotoIcon,
         PlusIcon,
         TrashIcon,
@@ -498,6 +499,7 @@ export default {
                 'Con proveedor',
                 'Puerto origen',
                 'En tránsito marítimo',
+                'Anticipo agente aduanal',
                 'Puerto destino',
                 'Entregado'
             ],
@@ -505,6 +507,7 @@ export default {
                 'Con proveedor': markRaw(ArchiveBoxIcon),
                 'Puerto origen': markRaw(AnclaIcon),
                 'En tránsito marítimo': markRaw(BarcoIcon),
+                'Anticipo agente aduanal': markRaw(BanknotesIcon),
                 'Puerto destino': markRaw(MarkerIcon),
                 'Entregado': markRaw(PalomitaIcon),
             },
@@ -709,6 +712,7 @@ export default {
                 'Con proveedor': { backgroundColor: '#EDEDED', color: '#3f3f3f' },
                 'Puerto origen': { backgroundColor: '#FCFFD8', color: '#645E20' },
                 'En tránsito marítimo': { backgroundColor: '#FFEFE2', color: '#C06102' },
+                'Anticipo agente aduanal': { backgroundColor: '#F3ECFF', color: '#6D28D9' },
                 'Puerto destino': { backgroundColor: '#E9F6FF', color: '#004C7B' },
                 'Entregado': { backgroundColor: '#E9FFDD', color: '#448734' },
             };
