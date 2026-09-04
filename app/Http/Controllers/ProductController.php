@@ -403,12 +403,15 @@ class ProductController extends Controller
         return response()->json(compact('items'));
     }
 
-    // para el listado en creaciond de produccion
+    // para el listado en creación de producciones / importaciones (búsqueda remota de productos)
     public function getMatch($query)
     {
         $items = Product::latest('id')
-            ->where('name', 'like', "%$query%")
-            ->get(['name', 'id', 'material'])
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('code', 'like', "%{$query}%");
+            })
+            ->get(['name', 'id', 'code', 'material'])
             ->take(30);
         return response()->json(compact('items'));
     }

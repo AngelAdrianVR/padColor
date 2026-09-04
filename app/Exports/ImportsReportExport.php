@@ -82,6 +82,11 @@ class ImportsReportExport implements FromCollection, WithHeadings, WithMapping, 
             return $carry + ($item->pivot->quantity * $item->pivot->unit_cost);
         }, 0);
 
+        // Sumamos también el costo de los productos terminados registrados
+        $merchandiseCost += $import->finishedProducts->reduce(function ($carry, $item) {
+            return $carry + ($item->pivot->quantity * $item->pivot->unit_cost);
+        }, 0);
+
         $logisticsCost = 0;
         $taxesCost = 0;
         $otherCosts = 0;
