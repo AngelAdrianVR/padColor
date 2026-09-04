@@ -88,10 +88,15 @@
                                         </div>
                                         <p class="font-semibold text-gray3F">{{ element.supplier?.name }}</p>
                                         <div class="text-sm text-gray-600 mt-2 h-10 overflow-hidden">
-                                            <p v-if="element.raw_materials && element.raw_materials.length"
+                                            <p
+                                                v-if="(element.raw_materials && element.raw_materials.length) || (element.finished_products && element.finished_products.length)"
                                                 class="leading-tight text-xs">
                                                 <span v-for="(item, index) in element.raw_materials" :key="index"
                                                     class="block">
+                                                    • {{ item.name }}
+                                                </span>
+                                                <span v-for="(item, index) in element.finished_products"
+                                                    :key="'fp-' + index" class="block">
                                                     • {{ item.name }}
                                                 </span>
                                             </p>

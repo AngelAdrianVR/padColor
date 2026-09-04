@@ -6,11 +6,14 @@ use App\Models\CustomsAgent;
 use App\Models\Import;
 use App\Models\ImportCost;
 use App\Models\ImportPayment;
+use App\Models\Product;
 use App\Models\RawMaterial;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -36,7 +39,7 @@ class ImportController extends Controller
         ]);
 
         // 2. Construimos la consulta, añadiendo 'media' para cargar los archivos
-        $importsQuery = Import::with('supplier', 'customsAgent', 'user', 'rawMaterials', 'media', 'costs.payments.media', 'activities.causer');
+        $importsQuery = Import::with('supplier', 'customsAgent', 'user', 'rawMaterials', 'finishedProducts', 'media', 'costs.payments.media', 'activities.causer');
 
         // 3. Aplicamos los filtros si existen en la petición
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
@@ -158,17 +161,26 @@ class ImportController extends Controller
             'estimated_arrival_date' => 'nullable|date',
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
-            'products' => 'required|array|min:1',
             'purchase_order' => 'nullable|max:255',
+            'products' => 'nullable|array',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_cost' => 'required|numeric|min:0.01',
+            'finished_products' => 'nullable|array',
+            'finished_products.*.product_id' => 'required|exists:products,id',
+            'finished_products.*.quantity' => 'required|numeric|min:0.01',
+            'finished_products.*.unit_cost' => 'required|numeric|min:0.01',
             'documents' => 'nullable|array',
             'documents.*.file' => 'required|file|max:10240', // max 10MB
             'documents.*.classification' => 'required|string',
-        ], [
-            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
+
+        // Validación personalizada: al menos una materia prima o un producto terminado
+        if (!count($validatedData['products'] ?? []) && !count($validatedData['finished_products'] ?? [])) {
+            $validator = Validator::make([], []);
+            $validator->errors()->add('products', 'Debe agregar al menos una materia prima o un producto terminado.');
+            throw new ValidationException($validator);
+        }
 
         // 2. Usamos una transacción para asegurar la integridad de los datos
         DB::transaction(function () use ($validatedData, $request) {
@@ -193,10 +205,15 @@ class ImportController extends Controller
                 'purchase_order' => $validatedData['purchase_order'] ?? null,
             ]);
 
-            // 4. Adjuntar los productos a la importación (tabla pivote) y documentos
-            foreach ($validatedData['products'] as $product) {
+            // 4. Adjuntar materias primas y productos terminados a la importación (tabla pivote) y documentos
+            foreach (($validatedData['products'] ?? []) as $product) {
                 $rawMaterial = RawMaterial::find($product['raw_material_id']);
                 $this->attachRawMaterial(new Request($product), $import, $rawMaterial);
+            }
+
+            foreach (($validatedData['finished_products'] ?? []) as $product) {
+                $finishedProduct = Product::find($product['product_id']);
+                $this->attachFinishedProduct(new Request($product), $import, $finishedProduct);
             }
 
             if ($request->has('documents')) {
@@ -220,13 +237,25 @@ class ImportController extends Controller
         // Cargamos las relaciones necesarias
         $import->load('rawMaterials', 'media');
 
-        // Formateamos los productos para el frontend, incluyendo los datos de la tabla pivote
+        // Formateamos las materias primas para el frontend, incluyendo los datos de la tabla pivote
         $import->products = $import->rawMaterials->map(function ($rawMaterial) {
             return [
                 'raw_material_id' => $rawMaterial->id,
                 'quantity' => $rawMaterial->pivot->quantity,
                 'unit_cost' => $rawMaterial->pivot->unit_cost,
                 'currency' => $rawMaterial->pivot->currency,
+            ];
+        });
+
+        // Formateamos los productos terminados para el frontend, incluyendo los datos de la tabla pivote
+        $import->finished_products = $import->finishedProducts()->get()->map(function ($finishedProduct) {
+            return [
+                'product_id' => $finishedProduct->id,
+                'quantity' => $finishedProduct->pivot->quantity,
+                'unit_cost' => $finishedProduct->pivot->unit_cost,
+                'currency' => $finishedProduct->pivot->currency,
+                'product_name' => $finishedProduct->name,
+                'product_code' => $finishedProduct->code,
             ];
         });
 
@@ -265,43 +294,78 @@ class ImportController extends Controller
             'estimated_payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'purchase_order' => 'nullable|max:255',
-            'products' => 'required|array|min:1',
+            'products' => 'nullable|array',
             'products.*.raw_material_id' => 'required|exists:raw_materials,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_cost' => 'required|numeric|min:0.01',
+            'finished_products' => 'nullable|array',
+            'finished_products.*.product_id' => 'required|exists:products,id',
+            'finished_products.*.quantity' => 'required|numeric|min:0.01',
+            'finished_products.*.unit_cost' => 'required|numeric|min:0.01',
             'new_documents' => 'nullable|array',
             'new_documents.*.file' => 'required|file|max:10240', // max 10MB
             'new_documents.*.classification' => 'required|string',
             'documents_to_delete' => 'nullable|array',
             'documents_to_delete.*' => 'integer|exists:media,id',
-        ], [
-            'products.required' => 'Debe agregar al menos una materia prima.',
         ]);
 
-        DB::transaction(function () use ($validatedData, $request, $import) {
-            $import->update($request->except('products', 'new_documents', 'documents_to_delete'));
+        // Validación personalizada: al menos una materia prima o un producto terminado
+        if (!count($validatedData['products'] ?? []) && !count($validatedData['finished_products'] ?? [])) {
+            $validator = Validator::make([], []);
+            $validator->errors()->add('products', 'Debe agregar al menos una materia prima o un producto terminado.');
+            throw new ValidationException($validator);
+        }
 
-            $newProductsData = collect($validatedData['products'])->keyBy('raw_material_id');
+        DB::transaction(function () use ($validatedData, $request, $import) {
+            $import->update($request->except('products', 'finished_products', 'new_documents', 'documents_to_delete'));
+
+            // --- Sincronización de materias primas ---
+            $newProductsData = collect($validatedData['products'] ?? [])->keyBy('raw_material_id');
             $currentProducts = $import->rawMaterials()->get()->keyBy('id');
 
-            // 1. Desvincular productos que ya no están en la lista
+            // 1. Desvincular materias primas que ya no están en la lista
             $idsToDetach = $currentProducts->keys()->diff($newProductsData->keys());
             foreach ($idsToDetach as $id) {
                 $this->detachRawMaterial($import, $currentProducts[$id]);
             }
 
-            // 2. Vincular nuevos productos y actualizar los existentes
+            // 2. Vincular nuevas materias primas y actualizar las existentes
             foreach ($newProductsData as $id => $productData) {
                 $rawMaterial = RawMaterial::find($id);
                 if ($currentProducts->has($id)) {
-                    // El producto ya existe, verificar si hay cambios
+                    // La materia prima ya existe, verificar si hay cambios
                     $pivot = $currentProducts[$id]->pivot;
                     if ($pivot->quantity != $productData['quantity'] || $pivot->unit_cost != $productData['unit_cost']) {
                         $this->updateRawMaterial($import, $rawMaterial, $productData, $pivot);
                     }
                 } else {
-                    // Es un producto nuevo, vincularlo
+                    // Es una materia prima nueva, vincularla
                     $this->attachRawMaterial(new Request($productData), $import, $rawMaterial);
+                }
+            }
+
+            // --- Sincronización de productos terminados ---
+            $newFinishedProductsData = collect($validatedData['finished_products'] ?? [])->keyBy('product_id');
+            $currentFinishedProducts = $import->finishedProducts()->get()->keyBy('id');
+
+            // 1. Desvincular productos terminados que ya no están en la lista
+            $idsToDetachFinished = $currentFinishedProducts->keys()->diff($newFinishedProductsData->keys());
+            foreach ($idsToDetachFinished as $id) {
+                $this->detachFinishedProduct($import, $currentFinishedProducts[$id]);
+            }
+
+            // 2. Vincular nuevos productos terminados y actualizar los existentes
+            foreach ($newFinishedProductsData as $id => $productData) {
+                $finishedProduct = Product::find($id);
+                if ($currentFinishedProducts->has($id)) {
+                    // El producto terminado ya existe, verificar si hay cambios
+                    $pivot = $currentFinishedProducts[$id]->pivot;
+                    if ($pivot->quantity != $productData['quantity'] || $pivot->unit_cost != $productData['unit_cost']) {
+                        $this->updateFinishedProduct($import, $finishedProduct, $productData, $pivot);
+                    }
+                } else {
+                    // Es un producto terminado nuevo, vincularlo
+                    $this->attachFinishedProduct(new Request($productData), $import, $finishedProduct);
                 }
             }
 
@@ -345,8 +409,9 @@ class ImportController extends Controller
         // $this->authorize('delete', $import);
 
         DB::transaction(function () use ($import) {
-            // 1. Desvincular materias primas
+            // 1. Desvincular materias primas y productos terminados
             $import->rawMaterials()->detach();
+            $import->finishedProducts()->detach();
 
             // 2. Eliminar costos y pagos asociados
             foreach ($import->costs as $cost) {
@@ -546,6 +611,43 @@ class ImportController extends Controller
         return back()->with('success', 'Materia prima eliminada.');
     }
 
+    public function attachFinishedProduct(Request $request, Import $import, Product $product = null)
+    {
+        $product = $product ?? Product::find($request->product_id);
+        $import->finishedProducts()->attach($product->id, [
+            'quantity' => $request->quantity,
+            'unit_cost' => $request->unit_cost,
+        ]);
+
+        // no registrar esta actividad si recién se creó la importación
+        if ($import->created_at->toDateTimeString() != now()->toDateTimeString()) {
+            activity()->performedOn($import)->event('created')->causedBy(auth()->user())->withProperties(['producto' => $product->name, 'cantidad' => $request->quantity])->log('agregó el producto terminado');
+        }
+    }
+
+    public function detachFinishedProduct(Import $import, Product $product)
+    {
+        $import->finishedProducts()->detach($product->id);
+        activity()->performedOn($import)->event('deleted')->causedBy(auth()->user())->withProperties(['producto' => $product->name])->log('eliminó el producto terminado');
+        return back()->with('success', 'Producto terminado eliminado.');
+    }
+
+    public function updateFinishedProduct(Import $import, Product $product, array $newData, $oldPivot)
+    {
+        $import->finishedProducts()->updateExistingPivot($product->id, [
+            'quantity' => $newData['quantity'],
+            'unit_cost' => $newData['unit_cost'],
+        ]);
+
+        activity()->performedOn($import)->causedBy(auth()->user())
+            ->withProperties([
+                'producto' => $product->name,
+                'old' => ['cantidad' => $oldPivot->quantity, 'costo_unitario' => $oldPivot->unit_cost],
+                'new' => ['cantidad' => $newData['quantity'], 'costo_unitario' => $newData['unit_cost']]
+            ])
+            ->log('actualizó el producto terminado');
+    }
+
     public function storeDocument(Request $request, Import $import)
     {
         $media = $import->addMedia($request->file)->toMediaCollection($request->classification);
@@ -574,7 +676,7 @@ class ImportController extends Controller
         ]);
 
         // Construir la consulta con los filtros (igual que en el método index)
-        $importsQuery = Import::with('supplier', 'rawMaterials', 'costs'); // Cargar relaciones necesarias
+        $importsQuery = Import::with('supplier', 'rawMaterials', 'finishedProducts', 'costs'); // Cargar relaciones necesarias
 
         $importsQuery->when($request->filled('search'), function ($query) use ($request) {
             $query->where('folio', 'like', '%' . $request->search . '%');

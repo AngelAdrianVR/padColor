@@ -88,6 +88,13 @@ class Import extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    public function finishedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'import_product')
+            ->withPivot('quantity', 'unit_cost')
+            ->withTimestamps();
+    }
+
     public function costs(): HasMany
     {
         return $this->hasMany(ImportCost::class);

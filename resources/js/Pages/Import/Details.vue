@@ -133,28 +133,68 @@
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="Mercancías" name="merchandises">
-                    <div v-if="importData.raw_materials && importData.raw_materials.length" class="border rounded-lg">
-                        <div class="grid grid-cols-4 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
-                            <span>Materia prima</span>
-                            <span class="text-right">Cantidad</span>
-                            <span class="text-right">Costo unitario</span>
-                            <span class="text-right">Total</span>
-                        </div>
-                        <div v-for="product in importData.raw_materials" :key="product.id"
-                            class="grid grid-cols-4 px-4 py-2 border-b text-[11px]">
-                            <div class="flex items-center space-x-2">
-                                <!-- <PhotoIcon class="size-8 text-gray-300" /> -->
-                                <span>{{ product.name }}</span>
+                    <div v-if="hasMerchandise" class="space-y-6">
+                        <!-- Materias primas -->
+                        <div v-if="importData.raw_materials && importData.raw_materials.length"
+                            class="border rounded-lg">
+                            <div
+                                class="grid grid-cols-4 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
+                                <span>Materia prima</span>
+                                <span class="text-right">Cantidad</span>
+                                <span class="text-right">Costo unitario</span>
+                                <span class="text-right">Total</span>
                             </div>
-                            <span class="text-right self-center">{{ product.pivot.quantity }} {{ product.measure_unit
-                                }}</span>
-                            <span class="text-right self-center">{{ formatCurrency(product.pivot.unit_cost) }}</span>
-                            <span class="text-right self-center font-semibold">{{ formatCurrency(product.pivot.quantity
-                                * product.pivot.unit_cost) }}</span>
+                            <div v-for="product in importData.raw_materials" :key="product.id"
+                                class="grid grid-cols-4 px-4 py-2 border-b text-[11px]">
+                                <div class="flex items-center space-x-2">
+                                    <!-- <PhotoIcon class="size-8 text-gray-300" /> -->
+                                    <span>{{ product.name }}</span>
+                                </div>
+                                <span class="text-right self-center">{{ product.pivot.quantity }} {{ product.measure_unit
+                                    }}</span>
+                                <span class="text-right self-center">{{ formatCurrency(product.pivot.unit_cost) }}</span>
+                                <span class="text-right self-center font-semibold">{{
+                                    formatCurrency(product.pivot.quantity * product.pivot.unit_cost) }}</span>
+                            </div>
+                            <div class="grid grid-cols-4 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
+                                <span class="col-span-3 text-right">Subtotal</span>
+                                <span class="text-right">{{ formatCurrency(merchandiseTotal) }}</span>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-4 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
-                            <span class="col-span-3 text-right">Total</span>
-                            <span class="text-right">{{ formatCurrency(merchandiseTotal) }}</span>
+
+                        <!-- Productos terminados -->
+                        <div v-if="importData.finished_products && importData.finished_products.length"
+                            class="border rounded-lg">
+                            <div
+                                class="grid grid-cols-4 px-4 py-2 border-b bg-gray-50 text-xs text-gray-500 font-semibold">
+                                <span>Producto terminado</span>
+                                <span class="text-right">Cantidad</span>
+                                <span class="text-right">Costo unitario</span>
+                                <span class="text-right">Total</span>
+                            </div>
+                            <div v-for="finishedProduct in importData.finished_products" :key="finishedProduct.id"
+                                class="grid grid-cols-4 px-4 py-2 border-b text-[11px]">
+                                <div class="flex items-center space-x-2">
+                                    <span>{{ finishedProduct.name }}</span>
+                                </div>
+                                <span class="text-right self-center">{{ finishedProduct.pivot.quantity }}
+                                    {{ finishedProduct.measure_unit }}</span>
+                                <span class="text-right self-center">{{ formatCurrency(finishedProduct.pivot.unit_cost)
+                                    }}</span>
+                                <span class="text-right self-center font-semibold">{{
+                                    formatCurrency(finishedProduct.pivot.quantity * finishedProduct.pivot.unit_cost)
+                                    }}</span>
+                            </div>
+                            <div class="grid grid-cols-4 px-4 py-1 bg-gray-50 text-[11px] font-semibold">
+                                <span class="col-span-3 text-right">Subtotal</span>
+                                <span class="text-right">{{ formatCurrency(finishedMerchandiseTotal) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Total general -->
+                        <div class="grid grid-cols-4 px-4 py-2 border rounded-lg bg-gray-50 text-[11px] font-bold">
+                            <span class="col-span-3 text-right">Total mercancías</span>
+                            <span class="text-right">{{ formatCurrency(totalMerchandiseValue) }}</span>
                         </div>
                     </div>
                     <div v-else class="text-center text-gray-500 p-4">
@@ -521,6 +561,22 @@ export default {
                 return total + (product.pivot.quantity * product.pivot.unit_cost);
             }, 0);
         },
+        finishedMerchandiseTotal() {
+            if (!this.importData.finished_products) return 0;
+
+            return this.importData.finished_products.reduce((total, product) => {
+                return total + (product.pivot.quantity * product.pivot.unit_cost);
+            }, 0);
+        },
+        totalMerchandiseValue() {
+            return this.merchandiseTotal + this.finishedMerchandiseTotal;
+        },
+        hasMerchandise() {
+            return Boolean(
+                (this.importData.raw_materials && this.importData.raw_materials.length) ||
+                (this.importData.finished_products && this.importData.finished_products.length)
+            );
+        },
         totalCosts() {
             if (!this.importData.costs) return 0;
             return this.importData.costs.reduce((total, cost) => {
@@ -571,6 +627,21 @@ export default {
                     return `${causerName} <br> eliminó un pago relacionado al costo <strong>${properties.import_cost}</strong> (monto: $${properties.amount}).`;
                 case 'eliminó la materia prima':
                     return `${causerName} <br> eliminó la materia prima <strong>${properties.materia_prima}</strong>.`;
+                case 'agregó el producto terminado':
+                    return `${causerName} <br> agregó el producto terminado <strong>${properties.producto}</strong> (Cantidad: ${properties.cantidad}).`;
+                case 'eliminó el producto terminado':
+                    return `${causerName} <br> eliminó el producto terminado <strong>${properties.producto}</strong>.`;
+                case 'actualizó el producto terminado':
+                    const oldFinished = properties.old;
+                    const newFinished = properties.new;
+                    let finishedChanges = [];
+                    if (oldFinished.cantidad !== newFinished.cantidad) {
+                        finishedChanges.push(`cantidad de <strong>${oldFinished.cantidad}</strong> a <strong>${newFinished.cantidad}</strong>`);
+                    }
+                    if (oldFinished.costo_unitario !== newFinished.costo_unitario) {
+                        finishedChanges.push(`costo de <strong>${this.formatCurrency(oldFinished.costo_unitario)}</strong> a <strong>${this.formatCurrency(newFinished.costo_unitario)}</strong>`);
+                    }
+                    return `${causerName} <br> actualizó el producto terminado <strong>${properties.producto}</strong>: ${finishedChanges.join(', ')}.`;
                 case 'actualizó la materia prima':
                     const old = properties.old;
                     const new_ = properties.new;
