@@ -171,6 +171,57 @@
                 </div>
                 <InputError :message="form.errors.products" />
 
+                <!-- Sección: Productos terminados -->
+                <div class="flex items-center justify-between col-span-full my-5 pt-3 border-t">
+                    <h2 class="text-gray-600 font-bold">Productos terminados</h2>
+                    <PrimaryButton @click="addFinishedProduct" type="button"
+                        class="!text-primary !bg-white border !border-gray-300 !rounded-md text-sm">
+                        <PlusIcon class="h-4 w-4 mr-1 inline" />
+                        Agregar producto terminado
+                    </PrimaryButton>
+                </div>
+                <div v-for="(finishedProduct, index) in form.finished_products" :key="index"
+                    class="flex items-end space-x-3 mb-3">
+                    <div class="flex-grow">
+                        <InputLabel value="Producto terminado *" />
+                        <el-select v-model="finishedProduct.product_id" placeholder="Busca el producto por nombre o código"
+                            class="!w-full" filterable remote reserve-keyword
+                            :remote-method="fetchFinishedProducts" :loading="fetchingFinishedProducts"
+                            no-match-text="No hay productos coincidentes"
+                            @change="handleFinishedProductChange(finishedProduct, $event)">
+                            <el-option v-for="item in finishedProductOptions" :key="item.id"
+                                :label="formatProductLabel(item)" :value="item.id" />
+                        </el-select>
+                    </div>
+                    <div style="width: 150px;">
+                        <InputLabel value="Cantidad *" />
+                        <el-input-number v-model="finishedProduct.quantity" :min="0.01" :step="0.01"
+                            placeholder="Ej. 100" class="!w-full" />
+                    </div>
+                    <div style="width: 150px;">
+                        <InputLabel value="Costo unitario *" />
+                        <el-input v-model="finishedProduct.unit_cost" placeholder="Ej. 500.00" required>
+                            <template #prepend>$</template>
+                        </el-input>
+                    </div>
+                    <div style="width: 150px;">
+                        <InputLabel value="Total" />
+                        <p class="ml-3">
+                            ${{ (finishedProduct.unit_cost * finishedProduct.quantity)?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                        </p>
+                    </div>
+                    <el-popconfirm title="¿Eliminar producto terminado?" @confirm="removeFinishedProduct(index)"
+                        confirm-button-text="Sí" icon-color="#373737" cancel-button-text="No">
+                        <template #reference>
+                            <button type="button"
+                                class="bg-primarylight text-primary rounded-md size-7 flex items-center justify-center mb-1">
+                                <TrashIcon class="size-4" />
+                            </button>
+                        </template>
+                    </el-popconfirm>
+                </div>
+                <InputError :message="form.errors.finished_products" />
+
                 <!-- Sección: Documentos -->
                 <div class="flex items-center justify-between col-span-full my-5 pt-3 border-t">
                     <h2 class="text-gray-600 font-bold">Documentos adjuntos</h2>
@@ -337,6 +388,7 @@ export default {
             currency: this.import.currency,
             purchase_order: this.import.purchase_order,
             products: this.import.products || [],
+            finished_products: this.import.finished_products || [],
             documents: this.import.documents || [], // Documentos existentes
             new_documents: [], // Nuevos documentos a subir
             documents_to_delete: [], // IDs de documentos a eliminar
@@ -352,6 +404,8 @@ export default {
         return {
             fastForm,
             form,
+            searchResults: [],
+            fetchingFinishedProducts: false,
             addingSupplier: false,
             showFastAddModal: false,
             incoterms: [
@@ -368,6 +422,30 @@ export default {
                 'CIF: Cost, Insurance and Freight (Costo, seguro y flete)',
             ]
         };
+    },
+    computed: {
+        finishedProductOptions() {
+            const options = [];
+            const seen = new Set();
+            const push = (item) => {
+                if (item && item.id !== null && item.id !== undefined && !seen.has(item.id)) {
+                    seen.add(item.id);
+                    options.push(item);
+                }
+            };
+
+            // Siempre incluimos los productos ya seleccionados en las filas para
+            // que el select muestre su nombre aunque no se haya hecho una búsqueda.
+            (this.form.finished_products || []).forEach((row) => {
+                if (row.product_name) {
+                    push({ id: row.product_id, name: row.product_name, code: row.product_code || null });
+                }
+            });
+
+            (this.searchResults || []).forEach(push);
+
+            return options;
+        },
     },
     methods: {
         update() {
@@ -427,6 +505,47 @@ export default {
         },
         removeProduct(index) {
             this.form.products.splice(index, 1);
+        },
+        addFinishedProduct() {
+            this.form.finished_products.push({
+                product_id: null,
+                quantity: 1,
+                unit_cost: null,
+                product_name: null,
+                product_code: null,
+            });
+        },
+        removeFinishedProduct(index) {
+            this.form.finished_products.splice(index, 1);
+        },
+        async fetchFinishedProducts(query) {
+            if (!query || !String(query).trim()) {
+                this.searchResults = [];
+                return;
+            }
+
+            this.fetchingFinishedProducts = true;
+            try {
+                const response = await axios.get(route('products.get-match', { query }));
+
+                if (response.status === 200) {
+                    this.searchResults = response.data.items || [];
+                }
+            } catch (error) {
+                console.error('Error al buscar productos terminados:', error);
+            } finally {
+                this.fetchingFinishedProducts = false;
+            }
+        },
+        formatProductLabel(item) {
+            return item.name + (item.code ? ` (${item.code})` : '');
+        },
+        handleFinishedProductChange(row, productId) {
+            const match = this.finishedProductOptions.find((option) => option.id === productId);
+            if (match) {
+                row.product_name = match.name;
+                row.product_code = match.code || null;
+            }
         },
         triggerFileInput() {
             this.$refs.fileInput.click();
