@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
@@ -451,5 +452,163 @@ class ProductController extends Controller
         $fileName = 'ficha-tecnica-' . \Illuminate\Support\Str::slug($product->name) . '.xlsx';
 
         return Excel::download(new ProductSheetExport($product, $sheetStructure), $fileName);
+    }
+
+    /**
+     * Recibe un lote de filas de Excel (ya normalizadas en el frontend) y las
+     * inserta/actualiza en la tabla products. Cada petición maneja solo un lote,
+     * por lo que no depende de colas ni de límites de ejecución del servidor.
+     */
+    public function importBatch(Request $request)
+    {
+        $request->validate([
+            'rows' => 'required|array|min:1|max:1000',
+        ]);
+
+        $rows = $request->input('rows', []);
+        $created = 0;
+        $updated = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($rows as $row) {
+                $code = $this->cleanExcelString($row['codigo'] ?? null);
+                $name = $this->cleanExcelString($row['descripcion'] ?? null);
+                $excelRow = $row['excel_row'] ?? null;
+
+                // Fila completamente vacía: se ignora sin marcar error.
+                if ($name === null && $code === null) {
+                    continue;
+                }
+
+                // La columna "Descripción" se usa como nombre y es obligatoria.
+                if ($name === null) {
+                    $errors[] = ['fila' => $excelRow, 'message' => 'Falta el nombre del producto (columna "Descripción").'];
+                    continue;
+                }
+
+                $season = $this->cleanExcelString($row['familia'] ?? null) ?? 'Toda ocasión';
+                $stock = $this->parseExcelNumber($row['existencia_actual'] ?? null);
+                $price = $this->parseExcelNumber($row['precio_de_lista'] ?? null);
+                $measureUnit = $this->cleanExcelString($row['unidad'] ?? null);
+
+                $data = [
+                    'name' => mb_substr($name, 0, 255),
+                    'code' => $code !== null ? mb_substr($code, 0, 255) : null,
+                    'description' => $this->cleanExcelString($row['descripcion_alterna'] ?? null),
+                    'measure_unit' => $measureUnit !== null ? mb_substr($measureUnit, 0, 255) : null,
+                    'season' => mb_substr($season, 0, 255),
+                    'stock' => $stock !== null && $stock >= 0 ? $stock : null,
+                    'price' => $price !== null && $price >= 0 ? $price : null,
+                ];
+
+                // "Medida" con formato "Ancho x Largo" (ej. "20 x 30").
+                $dimensions = $this->parseDimensions($row['medida'] ?? null);
+                if ($dimensions !== null) {
+                    $data['width'] = $dimensions['width'];
+                    $data['large'] = $dimensions['large'];
+                }
+
+                if ($code !== null) {
+                    // Si ya existe un producto con ese código, se actualiza en lugar de duplicarse.
+                    $product = Product::updateOrCreate(['code' => $code], $data);
+                } else {
+                    $product = Product::create($data);
+                }
+
+                if ($product->wasRecentlyCreated) {
+                    $created++;
+                } else {
+                    $updated++;
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('[PRODUCTOS IMPORT] Error procesando lote: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return response()->json([
+                'message' => 'No se pudo procesar el lote. Ningún registro de este lote fue guardado.',
+                'errors' => [['fila' => null, 'message' => $e->getMessage()]],
+            ], 422);
+        }
+
+        return response()->json(compact('created', 'updated', 'errors'));
+    }
+
+    /**
+     * Limpia un valor de celda: recorta espacios y convierte vacíos en null.
+     */
+    private function cleanExcelString($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $clean = trim((string) $value);
+
+        return $clean === '' ? null : $clean;
+    }
+
+    /**
+     * Convierte un valor de celda a número tolerando formatos comunes:
+     * "1,234.56", "1.234,56", "12,50", "$1 250.00", etc.
+     */
+    private function parseExcelNumber($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $number = str_replace(['$', ' '], '', trim((string) $value));
+
+        if ($number === '' || !preg_match('/^-?[\d.,]+$/', $number)) {
+            return null;
+        }
+
+        $commaPos = strrpos($number, ',');
+        $dotPos = strrpos($number, '.');
+
+        if ($commaPos !== false && $dotPos !== false) {
+            // El separador que aparece al final es el decimal.
+            $number = $commaPos > $dotPos
+                ? str_replace(['.', ','], ['', '.'], $number) // 1.234,56
+                : str_replace(',', '', $number);              // 1,234.56
+        } elseif ($commaPos !== false) {
+            // Una sola coma al final es decimal (12,50); si no, son miles (1,234).
+            $number = substr_count($number, ',') === 1 && preg_match('/,\d{1,2}$/', $number)
+                ? str_replace(',', '.', $number)
+                : str_replace(',', '', $number);
+        }
+
+        return is_numeric($number) ? (float) $number : null;
+    }
+
+    /**
+     * Intenta interpretar "Medida" como "Ancho x Largo" (ej. "20 x 30").
+     */
+    private function parseDimensions($value): ?array
+    {
+        $measure = $this->cleanExcelString($value);
+
+        if ($measure === null || !preg_match('/^\s*(\d+(?:[.,]\d+)?)\s*[xX×]\s*(\d+(?:[.,]\d+)?)\s*$/', $measure, $matches)) {
+            return null;
+        }
+
+        $width = (int) round($this->parseExcelNumber($matches[1]) ?? 0);
+        $large = (int) round($this->parseExcelNumber($matches[2]) ?? 0);
+
+        if ($width <= 0 || $large <= 0 || $width > 65535 || $large > 65535) {
+            return null;
+        }
+
+        return ['width' => $width, 'large' => $large];
     }
 }
