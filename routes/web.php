@@ -170,6 +170,7 @@ Route::get('products-clone/{product}', [ProductController::class, 'clone'])->nam
 Route::get('products/get-matches/{query}', [ProductController::class, 'getMatches'])->name('products.get-matches');
 Route::get('products/get-match-list/{query}', [ProductController::class, 'getMatch'])->name('products.get-match'); // para crear una produccion
 Route::post('products/update-with-media/{product}', [ProductController::class, 'updateWithMedia'])->name('products.update-with-media')->middleware('auth');
+Route::post('products/import-batch', [ProductController::class, 'importBatch'])->name('products.import-batch')->middleware('auth');
 Route::delete('products/{id}/media/{fileId}', [ProductController::class, 'deleteFile'])->name('products.delete-file');
 Route::post('/products/{product}/sheet', [ProductController::class, 'updateSheetData'])->name('products.sheet.update');
 Route::get('/products/{product}/export-sheet', [ProductController::class, 'exportSheet'])->name('products.export-sheet');

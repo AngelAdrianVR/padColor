@@ -10,7 +10,14 @@
                         placeholder="Buscar producto" type="search">
                     <i class="fa-solid fa-magnifying-glass text-xs text-gray99 absolute top-[10px] left-4"></i>
                 </div>
-                <PrimaryButton class="mt-3 lg:mt-0" v-if="this.$page.props.auth.user.permissions.includes('Crear productos')" @click="$inertia.get(route('products.create'))">Agregar producto</PrimaryButton>
+                <div class="mt-3 lg:mt-0 flex flex-wrap items-center gap-2">
+                    <PrimaryButton
+                        v-if="this.$page.props.auth.user.permissions.includes('Crear productos')"
+                        @click="openImportModal">
+                        <i class="fa-solid fa-file-import mr-1"></i> Importar productos
+                    </PrimaryButton>
+                    <PrimaryButton v-if="this.$page.props.auth.user.permissions.includes('Crear productos')" @click="$inertia.get(route('products.create'))">Agregar producto</PrimaryButton>
+                </div>
             </div>
             <div class="mt-2 text-center">
                 <el-tag v-if="search" size="large" closable @close="handleTagClose">
@@ -82,6 +89,93 @@
             </el-table>
         </div>
     </main>
+
+    <!-- Modal para importar productos desde Excel -->
+    <DialogModal :show="showImportModal" @close="closeImportModal" :max-width="'3xl'" :closeable="!importing">
+        <template #title>
+            <h1 class="font-semibold">Importar productos desde Excel</h1>
+        </template>
+        <template #content>
+            <div v-if="!importParsing">
+                <h2 class="font-bold">Prepara tu archivo:</h2>
+                <ul class="ml-5 mt-1 text-xs space-y-1 list-disc">
+                    <li>La primera fila debe contener los <b>encabezados</b> de las columnas.</li>
+                    <li>Las columnas se detectan <b>por el nombre del encabezado</b>: el orden y la posición no importan.</li>
+                    <li><b>Descripción</b> = nombre del producto (obligatoria). Si falta en una fila, se reportará como error.</li>
+                    <li><b>Familia</b> = Temporada. Si viene vacía se asignará <b>"Toda ocasión"</b>.</li>
+                    <li>Si <b>Medida</b> trae formato <b>Ancho x Largo</b> (ej. 20 x 30) se guardará en Ancho/Largo del producto.</li>
+                    <li>Si ya existe un producto con el mismo <b>Código</b>, sus datos se actualizan (no se duplica).</li>
+                </ul>
+
+                <div class="mt-6 ml-2">
+                    <FileUploader @files-selected="handleImportFiles" :multiple="false" acceptedFormat="excel" />
+                </div>
+
+                <p v-if="importParsingError" class="mt-2 text-xs text-red-600">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ importParsingError }}
+                </p>
+
+                <div v-if="!importing && !importingDone && totalRows > 0" class="mt-4 text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-4 py-3">
+                    <p><b>{{ totalRows.toLocaleString() }}</b> fila(s) con datos, listas para importarse en lotes de {{ batchSize }}.</p>
+                    <p v-if="recognizedColumns.length" class="mt-1">Columnas reconocidas: <b>{{ recognizedColumns.join(' · ') }}</b></p>
+                </div>
+
+                <div v-if="importing || importingDone" class="mt-6">
+                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                        <span v-if="importing">{{ cancelRequested ? 'Deteniendo...' : 'Procesando...' }}</span>
+                        <span v-else-if="importResult?.aborted">Importación detenida</span>
+                        <span v-else>Importación finalizada</span>
+                        <span v-if="totalRows > 0">{{ processedRows.toLocaleString() }} / {{ totalRows.toLocaleString() }} ({{ progressPercent }}%)</span>
+                    </div>
+                    <el-progress :percentage="progressPercent" :status="progressStatus" :stroke-width="14" />
+                    <p v-if="importing" class="mt-2 text-xs text-gray-400">
+                        Cada lote se envía en una petición corta, así la importación no depende del tiempo límite del servidor.
+                    </p>
+                </div>
+
+                <div v-if="importingDone && importResult" class="mt-6">
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-3">
+                            <p class="text-lg font-bold text-emerald-700">{{ importResult.created.toLocaleString() }}</p>
+                            <p class="text-xs text-emerald-800">productos creados</p>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-3">
+                            <p class="text-lg font-bold text-blue-700">{{ importResult.updated.toLocaleString() }}</p>
+                            <p class="text-xs text-blue-800">productos actualizados</p>
+                        </div>
+                    </div>
+
+                    <p v-if="importError" class="mt-3 text-xs bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ importError }}
+                    </p>
+
+                    <div v-if="importResult.errors.length" class="mt-3">
+                        <h3 class="text-sm font-semibold text-red-600">Filas con error ({{ importResult.errors.length }})</h3>
+                        <ul class="mt-1 max-h-40 overflow-auto text-xs space-y-1 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700">
+                            <li v-for="(item, index) in importResult.errors" :key="index">Fila {{ item.fila ?? '—' }}: {{ item.message }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="flex items-center justify-center py-10 text-gray-500 text-xs">
+                <i class="fa-solid fa-spinner fa-spin mr-2 text-lg text-primary"></i> Analizando archivo...
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex justify-end space-x-2">
+                <template v-if="!importingDone">
+                    <CancelButton @click="cancelImport" :disabled="cancelRequested">
+                        {{ importing ? (cancelRequested ? 'Deteniendo...' : 'Detener') : 'Cancelar' }}
+                    </CancelButton>
+                    <PrimaryButton v-if="!importing && totalRows > 0 && !importParsing" @click="startImport">
+                        <i class="fa-solid fa-file-import mr-1"></i> Importar productos
+                    </PrimaryButton>
+                </template>
+                <PrimaryButton v-else @click="finishImport">Cerrar</PrimaryButton>
+            </div>
+        </template>
+    </DialogModal>
 
     <!-- Modal para ver detalles del producto -->
     <DialogModal :show="showDetailsModal" @close="showDetailsModal = false" :max-width="'3xl'">
@@ -163,9 +257,24 @@ import ThirthButton from '@/Components/MyComponents/ThirthButton.vue';
 import PaginationWithNoMeta from "@/Components/MyComponents/PaginationWithNoMeta.vue";
 import FileView from "@/Components/MyComponents/Ticket/FileView.vue";
 import Loading from "@/Components/MyComponents/Loading.vue";
+import CancelButton from '@/Components/MyComponents/CancelButton.vue';
+import FileUploader from '@/Components/MyComponents/FileUploader.vue';
 import { format, parseISO } from 'date-fns';
 import es from 'date-fns/locale/es';
 import axios from 'axios';
+
+// Columnas que la importación utiliza (localizadas por nombre de encabezado, sin importar su posición).
+const BATCH_SIZE = 500;
+const IMPORT_COLUMNS = [
+    { key: 'codigo', label: 'Código' },
+    { key: 'descripcion', label: 'Descripción (nombre)' },
+    { key: 'descripcion_alterna', label: 'Descripción alterna' },
+    { key: 'familia', label: 'Familia (Temporada)' },
+    { key: 'unidad', label: 'Unidad' },
+    { key: 'medida', label: 'Medida (Ancho x Largo)' },
+    { key: 'existencia_actual', label: 'Existencia Actual (stock)' },
+    { key: 'precio_de_lista', label: 'Precio de lista' },
+];
 
 export default {
 data() {
@@ -176,10 +285,27 @@ data() {
         filteredProducts: this.products,
         showDetailsModal: false, //mostrar detalles del producto (modal)
         selectedProduct: null, //Producto seleccionado para mostrar sus detalles
+        // Estado de la importación masiva desde Excel
+        showImportModal: false,
+        batchSize: BATCH_SIZE,
+        importFile: null,
+        pendingRows: [],
+        totalRows: 0,
+        processedRows: 0,
+        importing: false,
+        cancelRequested: false,
+        importParsing: false,
+        importingDone: false,
+        importResult: null,
+        importError: null,
+        importParsingError: null,
+        recognizedColumns: [],
     }
 },
 components: {
     Loading,
+    CancelButton,
+    FileUploader,
     FileView,
     AppLayout,
     DialogModal,
@@ -280,6 +406,201 @@ methods: {
     },
     formatDate(dateString) {
         return format(parseISO(dateString), 'dd MMMM, yyyy', { locale: es });
+    },
+
+    // ===== Importación masiva de productos desde Excel =====
+    openImportModal() {
+        this.importParsingError = null;
+        this.showImportModal = true;
+    },
+    closeImportModal() {
+        if (this.importing) {
+            this.cancelRequested = true;
+            return;
+        }
+        if (this.importingDone) {
+            this.finishImport();
+            return;
+        }
+        this.showImportModal = false;
+        this.resetImportState();
+    },
+    resetImportState() {
+        this.importFile = null;
+        this.pendingRows = [];
+        this.totalRows = 0;
+        this.processedRows = 0;
+        this.importing = false;
+        this.cancelRequested = false;
+        this.importParsing = false;
+        this.importingDone = false;
+        this.importResult = null;
+        this.importError = null;
+        this.importParsingError = null;
+        this.recognizedColumns = [];
+    },
+    handleImportFiles(files) {
+        const file = files && files.length ? files[0] : null;
+        this.resetImportState();
+        if (!file) return;
+        this.importFile = file;
+        this.parseExcelFile(file);
+    },
+    async parseExcelFile(file) {
+        this.importParsing = true;
+        this.importParsingError = null;
+        try {
+            const XLSX = await this.loadXlsxLib();
+            const buffer = await file.arrayBuffer();
+            const workbook = XLSX.read(buffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            if (!sheetName) throw new Error('empty-workbook');
+            const sheet = workbook.Sheets[sheetName];
+            const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: null, raw: true });
+
+            const pending = [];
+            for (let i = 0; i < rawRows.length; i++) {
+                const source = rawRows[i] || {};
+                const normalized = {};
+                for (const header of Object.keys(source)) {
+                    const key = this.normalizeExcelHeader(header);
+                    if (!key) continue;
+                    if (normalized[key] === undefined) {
+                        normalized[key] = this.excelCellToString(source[header]);
+                    }
+                }
+                const hasData = Object.values(normalized).some((value) => value !== null);
+                if (!hasData) continue;
+                normalized.excel_row = i + 2; // la fila 1 corresponde a los encabezados
+                pending.push(normalized);
+            }
+
+            this.pendingRows = pending;
+            this.totalRows = pending.length;
+            this.processedRows = 0;
+            this.recognizedColumns = IMPORT_COLUMNS
+                .filter((column) => pending.some((row) => row[column.key] !== null))
+                .map((column) => column.label);
+
+            if (!this.totalRows) {
+                this.importParsingError = 'No se encontraron filas con datos. Verifica que la primera fila contenga los encabezados.';
+            }
+        } catch (error) {
+            console.error(error);
+            this.pendingRows = [];
+            this.totalRows = 0;
+            this.importParsingError = 'No se pudo leer el archivo. Asegúrate de que sea un Excel válido (.xlsx, .xls o .csv).';
+        } finally {
+            this.importParsing = false;
+        }
+    },
+    async loadXlsxLib() {
+        const module = await import('xlsx');
+        return module.default ?? module;
+    },
+    normalizeExcelHeader(header) {
+        return String(header ?? '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    },
+    excelCellToString(value) {
+        if (value === null || value === undefined) return null;
+        const text = String(value).trim();
+        return text === '' ? null : text;
+    },
+    async startImport() {
+        if (!this.pendingRows.length) return;
+
+        this.importing = true;
+        this.importingDone = false;
+        this.importError = null;
+        this.importResult = null;
+        this.cancelRequested = false;
+
+        let created = 0;
+        let updated = 0;
+        const errors = [];
+
+        for (let offset = 0; offset < this.pendingRows.length; offset += BATCH_SIZE) {
+            if (this.cancelRequested) break;
+
+            const batch = this.pendingRows.slice(offset, offset + BATCH_SIZE);
+            this.processedRows = offset; // filas ya confirmadas
+
+            try {
+                const response = await axios.post(route('products.import-batch'), { rows: batch });
+                created += Number(response.data.created) || 0;
+                updated += Number(response.data.updated) || 0;
+                if (Array.isArray(response.data.errors)) {
+                    errors.push(...response.data.errors);
+                }
+                this.processedRows = Math.min(offset + BATCH_SIZE, this.pendingRows.length);
+            } catch (error) {
+                const data = error?.response?.data;
+                if (data && data.message) {
+                    this.importError = data.message;
+                } else if (data && Array.isArray(data.errors)) {
+                    errors.push(...data.errors);
+                } else {
+                    this.importError = 'Ocurrió un error de comunicación con el servidor. Revisa tu conexión e inténtalo de nuevo.';
+                }
+                break;
+            }
+        }
+
+        this.importing = false;
+        this.importResult = {
+            created,
+            updated,
+            errors,
+            aborted: this.cancelRequested && this.processedRows < this.pendingRows.length,
+        };
+        this.importingDone = true;
+    },
+    cancelImport() {
+        if (this.importing) {
+            this.cancelRequested = true;
+        } else {
+            this.closeImportModal();
+        }
+    },
+    finishImport() {
+        const created = this.importResult?.created ?? 0;
+        const updated = this.importResult?.updated ?? 0;
+        const totalOk = created + updated;
+        const hasIssues = Boolean(this.importError) || (this.importResult?.errors?.length ?? 0) > 0;
+
+        this.showImportModal = false;
+        this.resetImportState();
+
+        if (totalOk > 0) {
+            this.$notify({
+                title: 'Importación de productos',
+                message: `${created} creado(s), ${updated} actualizado(s)`,
+                type: hasIssues ? 'warning' : 'success',
+            });
+            this.$inertia.reload();
+        } else if (hasIssues) {
+            this.$notify({
+                title: 'No se importaron productos',
+                message: 'Revisa los errores reportados en el archivo.',
+                type: 'error',
+            });
+        }
+    },
+},
+computed: {
+    progressPercent() {
+        if (!this.totalRows) return 0;
+        return Math.round((this.processedRows / this.totalRows) * 100);
+    },
+    progressStatus() {
+        if (this.importError || (this.importingDone && this.importResult?.aborted)) return 'exception';
+        if (this.importingDone) return 'success';
+        return '';
     },
 }
 }
